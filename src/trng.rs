@@ -12,7 +12,6 @@ pub struct Unknown;
 
 impl TrngState for Enabled {}
 impl TrngState for Disabled {}
-impl TrngState for Unknown {}
 
 const WA_KEY: u32 = 0x524E47; // b'RNG' write access key (see datasheet)
 
@@ -23,16 +22,16 @@ pub struct StatefulTrng<T: TrngState> {
 pub struct Trng {}
 
 impl Trng {
-    /// Creates new `TRNG` instance that's in unknown state.
+    /// Creates new `TRNG` instance that's in a disabled (unknown) state.
     #[allow(clippy::new_ret_no_self)]
-    pub fn new() -> StatefulTrng<Unknown> {
+    pub fn new() -> StatefulTrng<Disabled> {
         StatefulTrng {
             _state: PhantomData,
         }
     }
 }
 
-impl StatefulTrng<Unknown> {
+impl StatefulTrng<Disabled> {
     /// Enables the `TRNG`. Ensure that `TRNG` has clock source enabled via `PMC`.
     pub fn enable(self) -> StatefulTrng<Enabled> {
         let mut trng_csr = CSR::new(HW_TRNG_BASE as *mut u32);
