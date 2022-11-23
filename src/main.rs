@@ -6,6 +6,9 @@ use core::fmt::Write;
 use core::panic::PanicInfo;
 use core::sync::atomic::{compiler_fence, Ordering::SeqCst};
 
+use atsama5d27::pmc::{PeripheralId, Pmc};
+use atsama5d27::trng::Trng;
+
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
 global_asm!(include_str!("start.S"));
@@ -25,10 +28,21 @@ fn _entry() -> ! {
     rprintln!("");
     rprintln!("Hello from ATSAMA5D27 & Rust");
 
-    let mut i: u64 = 0;
+    Pmc::enable_peripheral_clock(PeripheralId::Trng);
+    let trng = Trng::new().enable();
+
+    // Warm-up TRNG (must wait least 5ms per datasheet)
+    for _ in 0..100_000 {
+        unsafe {
+            asm!("nop");
+        }
+    }
+
+    rprintln!("Running rng...");
+
     loop {
-        rprintln!("count: {}", i);
-        i += 1;
+        let res = trng.read_u32();
+        rprintln!("Random bits: {:032b}", res);
     }
 }
 
