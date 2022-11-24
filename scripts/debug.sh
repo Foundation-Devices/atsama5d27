@@ -3,4 +3,4 @@
 set -e
 
 cargo build
-arm-none-eabi-gdb ../target/armv7a-none-eabi/debug/atsama5d27
+arm-none-eabi-gdb -q ../target/armv7a-none-eabi/debug/atsama5d27
