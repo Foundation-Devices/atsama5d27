@@ -1,63 +1,65 @@
-/* This will be provided by the user (see `memory.x`) */
 INCLUDE memory.x
-ENTRY(start);
+ENTRY(reset);
 
 SECTIONS
 {
-  .text :
-  {
-    *(.text .text.*);
     . = ALIGN(4);
-    __etext = .;
-  } > SRAM
+	.text : {
+		_stext = .;
+		*(.text .text.*);
+		*(.rodata)                 /* read-only data (constants) */
+		*(.rodata*)
+		. = ALIGN(4);
+		*(.glue_7)
+		. = ALIGN(4);
+		*(.eh_frame)
+		. = ALIGN(4);
+ 		_etext = . ;
+	} > SRAM
 
-  .rodata __etext : ALIGN(4)
-  {
-    *(.rodata .rodata.*);
+	. = ALIGN(4);
+	.dummy : {
+		_edummy = .;
+	} > SRAM
+
+	.data : AT (LOADADDR(.dummy)) {
+		_sdata = .;
+		*(.vectors)
+		*(.data)
+		_edata = .;
+	} > SRAM
+
+	/* collect all uninitialized .bss sections */
+	.bss (NOLOAD) : {
+		. = ALIGN(4);
+		_sbss = .;
+		*(.bss)
+		_ebss = .;
+	} > SRAM
+
+    /* Place the heap right after `.uninit` */
     . = ALIGN(4);
-  } > SRAM
+    __sheap = .;
 
-  .data : ALIGN(4)
-  {
-    *(.data .data.*);
-    . = ALIGN(4);
-  } > SRAM
-
-  /* LMA of .data */
-  __sidata = LOADADDR(.data);
-
-  /* ### .bss */
-  .bss : ALIGN(4)
-  {
-    __sbss = .;
-    *(.bss .bss.*);
-    . = ALIGN(4);
-    __ebss = .;
-  } > SRAM
-
-  /* Initial, IRQ, and Abort stack */
-  . += 4096;
-  . = ALIGN(8);
-  _stack_start = .;
-
-  /* Place the heap right after `.uninit` */
-  . = ALIGN(4);
-  __sheap = .;
-
-  /* ## .got */
-  /* Dynamic relocations are unsupported. This section is only used to detect relocatable code in
+    /* ## .got */
+    /* Dynamic relocations are unsupported. This section is only used to detect relocatable code in
      the input files and raise an error if relocatable code is found */
-  .got (NOLOAD) :
-  {
-    KEEP(*(.got .got.*));
-  }
+    .got (NOLOAD) :
+    {
+        KEEP(*(.got .got.*));
+    }
 
-  /* ## Discarded sections */
-  /DISCARD/ :
-  {
-    /* Unused exception related info that only wastes space */
-    *(.ARM.exidx);
-    *(.ARM.exidx.*);
-    *(.ARM.extab.*);
-  }
+    /* ## Discarded sections */
+    /DISCARD/ :
+    {
+        /* Unused exception related info that only wastes space */
+        *(.ARM.exidx);
+        *(.ARM.exidx.*);
+        *(.ARM.extab.*);
+    }
 }
+
+_romsize = _edata - _stext;
+_sramsize = _ebss - _stext;
+
+end = .;  /* define a global symbol marking the end of application */

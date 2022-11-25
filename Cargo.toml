@@ -5,8 +5,14 @@ edition = "2021"
 
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
-rtt-target = { git = "https://github.com/Foundation-Devices/rtt-target.git", branch = "cortex-a", features = ["cortex-a"] }
+rtt-target = { git = "https://github.com/Foundation-Devices/rtt-target.git", branch = "cortex-a", features = ["cortex-a"], optional = true }
 utralib = { git = "https://github.com/Foundation-Devices/keyOS.git", branch = "main", default_features=false, features = ["atsama5d27"] }
+r0 = "1.0.0"
+
+[features]
+rtt = ["rtt-target"]
+
+default = []
 
 [profile.dev]
 #codegen-units = 1

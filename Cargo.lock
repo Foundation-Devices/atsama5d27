@@ -15,6 +15,7 @@ name = "atsama5d27"
 version = "0.1.0"
 dependencies = [
  "armv7",
+ "r0",
  "rtt-target",
  "utralib",
 ]
@@ -39,6 +40,12 @@ checksum = "b3d72d5477478f85bd00b6521780dfba1ec6cdaadcf90b8b181c36d7de561f9b"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "r0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd7a31eed1591dcbc95d92ad7161908e72f4677f8fabf2a32ca49b4237cbf211"
 
 [[package]]
 name = "rtt-target"
