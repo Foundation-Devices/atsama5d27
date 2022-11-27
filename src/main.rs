@@ -6,7 +6,7 @@ use core::panic::PanicInfo;
 use core::sync::atomic::{compiler_fence, Ordering::SeqCst};
 use core::fmt::Write;
 
-use atsama5d27::pio::{PioB, PioPin};
+use atsama5d27::pio::Pio;
 use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
@@ -60,7 +60,7 @@ fn _entry() -> ! {
     rprintln!("Running rng..");
 
 
-    let mut green_led_pin = PioPin::<PioB>::new(1); // PB1 is green/red
+    let mut green_led_pin = Pio::pb1(); // PB1 is green/red
     let mut hi = false;
 
     loop {
