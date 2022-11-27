@@ -52,7 +52,7 @@ fn _entry() -> ! {
     let trng = Trng::new().enable();
 
     // Warm-up TRNG (must wait least 5ms per datasheet)
-    for _ in 0..100_000 {
+    for _ in 0..10_000 {
         armv7::asm::nop();
     }
 
@@ -82,7 +82,7 @@ fn _entry() -> ! {
     }
 }
 
-// FIXME: this doesn't seem to work well
+// FIXME: this doesn't seem to work well with RTT
 #[inline(never)]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -97,7 +97,11 @@ fn panic(_info: &PanicInfo) -> ! {
         }
     }
 
+    let mut console = Uart::<Uart1>::new();
+    writeln!(console, "{}", _info).ok();
+
     loop {
         compiler_fence(SeqCst);
+        armv7::asm::nop();
     }
 }
