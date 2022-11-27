@@ -3,3 +3,4 @@
 pub mod pio;
 pub mod pmc;
 pub mod trng;
+pub mod uart;
