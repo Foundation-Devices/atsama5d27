@@ -67,7 +67,7 @@ impl StatefulTrng<Enabled> {
     pub fn read_u32(&self) -> u32 {
         let trng_csr = CSR::new(HW_TRNG_BASE as *mut u32);
         while !self.data_ready() {
-            // TODO: put a safe no-op here
+            armv7::asm::nop();
         }
 
         trng_csr.rf(TRNG_ODATA_ODATA)
