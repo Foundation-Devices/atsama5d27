@@ -6,7 +6,8 @@ SECTIONS
     . = ALIGN(4);
 	.text : {
 		_stext = .;
-		*(.text .text.*);
+		*(.text);    /* Place .text section first so that the reset vector is always placed at the load address */
+		*(.text.*);  /* Place other code sections next */
 		*(.rodata)                 /* read-only data (constants) */
 		*(.rodata*)
 		. = ALIGN(4);
