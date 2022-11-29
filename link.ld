@@ -16,19 +16,19 @@ SECTIONS
     *(.eh_frame)
     . = ALIGN(4);
      _etext = . ;
-  } > SRAM
+  } > DDR_MEM
 
   . = ALIGN(4);
   .dummy : {
     _edummy = .;
-  } > SRAM
+  } > DDR_MEM
 
   .data : AT (LOADADDR(.dummy)) {
     _sdata = .;
     *(.vectors)
     *(.data)
     _edata = .;
-  } > SRAM
+  } > DDR_MEM
 
   /* collect all uninitialized .bss sections */
   .bss (NOLOAD) : {
@@ -36,7 +36,7 @@ SECTIONS
     _sbss = .;
     *(.bss)
     _ebss = .;
-  } > SRAM
+  } > DDR_MEM
 
     /* Place the heap right after `.uninit` */
     . = ALIGN(4);
