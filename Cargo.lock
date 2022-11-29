@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "armv7"
 version = "0.2.1"
-source = "git+https://github.com/Foundation-Devices/armv7.git?branch=update#a9024032d2ea24676ff589691ce943cee82a0c87"
+source = "git+https://github.com/Foundation-Devices/armv7.git?branch=update#16d81e4bad425b10e0c6e540aa1b6489d2a5606e"
 dependencies = [
  "tock-registers",
 ]
@@ -57,9 +57,9 @@ dependencies = [
 
 [[package]]
 name = "svd2utra"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7efde6b1170abe1fcdb38f101daa8a44db336efba04effba0d8032eb01b20046"
+checksum = "6f199c64d5050f87dc7451a7e683827f36221cc3e7be7c99109133173afc7638"
 dependencies = [
  "convert_case",
  "quick-xml",
@@ -80,7 +80,7 @@ checksum = "e87a2ed6b42ec5e28cc3b94c09982969e9227600b2e3dcbc1db927a84c06bd69"
 [[package]]
 name = "utralib"
 version = "0.1.3"
-source = "git+https://github.com/Foundation-Devices/keyOS.git?branch=main#0c1704b6c0e2871277d5f91956ed1c327f127ea9"
+source = "git+https://github.com/Foundation-Devices/keyOS.git?branch=main#fcb71b5df92f9263d5f5a9808703dae7d1c16ea0"
 dependencies = [
  "svd2utra",
 ]

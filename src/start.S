@@ -1,37 +1,37 @@
 .section start
-	.text
+  .text
 
-	.globl reset
-	.align 4
+  .globl reset
+  .align 4
 
 reset:
 
 /* Exception vectors (should be a branch to be detected as a valid code by the rom */
 _exception_vectors:
-	b 	reset_vector    /* reset */
-	b 	undef_vector 	/* Undefined Instruction */
-	b 	swi_vector   	/* Software Interrupt */
-	b 	pabt_vector  	/* Prefetch Abort */
-	b 	dabt_vector  	/* Data Abort */
-.word		_romsize	/* Size of the binary for ROMCode loading */
-	b 	irq_vector	/* IRQ : read the AIC */
-	b 	fiq_vector      /* FIQ */
+  b   reset_vector    /* reset */
+  b   undef_vector   /* Undefined Instruction */
+  b   swi_vector     /* Software Interrupt */
+  b   pabt_vector    /* Prefetch Abort */
+  b   dabt_vector    /* Data Abort */
+.word    _romsize  /* Size of the binary for ROMCode loading */
+  b   irq_vector  /* IRQ : read the AIC */
+  b   fiq_vector      /* FIQ */
 
 undef_vector:
-	b 	undef_vector
+  b   undef_vector
 swi_vector:
-	b 	swi_vector
+  b   swi_vector
 pabt_vector:
-	b 	pabt_vector
+  b   pabt_vector
 dabt_vector:
-	subs	pc, r14, #4	/* return */
-	nop
+  subs  pc, r14, #4  /* return */
+  nop
 rsvd_vector:
-	b 	rsvd_vector
+  b   rsvd_vector
 irq_vector:
-	b 	irq_vector
+  b   irq_vector
 fiq_vector:
-	b 	fiq_vector
+  b   fiq_vector
 reset_vector:
 
 /*
@@ -39,8 +39,8 @@ reset_vector:
  * the start of SRAM (0x200000)
  */
 mrc p15, 0, r2, c12, c0, 0 /* Read VBAR into R2 */
-ldr	r2, =_sram_start
-mcr	p15, 0, r2, c12, c0, 0
+ldr  r2, =_sram_start
+mcr  p15, 0, r2, c12, c0, 0
 
 /* Init the stack */
 _init_stack:
@@ -69,13 +69,13 @@ msr cpsr_c, #0xd3
 mov sp, r0
 
 /* Clear Abort condition if it is pending with help of the abort handler */
-ldr	r1, =(0x100)
-mrs	r0, cpsr
-eor	r0, r0, r1
-msr	cpsr_x, r0
+ldr  r1, =(0x100)
+mrs  r0, cpsr
+eor  r0, r0, r1
+msr  cpsr_x, r0
 nop
-eor	r0, r0, r1
-msr	cpsr_x, r0
+eor  r0, r0, r1
+msr  cpsr_x, r0
 
 /* Branch to the Rust _entry function */
 _branch_main:
@@ -89,5 +89,5 @@ _lp_data:
         .word _edata
 
 _lp_bss:
-	.word _sbss
-	.word _ebss
+  .word _sbss
+  .word _ebss

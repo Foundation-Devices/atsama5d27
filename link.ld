@@ -4,38 +4,39 @@ ENTRY(reset);
 SECTIONS
 {
     . = ALIGN(4);
-	.text : {
-		_stext = .;
-		*(.text .text.*);
-		*(.rodata)                 /* read-only data (constants) */
-		*(.rodata*)
-		. = ALIGN(4);
-		*(.glue_7)
-		. = ALIGN(4);
-		*(.eh_frame)
-		. = ALIGN(4);
- 		_etext = . ;
-	} > SRAM
+  .text : {
+    _stext = .;
+    *(.text);    /* Place .text section first so that the reset vector is always placed at the load address */
+    *(.text.*);  /* Place other code sections next */
+    *(.rodata)                 /* read-only data (constants) */
+    *(.rodata*)
+    . = ALIGN(4);
+    *(.glue_7)
+    . = ALIGN(4);
+    *(.eh_frame)
+    . = ALIGN(4);
+     _etext = . ;
+  } > SRAM
 
-	. = ALIGN(4);
-	.dummy : {
-		_edummy = .;
-	} > SRAM
+  . = ALIGN(4);
+  .dummy : {
+    _edummy = .;
+  } > SRAM
 
-	.data : AT (LOADADDR(.dummy)) {
-		_sdata = .;
-		*(.vectors)
-		*(.data)
-		_edata = .;
-	} > SRAM
+  .data : AT (LOADADDR(.dummy)) {
+    _sdata = .;
+    *(.vectors)
+    *(.data)
+    _edata = .;
+  } > SRAM
 
-	/* collect all uninitialized .bss sections */
-	.bss (NOLOAD) : {
-		. = ALIGN(4);
-		_sbss = .;
-		*(.bss)
-		_ebss = .;
-	} > SRAM
+  /* collect all uninitialized .bss sections */
+  .bss (NOLOAD) : {
+    . = ALIGN(4);
+    _sbss = .;
+    *(.bss)
+    _ebss = .;
+  } > SRAM
 
     /* Place the heap right after `.uninit` */
     . = ALIGN(4);

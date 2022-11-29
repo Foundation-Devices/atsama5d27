@@ -1,12 +1,15 @@
 #![no_std]
 #![no_main]
 
-use core::arch::{asm, global_asm};
+use core::arch::global_asm;
 use core::panic::PanicInfo;
 use core::sync::atomic::{compiler_fence, Ordering::SeqCst};
+use core::fmt::Write;
 
+use atsama5d27::pio::Pio;
 use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
+use atsama5d27::uart::{Uart, Uart1};
 
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
@@ -30,7 +33,7 @@ fn _entry() -> ! {
     {
         rtt_init_print!(BlockIfFull);
 
-        rprintln!(r" ______  ____   _    _  _   _  _____         _______  _____  ____   _   _");
+        rprintln!(r" ______  ____   _    _  _   _  _____         _______  _____  ____   _   _ ");
         rprintln!(r"|  ____|/ __ \ | |  | || \ | ||  __ \    /\ |__   __||_   _|/ __ \ | \ | |");
         rprintln!(r"| |__  | |  | || |  | ||  \| || |  | |  /  \   | |     | | | |  | ||  \| |");
         rprintln!(r"|  __| | |  | || |  | || . ` || |  | | / /\ \  | |     | | | |  | || . ` |");
@@ -42,28 +45,44 @@ fn _entry() -> ! {
         rprintln!("Hello from ATSAMA5D27 & Rust");
     }
 
+    let mut console = Uart::<Uart1>::new();
+    writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
+
     Pmc::enable_peripheral_clock(PeripheralId::Trng);
     let trng = Trng::new().enable();
 
     // Warm-up TRNG (must wait least 5ms per datasheet)
-    for _ in 0..100_000 {
-        unsafe {
-            asm!("nop");
-        }
+    for _ in 0..10_000 {
+        armv7::asm::nop();
     }
 
     #[cfg(feature = "rtt")]
     rprintln!("Running rng..");
 
+
+    let mut green_led_pin = Pio::pb1(); // PB1 is green/red
+    let mut hi = false;
+
     loop {
-        let res = trng.read_u32();
+        let rnd_val = trng.read_u32();
 
         #[cfg(feature = "rtt")]
-        rprintln!("Random bits: {:032b}", res);
+        rprintln!("Random bits: {:032b}", rnd_val);
+
+        writeln!(console, "Random bits: {:032b}", rnd_val).ok();
+
+        green_led_pin.set(hi);
+
+        // Random delay
+        for _ in 0..10_000 + (rnd_val % 80_000) {
+            armv7::asm::nop();
+        }
+
+        hi = !hi;
     }
 }
 
-// FIXME: this doesn't seem to work well
+// FIXME: this doesn't seem to work well with RTT
 #[inline(never)]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -71,8 +90,6 @@ fn panic(_info: &PanicInfo) -> ! {
 
     #[cfg(feature = "rtt")]
     {
-        use core::fmt::Write;
-
         if let Some(mut channel) = unsafe { UpChannel::conjure(0) } {
             channel.set_mode(ChannelMode::BlockIfFull);
 
@@ -80,7 +97,11 @@ fn panic(_info: &PanicInfo) -> ! {
         }
     }
 
+    let mut console = Uart::<Uart1>::new();
+    writeln!(console, "{}", _info).ok();
+
     loop {
         compiler_fence(SeqCst);
+        armv7::asm::nop();
     }
 }
