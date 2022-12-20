@@ -13,7 +13,8 @@ pub struct Uart3 {}
 pub struct Uart4 {}
 
 // UART peripheral base addresses.
-const UART_BASE_ADDRESS: [u32; 5] = [0xf801c000, 0xf8020000, 0xf8024000, 0xfc008000, 0xfc00c000];
+pub const UART_BASE_ADDRESS: [u32; 5] =
+    [0xf801c000, 0xf8020000, 0xf8024000, 0xfc008000, 0xfc00c000];
 
 mod sealed {
     use crate::uart::*;
@@ -48,16 +49,29 @@ impl UartPeriph for Uart4 {
 
 #[derive(Default)]
 pub struct Uart<U: UartPeriph> {
+    base_addr: u32,
     inner: PhantomData<U>,
 }
 
 impl<U: UartPeriph> Uart<U> {
     pub fn new() -> Uart<U> {
-        Uart { inner: PhantomData }
+        Uart {
+            base_addr: UART_BASE_ADDRESS[U::ID],
+            inner: PhantomData,
+        }
+    }
+
+    /// Creates a driver instance with an alternative base address.
+    /// Useful when the UART peripheral is remapped to some other virtual address by the MMU.
+    pub fn with_alt_base_addr(base_addr: u32) -> Uart<U> {
+        Uart {
+            base_addr,
+            inner: PhantomData,
+        }
     }
 
     pub fn write_byte(&mut self, byte: u8) {
-        let mut uart_csr = CSR::new(UART_BASE_ADDRESS[U::ID] as *mut u32);
+        let mut uart_csr = CSR::new(self.base_addr as *mut u32);
 
         // Wait for the previous transfer to complete
         while uart_csr.rf(SR_TXRDY) == 0 {
