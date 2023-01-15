@@ -105,12 +105,31 @@ const PMC_PCR_DIV_SET: u32 = 0x3_u32 << 16;
 const PMC_PCR_EN_SET: u32 = 0x1 << 28;
 const PMC_PCR_CMD_SET: u32 = 0x1 << 12;
 
-pub struct Pmc {}
+pub struct Pmc {
+    base_addr: u32,
+}
+
+impl Default for Pmc {
+    fn default() -> Pmc {
+        Self::new()
+    }
+}
 
 impl Pmc {
+    pub fn new() -> Self {
+        Self {
+            base_addr: HW_PMC_BASE as u32,
+        }
+    }
+
+    /// Creates PMC instance with a different base address. Used with virtual memory
+    pub fn with_alt_base_addr(base_addr: u32) -> Self {
+        Self { base_addr }
+    }
+
     /// Turns on the peripheral's clock source.
-    pub fn enable_peripheral_clock(pid: PeripheralId) {
-        let mut pmc_csr = CSR::new(HW_PMC_BASE as *mut u32);
+    pub fn enable_peripheral_clock(&mut self, pid: PeripheralId) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
         pmc_csr.wfo(PMC_PCR_PID, pid as u32 & PMC_PCR_PID_MASK);
 
         let mut val = pmc_csr.r(PMC_PCR);
@@ -121,8 +140,8 @@ impl Pmc {
     }
 
     /// Disables the peripheral's clock source.
-    pub fn disable_peripheral_clock(pid: PeripheralId) {
-        let mut pmc_csr = CSR::new(HW_PMC_BASE as *mut u32);
+    pub fn disable_peripheral_clock(&mut self, pid: PeripheralId) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
         pmc_csr.wfo(PMC_PCR_PID, pid as u32 & PMC_PCR_PID_MASK);
 
         let mut val = pmc_csr.r(PMC_PCR);
