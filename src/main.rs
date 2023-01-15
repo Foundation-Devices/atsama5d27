@@ -2,15 +2,16 @@
 #![no_main]
 
 use core::arch::global_asm;
+use core::fmt::Write;
 use core::panic::PanicInfo;
 use core::sync::atomic::{compiler_fence, Ordering::SeqCst};
-use core::fmt::Write;
 
 use atsama5d27::pio::Pio;
 use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 
+use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
@@ -48,17 +49,25 @@ fn _entry() -> ! {
     let mut console = Uart::<Uart1>::new();
     writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
 
-    Pmc::new().enable_peripheral_clock(PeripheralId::Trng);
-    let trng = Trng::new().enable();
+    let mut pmc = Pmc::new();
+    pmc.enable_peripheral_clock(PeripheralId::Trng);
+    pmc.enable_peripheral_clock(PeripheralId::Pit);
 
-    // Warm-up TRNG (must wait least 5ms per datasheet)
-    for _ in 0..10_000 {
-        armv7::asm::nop();
-    }
+    let mut pit = Pit::new();
+    pit.set_interval(PIV_MAX);
+    pit.set_enabled(true);
+
+    // MCK: 164MHz
+    // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
+    const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
+
+    // Enable the TRNG
+    let trng = Trng::new().enable();
+    // Warm-up the TRNG (must wait least 5ms as per datasheet)
+    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10);
 
     #[cfg(feature = "rtt")]
     rprintln!("Running rng..");
-
 
     let mut green_led_pin = Pio::pb1(); // PB1 is green/red
     let mut hi = false;
@@ -73,10 +82,9 @@ fn _entry() -> ! {
 
         green_led_pin.set(hi);
 
-        // Random delay
-        for _ in 0..10_000 + (rnd_val % 80_000) {
-            armv7::asm::nop();
-        }
+        // Random delay from 250ms to 1250ms
+        let delay_ms = 250 + rnd_val % 1000;
+        pit.busy_wait_ms(MASTER_CLOCK_SPEED, delay_ms);
 
         hi = !hi;
     }
