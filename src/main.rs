@@ -48,7 +48,7 @@ fn _entry() -> ! {
     let mut console = Uart::<Uart1>::new();
     writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
 
-    Pmc::enable_peripheral_clock(PeripheralId::Trng);
+    Pmc::new().enable_peripheral_clock(PeripheralId::Trng);
     let trng = Trng::new().enable();
 
     // Warm-up TRNG (must wait least 5ms per datasheet)
