@@ -1,0 +1,159 @@
+use utralib::utra::aic::{
+    EOICR_ENDIT, IDCR_INTD, IECR_INTEN, ISR_IRQID, SMR_PRIORITY, SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL,
+    SVR_VECTOR,
+};
+use utralib::*;
+
+use crate::pmc::PeripheralId;
+
+pub struct Aic {
+    base_addr: u32,
+    spurious_handler_fn_ptr: usize,
+}
+
+// const UNLOCK_KEY: u32 = 0xB6D81C4D;
+const MAX_INTERRUPT_DEPTH: usize = 8;
+const MAX_NUM_SOURCES: usize = 127;
+
+#[derive(Debug)]
+#[repr(C)]
+pub enum SourceKind {
+    /// High-level sensitive for internal source. Low-level sensitive for external source.
+    LevelSensitive = 0,
+
+    /// Negative-edge triggered for external source.
+    ExternalNegativeEdge = 1,
+
+    /// High-level sensitive for internal source. High-level sensitive for external source.
+    ExternalHighLevel = 2,
+
+    /// Positive-edge triggered for external source.
+    ExternalPositiveEdge = 3,
+}
+
+#[derive(Debug)]
+pub struct InterruptEntry {
+    pub peripheral_id: PeripheralId,
+    pub vector_fn_ptr: usize,
+    pub kind: SourceKind,
+    pub priority: u32,
+}
+
+impl Default for Aic {
+    fn default() -> Aic {
+        Self::new()
+    }
+}
+
+impl Aic {
+    pub fn new() -> Self {
+        Self {
+            base_addr: HW_AIC_BASE as u32,
+            spurious_handler_fn_ptr: 0,
+        }
+    }
+
+    /// Sets the spurious interrupt handler function address.
+    pub fn set_spurious_handler_fn_ptr(&mut self, handler_fn_addr: usize) {
+        self.spurious_handler_fn_ptr = handler_fn_addr;
+    }
+
+    /// Creates AIC instance with a different base address.
+    /// Used with virtual memory or when choosing between secured and non-secured versions of AIC.
+    pub fn with_alt_base_addr(base_addr: u32) -> Self {
+        Self {
+            base_addr,
+            spurious_handler_fn_ptr: 0,
+        }
+    }
+
+    pub fn init(&mut self) {
+        let mut aic_csr = CSR::new(self.base_addr as *mut u32);
+
+        disable_interrupts();
+        armv7::asm::dmb();
+        armv7::asm::isb();
+
+        // Disable interrupts from all sources
+        for i in 0..MAX_NUM_SOURCES {
+            // Select interrupt source
+            aic_csr.wfo(SSR_INTSEL, i as u32);
+
+            armv7::asm::dsb();
+            armv7::asm::isb();
+
+            // Disable interrupt source
+            aic_csr.wfo(IDCR_INTD, 1);
+        }
+
+        // Pop all possible nested interrupts from internal hw stack
+        for _ in 0..MAX_INTERRUPT_DEPTH {
+            aic_csr.wfo(EOICR_ENDIT, 1);
+        }
+
+        armv7::asm::dsb();
+        enable_interrupts();
+        armv7::asm::isb();
+    }
+
+    /// Sets the handler for the interrupt.
+    pub fn set_interrupt_handler(&mut self, handler: InterruptEntry) {
+        disable_interrupts();
+
+        let mut aic_csr = CSR::new(self.base_addr as *mut u32);
+
+        aic_csr.wfo(SSR_INTSEL, handler.peripheral_id as u32);
+        aic_csr.rmwf(SMR_SRCTYPE, handler.kind as u32);
+        aic_csr.rmwf(SMR_PRIORITY, handler.priority);
+        aic_csr.wfo(SPU_SIVR, self.spurious_handler_fn_ptr as u32);
+        aic_csr.wfo(SVR_VECTOR, handler.vector_fn_ptr as u32);
+
+        // Enable the interrupt
+        aic_csr.wfo(IECR_INTEN, 1);
+
+        enable_interrupts();
+    }
+
+    pub fn current_irq_source(&self) -> PeripheralId {
+        let aic_csr = CSR::new(self.base_addr as *mut u32);
+        (aic_csr.rf(ISR_IRQID) as u8).into()
+    }
+
+    /// Should be called from the end of the
+    pub fn interrupt_completed(&mut self) {
+        let mut aic_csr = CSR::new(self.base_addr as *mut u32);
+        aic_csr.wfo(EOICR_ENDIT, 1);
+    }
+}
+
+fn disable_interrupts() {
+    unsafe {
+        // Use a dummy variable to allocate a register for.
+        // Makes the compiler aware of the register being modified to avoid clobbering in-use registers.
+        // Otherwise, modifying any of the common registers unbeknown to the compiler may make a mess in --release mode.
+        let mut _dummy: u32 = 0;
+        core::arch::asm!(
+            "mrs {reg}, cpsr",
+            "orr {reg}, {reg}, #0xc0",
+            "msr cpsr_c, {reg}",
+            "cpsid if",
+            reg = inlateout(reg) _dummy,
+        );
+    }
+}
+
+fn enable_interrupts() {
+    unsafe {
+        // Use a dummy variable to allocate a register for.
+        // Makes the compiler aware of the register being modified to avoid clobbering in-use registers.
+        // Otherwise, modifying any of the common registers unbeknown to the compiler may make a mess in --release mode.
+        let mut _dummy: u32 = 0;
+        core::arch::asm!(
+            "mrs {reg}, cpsr",
+            "bic {reg}, {reg}, #0xc0",
+            "msr cpsr_c, {reg}",
+            "cpsie if",
+            reg = inlateout(reg) _dummy,
+        );
+    }
+}

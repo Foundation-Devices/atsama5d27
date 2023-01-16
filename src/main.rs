@@ -11,6 +11,7 @@ use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 
+use atsama5d27::aic::{Aic, InterruptEntry, SourceKind};
 use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
