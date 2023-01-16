@@ -21,3 +21,6 @@ default = []
 #incremental = false
 #opt-level = 3 # <-
 #overflow-checks = true # <-
+
+[profile.release]
+debug = 1

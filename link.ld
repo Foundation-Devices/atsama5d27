@@ -38,10 +38,6 @@ SECTIONS
     _ebss = .;
   } > DDR_MEM
 
-    /* Place the heap right after `.uninit` */
-    . = ALIGN(4);
-    __sheap = .;
-
     /* ## .got */
     /* Dynamic relocations are unsupported. This section is only used to detect relocatable code in
      the input files and raise an error if relocatable code is found */
@@ -58,6 +54,30 @@ SECTIONS
         *(.ARM.exidx.*);
         *(.ARM.extab.*);
     }
+
+    . = ALIGN(8);
+  .stack (NOLOAD) :
+  {
+    . += IRQ_STACK_SIZE;
+    . = ALIGN(8);
+    _irqstack = .;
+
+    . += FIQ_STACK_SIZE;
+    . = ALIGN(8);
+    _fiqstack = .;
+
+    . += ABT_STACK_SIZE;
+    . = ALIGN(8);
+    _abtstack = .;
+
+    . += UND_STACK_SIZE;
+    . = ALIGN(8);
+    _undstack = .;
+
+    . += SYS_STACK_SIZE;
+    . = ALIGN(8);
+    _sysstack = .;
+  } >DDR_MEM
 }
 
 _romsize = _edata - _stext;

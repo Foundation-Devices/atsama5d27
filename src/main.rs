@@ -11,11 +11,15 @@ use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 
+use atsama5d27::aic::{Aic, InterruptEntry, SourceKind};
 use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
 global_asm!(include_str!("start.S"));
+
+type UartType = Uart<Uart1>;
+const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -46,12 +50,28 @@ fn _entry() -> ! {
         rprintln!("Hello from ATSAMA5D27 & Rust");
     }
 
-    let mut console = Uart::<Uart1>::new();
-    writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
-
     let mut pmc = Pmc::new();
     pmc.enable_peripheral_clock(PeripheralId::Trng);
     pmc.enable_peripheral_clock(PeripheralId::Pit);
+    pmc.enable_peripheral_clock(PeripheralId::Aic);
+
+    let mut aic = Aic::new();
+    aic.init();
+    aic.set_spurious_handler_fn_ptr(aic_spurious_handler as unsafe extern "C" fn() as usize);
+
+    let uart_irq_ptr = uart_irq_handler as unsafe extern "C" fn() as usize;
+    aic.set_interrupt_handler(InterruptEntry {
+        peripheral_id: UART_PERIPH_ID,
+        vector_fn_ptr: uart_irq_ptr,
+        kind: SourceKind::LevelSensitive,
+        priority: 0,
+    });
+
+    let mut console = UartType::new();
+    console.set_rx_interrupt(true);
+    console.set_rx(true);
+
+    writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
 
     let mut pit = Pit::new();
     pit.set_interval(PIV_MAX);
@@ -88,6 +108,20 @@ fn _entry() -> ! {
 
         hi = !hi;
     }
+}
+
+#[no_mangle]
+#[export_name = "aic_spurious_handler"]
+unsafe extern "C" fn aic_spurious_handler() {
+    core::arch::asm!("bkpt");
+}
+
+#[no_mangle]
+#[export_name = "pit_irq_handler"]
+unsafe extern "C" fn uart_irq_handler() {
+    let mut uart = UartType::new();
+    let char = uart.getc() as char;
+    writeln!(uart, "Received character: {}", char).ok();
 }
 
 // FIXME: this doesn't seem to work well with RTT

@@ -3,7 +3,9 @@
 use core::fmt::Write;
 use core::marker::PhantomData;
 
-use utralib::utra::uart0::{SR_TXRDY, THR_TXCHR};
+use utralib::utra::uart0::{
+    CR_RXDIS, CR_RXEN, IER_RXRDY, IMR_RXRDY, RHR_RXCHR, SR_RXRDY, SR_TXRDY, THR_TXCHR,
+};
 use utralib::*;
 
 pub struct Uart0 {}
@@ -86,6 +88,32 @@ impl<U: UartPeriph> Uart<U> {
         for byte in s.as_bytes().iter() {
             self.write_byte(*byte);
         }
+    }
+
+    pub fn set_rx(&mut self, enabled: bool) {
+        let mut uart_csr = CSR::new(self.base_addr as *mut u32);
+        if enabled {
+            uart_csr.wfo(CR_RXEN, 1);
+        } else {
+            uart_csr.wfo(CR_RXDIS, 1);
+        }
+    }
+
+    pub fn set_rx_interrupt(&mut self, enabled: bool) {
+        let mut uart_csr = CSR::new(self.base_addr as *mut u32);
+        uart_csr.rmwf(IMR_RXRDY, enabled.into());
+        uart_csr.rmwf(IER_RXRDY, enabled.into());
+    }
+
+    pub fn getc(&mut self) -> u8 {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+
+        // Wait for the character reception to complete
+        while uart_csr.rf(SR_RXRDY) == 0 {
+            armv7::asm::nop();
+        }
+
+        uart_csr.rf(RHR_RXCHR) as u8
     }
 }
 
