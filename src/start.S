@@ -36,81 +36,81 @@ irq_vector:
  handler, as defined in the AIC. Supports interrupt nesting.
 ------------------------------------------------------------------------------
 */
-	sub     lr, lr, #4
-	stmfd   sp!, {{lr}}
-	mrs     lr, SPSR
-	stmfd   sp!, {{r0, lr}}
+  sub     lr, lr, #4
+  stmfd   sp!, {{lr}}
+  mrs     lr, SPSR
+  stmfd   sp!, {{r0, lr}}
 
-	/* Write in the IVR to support Protect Mode */
+  /* Write in the IVR to support Protect Mode */
 
-	ldr     lr, =(0xFC020000)
-	ldr     r0, [r14, #0x10]
-	str     lr, [r14, #0x10]
-	/* Dummy read to force AIC_IVR write completion */
-	ldr     lr, [r14, #0x04]
+  ldr     lr, =(0xFC020000)
+  ldr     r0, [r14, #0x10]
+  str     lr, [r14, #0x10]
+  /* Dummy read to force AIC_IVR write completion */
+  ldr     lr, [r14, #0x04]
 
-	/* Branch to interrupt handler in Supervisor mode */
+  /* Branch to interrupt handler in Supervisor mode */
 
-	msr     CPSR_c, #0x13
-	stmfd   sp!, {{r1-r3, r4, r12, lr}}
+  msr     CPSR_c, #0x13
+  stmfd   sp!, {{r1-r3, r4, r12, lr}}
 
-	/* Check for 8-byte alignment and save lr plus a */
-	/* word to indicate the stack adjustment used (0 or 4) */
+  /* Check for 8-byte alignment and save lr plus a */
+  /* word to indicate the stack adjustment used (0 or 4) */
 
-	and     r1, sp, #4
-	sub     sp, sp, r1
-	stmfd   sp!, {{r1, lr}}
+  and     r1, sp, #4
+  sub     sp, sp, r1
+  stmfd   sp!, {{r1, lr}}
 
-	blx     r0
+  blx     r0
 
-	ldmia   sp!, {{r1, lr}}
-	add     sp, sp, r1
+  ldmia   sp!, {{r1, lr}}
+  add     sp, sp, r1
 
-	ldmia   sp!, {{r1-r3, r4, r12, lr}}
-	msr     CPSR_c, #0x12 | 0x80 | 0x40
+  ldmia   sp!, {{r1-r3, r4, r12, lr}}
+  msr     CPSR_c, #0x12 | 0x80 | 0x40
 
-	/* Acknowledge interrupt */
+  /* Acknowledge interrupt */
 
-	ldr     lr, =(0xFC020000)
-	str     lr, [r14, #0x38]
+  ldr     lr, =(0xFC020000)
+  str     lr, [r14, #0x38]
 
-	/* Restore interrupt context and branch back to calling code */
+  /* Restore interrupt context and branch back to calling code */
 
-	ldmia   sp!, {{r0, lr}}
-	msr     SPSR_cxsf, lr
-	ldmia   sp!, {{pc}}^
+  ldmia   sp!, {{r0, lr}}
+  msr     SPSR_cxsf, lr
+  ldmia   sp!, {{pc}}^
 
 fiq_vector:
-	sub     lr, lr, #4
-	stmfd   sp!, {{lr}}
-	# mrs     lr, SPSR
-	stmfd   sp!, {{r0}}
+  sub     lr, lr, #4
+  stmfd   sp!, {{lr}}
+  # mrs     lr, SPSR
+  stmfd   sp!, {{r0}}
 
-	/* Write in the IVR to support Protect Mode */
+  /* Write in the IVR to support Protect Mode */
 
-	ldr     lr, =(0xF803C000)
-	ldr     r0, [r14, #0x10]
-	str     lr, [r14, #0x10]
+  ldr     lr, =(0xF803C000)
+  ldr     r0, [r14, #0x10]
+  str     lr, [r14, #0x10]
 
-	/* Branch to interrupt handler in Supervisor mode */
+  /* Branch to interrupt handler in Supervisor mode */
 
-	msr     CPSR_c, #0x13
-	stmfd   sp!, {{r1-r3, r4, r12, lr}}
+  msr     CPSR_c, #0x13
+  stmfd   sp!, {{r1-r3, r4, r12, lr}}
 
-	blx      r0
+  blx      r0
 
-	ldmia   sp!, {{r1-r3, r4, r12, lr}}
-	msr     CPSR_c, #0x11 | 0x80 | 0x40
+  ldmia   sp!, {{r1-r3, r4, r12, lr}}
+  msr     CPSR_c, #0x11 | 0x80 | 0x40
 
-	/* Acknowledge interrupt */
-	ldr     lr, =(0xF803C000)
-	str     lr, [r14, #0x38]
+  /* Acknowledge interrupt */
+  ldr     lr, =(0xF803C000)
+  str     lr, [r14, #0x38]
 
-	/* Restore interrupt context and branch back to calling code */
+  /* Restore interrupt context and branch back to calling code */
 
-	ldmia   sp!, {{r0}}
-	# msr     SPSR_cxsf, lr
-	ldmia   sp!, {{pc}}^
+  ldmia   sp!, {{r0}}
+  # msr     SPSR_cxsf, lr
+  ldmia   sp!, {{pc}}^
 
 reset_vector:
 

@@ -56,28 +56,28 @@ SECTIONS
     }
 
     . = ALIGN(8);
-	.stack (NOLOAD) :
-	{
-		. += IRQ_STACK_SIZE;
-		. = ALIGN(8);
-		_irqstack = .;
+  .stack (NOLOAD) :
+  {
+    . += IRQ_STACK_SIZE;
+    . = ALIGN(8);
+    _irqstack = .;
 
-		. += FIQ_STACK_SIZE;
-		. = ALIGN(8);
-		_fiqstack = .;
+    . += FIQ_STACK_SIZE;
+    . = ALIGN(8);
+    _fiqstack = .;
 
-		. += ABT_STACK_SIZE;
-		. = ALIGN(8);
-		_abtstack = .;
+    . += ABT_STACK_SIZE;
+    . = ALIGN(8);
+    _abtstack = .;
 
-		. += UND_STACK_SIZE;
-		. = ALIGN(8);
-		_undstack = .;
+    . += UND_STACK_SIZE;
+    . = ALIGN(8);
+    _undstack = .;
 
-		. += SYS_STACK_SIZE;
-		. = ALIGN(8);
-		_sysstack = .;
-	} >DDR_MEM
+    . += SYS_STACK_SIZE;
+    . = ALIGN(8);
+    _sysstack = .;
+  } >DDR_MEM
 }
 
 _romsize = _edata - _stext;
