@@ -1,6 +1,6 @@
 use utralib::utra::aic::{
     EOICR_ENDIT, IDCR_INTD, IECR_INTEN, ISR_IRQID, SMR_PRIORITY, SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL,
-    SVR_VECTOR,
+    SVR_VECTOR, IPR0, IPR1, IPR2, IPR3
 };
 use utralib::*;
 
@@ -37,6 +37,14 @@ pub struct InterruptEntry {
     pub vector_fn_ptr: usize,
     pub kind: SourceKind,
     pub priority: u32,
+}
+
+#[derive(Debug)]
+pub struct IrqPendingInfo {
+    pub irqs_0_31: u32,
+    pub irqs_32_63: u32,
+    pub irqs_64_95: u32,
+    pub irqs_96_127: u32,
 }
 
 impl Default for Aic {
@@ -114,15 +122,44 @@ impl Aic {
         enable_interrupts();
     }
 
+    /// # Panics
+    /// Panics if the AIC returned an interrupt source that is unknown.
     pub fn current_irq_source(&self) -> PeripheralId {
         let aic_csr = CSR::new(self.base_addr as *mut u32);
-        (aic_csr.rf(ISR_IRQID) as u8).into()
+        (aic_csr.rf(ISR_IRQID) as u8).try_into().expect("invalid peripheral ID")
     }
 
-    /// Should be called from the end of the
+    /// Should be called from the end of the ISR.
     pub fn interrupt_completed(&mut self) {
         let mut aic_csr = CSR::new(self.base_addr as *mut u32);
         aic_csr.wfo(EOICR_ENDIT, 1);
+    }
+
+    /// Enables or disables specific IRQ.
+    pub fn set_interrupt_enabled(&mut self, id: PeripheralId, enabled: bool) {
+        disable_interrupts();
+        armv7::asm::dmb();
+        armv7::asm::isb();
+
+        let mut aic_csr = CSR::new(self.base_addr as *mut u32);
+        aic_csr.wfo(SSR_INTSEL, id as u32);
+        aic_csr.wfo(IECR_INTEN, enabled.into());
+
+        armv7::asm::dsb();
+        enable_interrupts();
+        armv7::asm::isb();
+    }
+
+    /// Returns a 128-bit mask of pending IRQs.
+    pub fn get_pending_irqs(&self) -> IrqPendingInfo {
+        let aic_csr = CSR::new(self.base_addr as *mut u32);
+
+        IrqPendingInfo {
+            irqs_0_31: aic_csr.r(IPR0),
+            irqs_32_63: aic_csr.r(IPR1),
+            irqs_64_95: aic_csr.r(IPR2),
+            irqs_96_127: aic_csr.r(IPR3)
+        }
     }
 }
 
