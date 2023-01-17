@@ -105,6 +105,15 @@ impl<U: UartPeriph> Uart<U> {
         uart_csr.rmwf(IER_RXRDY, enabled.into());
     }
 
+    pub fn getc_nonblocking(&mut self) -> Option<u8> {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+        if uart_csr.rf(SR_RXRDY) != 0 {
+            Some(uart_csr.rf(RHR_RXCHR) as u8)
+        } else {
+            None
+        }
+    }
+
     pub fn getc(&mut self) -> u8 {
         let uart_csr = CSR::new(self.base_addr as *mut u32);
 
