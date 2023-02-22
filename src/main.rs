@@ -7,16 +7,32 @@ use core::panic::PanicInfo;
 use core::sync::atomic::Ordering::{Acquire, Release};
 use core::sync::atomic::{compiler_fence, AtomicBool, Ordering::Relaxed, Ordering::SeqCst};
 
-use atsama5d27::pio::Pio;
+use atsama5d27::aic::{Aic, InterruptEntry, SourceKind};
+use atsama5d27::pio::{Direction, Func, Pio, PioB, PioC, PioD, PioPort};
 use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
-
-use atsama5d27::aic::{Aic, InterruptEntry, SourceKind};
-use atsama5d27::pit::{Pit, PIV_MAX};
+// use atsama5d27::pit::{Pit, PIV_MAX};
+use atsama5d27::lcdc::{LcdDmaDesc, Lcdc};
 use atsama5d27::tc::Tc;
+
+const WIDTH: usize = 800;
+const HEIGHT: usize = 480;
+
+#[repr(align(32))]
+struct Aligned4([u32; WIDTH * HEIGHT]);
+static mut FRAMEBUFFER: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
+static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
+    addr: 0,
+    ctrl: 0,
+    next: 0,
+};
+
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
+
+#[cfg(feature = "lcd-console")]
+use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 
 global_asm!(include_str!("start.S"));
 
@@ -42,14 +58,6 @@ fn _entry() -> ! {
     #[cfg(feature = "rtt")]
     {
         rtt_init_print!(BlockIfFull);
-
-        rprintln!(r" ______  ____   _    _  _   _  _____         _______  _____  ____   _   _ ");
-        rprintln!(r"|  ____|/ __ \ | |  | || \ | ||  __ \    /\ |__   __||_   _|/ __ \ | \ | |");
-        rprintln!(r"| |__  | |  | || |  | ||  \| || |  | |  /  \   | |     | | | |  | ||  \| |");
-        rprintln!(r"|  __| | |  | || |  | || . ` || |  | | / /\ \  | |     | | | |  | || . ` |");
-        rprintln!(r"| |    | |__| || |__| || |\  || |__| |/ /  \ \ | |    _| |_| |__| || |\  |");
-        rprintln!(r"|_|     \____/  \____/ |_| \_||_____//_/    \_\|_|   |_____|\____/ |_| \_|");
-
         rprintln!("");
         rprintln!("");
         rprintln!("Hello from ATSAMA5D27 & Rust");
@@ -60,6 +68,8 @@ fn _entry() -> ! {
     // pmc.enable_peripheral_clock(PeripheralId::Pit); // PIT is disabled in favor of TC0
     pmc.enable_peripheral_clock(PeripheralId::Tc0);
     pmc.enable_peripheral_clock(PeripheralId::Aic);
+    pmc.enable_peripheral_clock(PeripheralId::Pioc);
+    pmc.enable_peripheral_clock(PeripheralId::Piod);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -84,16 +94,28 @@ fn _entry() -> ! {
         priority: 0,
     });
 
-    let mut console = UartType::new();
-    console.set_rx_interrupt(true);
-    console.set_rx(true);
+    let mut uart = UartType::new();
+    uart.set_rx_interrupt(true);
+    uart.set_rx(true);
 
-    writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
+    configure_lcdc_pins();
+    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
+    let mut lcdc = Lcdc::new(
+        unsafe { FRAMEBUFFER.0.as_ptr() as usize },
+        WIDTH as u16,
+        HEIGHT as u16,
+        unsafe { &mut DMA_DESC },
+    );
+    lcdc.init();
 
-    // PIT is disabled in favor of TC0
-    // let mut pit = Pit::new();
-    // pit.set_interval(PIV_MAX);
-    // pit.set_enabled(true);
+    #[cfg(not(feature = "lcd-console"))]
+    let mut console = uart;
+    #[cfg(feature = "lcd-console")]
+    let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER.0 }, WIDTH, HEIGHT);
+    #[cfg(feature = "lcd-console")]
+    let mut console = DisplayAndUartConsole::new(display, uart);
+
+    print_banner(&mut console);
 
     // MCK: 164MHz
     // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
@@ -102,12 +124,19 @@ fn _entry() -> ! {
     // Enable the TRNG
     let trng = Trng::new().enable();
     // Warm-up the TRNG (must wait least 5ms as per datasheet)
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10);
+    // pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10);
 
     #[cfg(feature = "rtt")]
     rprintln!("Running rng..");
 
-    let mut green_led_pin = Pio::pb1(); // PB1 is green/red
+    writeln!(console, "Running rng..").ok();
+
+    let mut red_led = Pio::pa10();
+    red_led.set_func(Func::Gpio);
+    red_led.set_direction(Direction::Output);
+    red_led.set(false); // Disable red led
+
+    let mut blue_led_pin = Pio::pa31(); // PA31 is blue led
     let mut hi = false;
 
     tc0.set_interrupt(true);
@@ -120,10 +149,10 @@ fn _entry() -> ! {
 
         writeln!(console, "Random bits: {:032b}", rnd_val).ok();
 
-        green_led_pin.set(hi);
+        blue_led_pin.set(hi);
 
         // Random delay from 250ms to 1250ms
-        let delay_ms = 250 + rnd_val % 1000;
+        let delay_ms = 250 + rnd_val % 250;
         let ticks_per_ms = MASTER_CLOCK_SPEED / 128 / 1000;
 
         tc0.set_period(delay_ms * ticks_per_ms);
@@ -141,6 +170,18 @@ fn _entry() -> ! {
 
         hi = !hi;
     }
+}
+
+#[rustfmt::skip]
+fn print_banner<U: Write>(console: &mut U) {
+    writeln!(console, r"        ______  ____   _    _  _   _  _____         _______  _____  ____   _   _ ").ok();
+    writeln!(console, r"       |  ____|/ __ \ | |  | || \ | ||  __ \    /\ |__   __||_   _|/ __ \ | \ | |").ok();
+    writeln!(console, r"       | |__  | |  | || |  | ||  \| || |  | |  /  \   | |     | | | |  | ||  \| |").ok();
+    writeln!(console, r"       |  __| | |  | || |  | || . ` || |  | | / /\ \  | |     | | | |  | || . ` |").ok();
+    writeln!(console, r"       | |    | |__| || |__| || |\  || |__| |/ /  \ \ | |    _| |_| |__| || |\  |").ok();
+    writeln!(console, r"       |_|     \____/  \____/ |_| \_||_____//_/    \_\|_|   |_____|\____/ |_| \_|").ok();
+    writeln!(console).ok();
+    writeln!(console, "Hello from ATSAMA5D27 & Rust").ok();
 }
 
 #[no_mangle]
@@ -187,4 +228,12 @@ fn panic(_info: &PanicInfo) -> ! {
         compiler_fence(SeqCst);
         armv7::asm::nop();
     }
+}
+
+fn configure_lcdc_pins() {
+    PioB::configure_pins_by_mask(0xe7e7e000, Func::A, None);
+    PioB::configure_pins_by_mask(0x2, Func::A, None);
+    PioB::clear_all();
+    PioC::configure_pins_by_mask(0x1ff, Func::A, None);
+    PioD::configure_pins_by_mask(0x30, Func::A, None);
 }

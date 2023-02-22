@@ -8,3 +8,8 @@ pub mod pmc;
 pub mod tc;
 pub mod trng;
 pub mod uart;
+
+#[cfg(feature = "lcd-console")]
+pub mod console;
+#[cfg(feature = "lcd-console")]
+pub mod display;
