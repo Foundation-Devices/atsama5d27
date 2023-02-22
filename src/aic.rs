@@ -1,6 +1,6 @@
 use utralib::utra::aic::{
-    EOICR_ENDIT, IDCR_INTD, IECR_INTEN, ISR_IRQID, SMR_PRIORITY, SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL,
-    SVR_VECTOR, IPR0, IPR1, IPR2, IPR3
+    EOICR_ENDIT, IDCR_INTD, IECR_INTEN, IPR0, IPR1, IPR2, IPR3, ISR_IRQID, SMR_PRIORITY,
+    SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL, SVR_VECTOR,
 };
 use utralib::*;
 
@@ -126,7 +126,9 @@ impl Aic {
     /// Panics if the AIC returned an interrupt source that is unknown.
     pub fn current_irq_source(&self) -> PeripheralId {
         let aic_csr = CSR::new(self.base_addr as *mut u32);
-        (aic_csr.rf(ISR_IRQID) as u8).try_into().expect("invalid peripheral ID")
+        (aic_csr.rf(ISR_IRQID) as u8)
+            .try_into()
+            .expect("invalid peripheral ID")
     }
 
     /// Should be called from the end of the ISR.
@@ -158,7 +160,7 @@ impl Aic {
             irqs_0_31: aic_csr.r(IPR0),
             irqs_32_63: aic_csr.r(IPR1),
             irqs_64_95: aic_csr.r(IPR2),
-            irqs_96_127: aic_csr.r(IPR3)
+            irqs_96_127: aic_csr.r(IPR3),
         }
     }
 }
