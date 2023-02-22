@@ -1,7 +1,10 @@
 //! Parallel I/O controller (GPIO).
 
 use core::marker::PhantomData;
-use utralib::utra::pio::{HW_PIO_BASE, PIO_CODR0, PIO_ODSR0, PIO_SODR0};
+use utralib::utra::pio::{
+    HW_PIO_BASE, PIO_CFGR0, PIO_CFGR0_DIR, PIO_CFGR0_FUNC, PIO_CODR0, PIO_MSKR0, PIO_ODSR0,
+    PIO_SODR0,
+};
 use utralib::*;
 
 use crate::pio::sealed::Sealed;
@@ -13,6 +16,25 @@ pub struct PioD {}
 
 pub trait PioPort: Sealed {
     const ID: u32;
+
+    fn configure_pins_by_mask(mask: u32, func: Func, dir: impl Into<Option<Direction>>) {
+        let mut pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+        pio_csr.wo(PIO_MSKR0, mask);
+        pio_csr.wo(PIO_CFGR0, func as u32);
+        if let Some(dir) = dir.into() {
+            pio_csr.rmwf(PIO_CFGR0_DIR, dir as u32);
+        }
+    }
+
+    fn clear_all() {
+        let mut pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+        pio_csr.wo(PIO_CODR0, 0x00);
+    }
+
+    /// Retrieves PIO peripheral base address for the specific PIO Port.
+    fn get_base_address() -> u32 {
+        HW_PIO_BASE as u32 + Self::ID * 0x40
+    }
 }
 
 impl PioPort for PioA {
@@ -28,6 +50,23 @@ impl PioPort for PioD {
     const ID: u32 = 3;
 }
 
+#[derive(Debug)]
+pub enum Func {
+    Gpio = 0,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+}
+
+#[derive(Debug)]
+pub enum Direction {
+    Input = 0,
+    Output = 1,
+}
+
 #[derive(Default)]
 pub struct Pio<P: PioPort, const PIN: u32> {
     port: PhantomData<P>,
@@ -36,7 +75,7 @@ pub struct Pio<P: PioPort, const PIN: u32> {
 impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
     /// Sets the pin into HIGH or LOW logic level.
     pub fn set(&mut self, hi: bool) {
-        let mut pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
         let pin_bit = 1 << PIN;
 
         if hi {
@@ -48,15 +87,26 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
     /// Returns `true` if pin is in HIGH logic level.
     pub fn get(&self) -> bool {
-        let pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+        let pio_csr = CSR::new(P::get_base_address() as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.r(PIO_ODSR0) & pin_bit != 0
     }
 
-    /// Retrieves PIO peripheral base address for the specific PIO Port.
-    fn get_base_address() -> u32 {
-        HW_PIO_BASE as u32 + P::ID * 0x40
+    pub fn set_func(&self, func: Func) {
+        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let pin_bit = 1 << PIN;
+
+        pio_csr.wo(PIO_MSKR0, pin_bit);
+        pio_csr.rmwf(PIO_CFGR0_FUNC, func as u32);
+    }
+
+    pub fn set_direction(&self, direction: Direction) {
+        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let pin_bit = 1 << PIN;
+
+        pio_csr.wo(PIO_MSKR0, pin_bit);
+        pio_csr.rmwf(PIO_CFGR0_DIR, direction as u32);
     }
 }
 
