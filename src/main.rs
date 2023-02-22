@@ -19,7 +19,7 @@ use atsama5d27::tc::Tc;
 const WIDTH: usize = 800;
 const HEIGHT: usize = 480;
 
-#[repr(align(32))]
+#[repr(align(4))]
 struct Aligned4([u32; WIDTH * HEIGHT]);
 static mut FRAMEBUFFER: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
 static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {

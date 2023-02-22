@@ -19,7 +19,7 @@ use utralib::utra::lcdc::{
 };
 use utralib::*;
 
-#[repr(align(64))]
+#[repr(align(8))]
 #[derive(Debug, Default)]
 pub struct LcdDmaDesc {
     pub addr: u32,
