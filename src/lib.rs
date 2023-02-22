@@ -1,6 +1,7 @@
 #![no_std]
 
 pub mod aic;
+pub mod lcdc;
 pub mod pio;
 pub mod pit;
 pub mod pmc;
