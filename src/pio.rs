@@ -17,8 +17,13 @@ pub struct PioD {}
 pub trait PioPort: Sealed {
     const ID: u32;
 
-    fn configure_pins_by_mask(mask: u32, func: Func, dir: impl Into<Option<Direction>>) {
-        let mut pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+    fn configure_pins_by_mask(
+        base_addr: impl Into<Option<u32>>,
+        mask: u32,
+        func: Func,
+        dir: impl Into<Option<Direction>>,
+    ) {
+        let mut pio_csr = CSR::new(Self::get_base_address(base_addr) as *mut u32);
         pio_csr.wo(PIO_MSKR0, mask);
         pio_csr.wo(PIO_CFGR0, func as u32);
         if let Some(dir) = dir.into() {
@@ -26,14 +31,14 @@ pub trait PioPort: Sealed {
         }
     }
 
-    fn clear_all() {
-        let mut pio_csr = CSR::new(Self::get_base_address() as *mut u32);
+    fn clear_all(base_addr: impl Into<Option<u32>>) {
+        let mut pio_csr = CSR::new(Self::get_base_address(base_addr) as *mut u32);
         pio_csr.wo(PIO_CODR0, 0x00);
     }
 
     /// Retrieves PIO peripheral base address for the specific PIO Port.
-    fn get_base_address() -> u32 {
-        HW_PIO_BASE as u32 + Self::ID * 0x40
+    fn get_base_address(base_addr: impl Into<Option<u32>>) -> u32 {
+        base_addr.into().unwrap_or(HW_PIO_BASE as u32) + Self::ID * 0x40
     }
 }
 
@@ -75,7 +80,7 @@ pub struct Pio<P: PioPort, const PIN: u32> {
 impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
     /// Sets the pin into HIGH or LOW logic level.
     pub fn set(&mut self, hi: bool) {
-        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
         let pin_bit = 1 << PIN;
 
         if hi {
@@ -87,14 +92,14 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
     /// Returns `true` if pin is in HIGH logic level.
     pub fn get(&self) -> bool {
-        let pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.r(PIO_ODSR0) & pin_bit != 0
     }
 
     pub fn set_func(&self, func: Func) {
-        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.wo(PIO_MSKR0, pin_bit);
@@ -102,7 +107,7 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
     }
 
     pub fn set_direction(&self, direction: Direction) {
-        let mut pio_csr = CSR::new(P::get_base_address() as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.wo(PIO_MSKR0, pin_bit);
