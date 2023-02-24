@@ -135,34 +135,39 @@ pub struct Lcdc {
     fb: usize,
     w: u16,
     h: u16,
-    dma_desc_base_layer: &'static mut LcdDmaDesc,
+    dma_desc_addr: usize,
+    dma_desc_phys_addr: usize,
 }
 
 impl Lcdc {
-    pub fn new(fb: usize, w: u16, h: u16, dma_desc_base_layer: &'static mut LcdDmaDesc) -> Lcdc {
+    pub fn new(fb: usize, w: u16, h: u16, dma_desc_addr: usize) -> Lcdc {
         Lcdc {
             base_addr: HW_LCDC_BASE as u32,
             fb,
             w,
             h,
-            dma_desc_base_layer,
+            dma_desc_addr,
+            dma_desc_phys_addr: dma_desc_addr,
         }
     }
 
-    /// Creates a new LCDC instance with the specified base address. Used with virtual memory.
-    pub fn new_with_alt_base_addr(
+    /// Creates a new LCDC instance with the specified base address and
+    /// DMA descriptor's virtual and physical addresses.
+    pub fn new_vma(
         base_addr: u32,
         fb: usize,
         w: u16,
         h: u16,
-        dma_desc_base_layer: &'static mut LcdDmaDesc,
+        dma_desc_addr: usize,
+        dma_desc_phys_addr: usize,
     ) -> Lcdc {
         Lcdc {
             base_addr,
             fb,
             w,
             h,
-            dma_desc_base_layer,
+            dma_desc_addr,
+            dma_desc_phys_addr,
         }
     }
 
@@ -232,18 +237,20 @@ impl Lcdc {
         self.wait_for_sync_in_progress();
         self.set_pwm_enable(true);
 
-        self.dma_desc_base_layer.addr = self.fb as u32;
-        self.dma_desc_base_layer.ctrl = 0x01;
-        let dma_desc_base_layer_ptr = self.dma_desc_base_layer as *const _;
-        self.dma_desc_base_layer.next = dma_desc_base_layer_ptr as _;
+        let dma_desc_base_layer = self.dma_desc_addr as *mut LcdDmaDesc;
+        unsafe {
+            (*dma_desc_base_layer).addr = self.fb as u32;
+            (*dma_desc_base_layer).ctrl = 0x01;
+            (*dma_desc_base_layer).next = self.dma_desc_phys_addr as u32;
+        }
 
         self.set_layer_clock_gating_disable(LcdcLayerId::Base, false);
         self.set_use_dma_path_enable(LcdcLayerId::Base, true);
         self.set_rgb_mode_input(LcdcLayerId::Base, DEFAULT_GFX_COLOR_MODE);
 
-        self.set_dma_address_register(LcdcLayerId::Base, self.dma_desc_base_layer.addr);
-        self.set_dma_descriptor_next_address(LcdcLayerId::Base, dma_desc_base_layer_ptr as u32);
-        self.set_dma_head_pointer(LcdcLayerId::Base, dma_desc_base_layer_ptr as u32);
+        self.set_dma_address_register(LcdcLayerId::Base, self.fb as u32);
+        self.set_dma_descriptor_next_address(LcdcLayerId::Base, self.dma_desc_phys_addr as u32);
+        self.set_dma_head_pointer(LcdcLayerId::Base, self.dma_desc_phys_addr as u32);
         self.set_transfer_descriptor_fetch_enable(LcdcLayerId::Base, true);
         self.update_overlay_attributes_enable(LcdcLayerId::Base);
         self.update_attribute(LcdcLayerId::Base);
