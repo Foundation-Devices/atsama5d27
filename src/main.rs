@@ -98,13 +98,15 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
+    let dma_desc_addr = (unsafe { &mut DMA_DESC } as *const _) as usize;
+    let fb_addr = unsafe { FRAMEBUFFER.0.as_ptr() as usize };
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
     let mut lcdc = Lcdc::new(
-        unsafe { FRAMEBUFFER.0.as_ptr() as usize },
+        fb_addr,
         WIDTH as u16,
         HEIGHT as u16,
-        unsafe { &mut DMA_DESC },
+        dma_desc_addr,
     );
     lcdc.init();
 
@@ -231,9 +233,9 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 fn configure_lcdc_pins() {
-    PioB::configure_pins_by_mask(0xe7e7e000, Func::A, None);
-    PioB::configure_pins_by_mask(0x2, Func::A, None);
-    PioB::clear_all();
-    PioC::configure_pins_by_mask(0x1ff, Func::A, None);
-    PioD::configure_pins_by_mask(0x30, Func::A, None);
+    PioB::configure_pins_by_mask(None, 0xe7e7e000, Func::A, None);
+    PioB::configure_pins_by_mask(None, 0x2, Func::A, None);
+    PioB::clear_all(None);
+    PioC::configure_pins_by_mask(None, 0x1ff, Func::A, None);
+    PioD::configure_pins_by_mask(None, 0x30, Func::A, None);
 }
