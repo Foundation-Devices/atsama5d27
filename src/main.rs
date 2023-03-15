@@ -33,6 +33,8 @@ use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
 #[cfg(feature = "lcd-console")]
 use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
+use atsama5d27::l2cc::{Counter, EventCounterKind, L2cc};
+use atsama5d27::sfr::Sfr;
 
 global_asm!(include_str!("start.S"));
 
@@ -62,6 +64,23 @@ fn _entry() -> ! {
         rprintln!("");
         rprintln!("Hello from ATSAMA5D27 & Rust");
     }
+
+    let mut sfr = Sfr::new();
+    sfr.set_l2_cache_sram_enabled(true);
+
+    let mut l2cc = L2cc::new();
+    l2cc.set_data_prefetch_enable(true);
+    l2cc.set_inst_prefetch_enable(true);
+    l2cc.set_double_line_fill_enable(true);
+    l2cc.set_force_write_alloc(0);
+    l2cc.set_prefetch_offset(1);
+    l2cc.set_prefetch_drop_enable(true);
+    l2cc.set_standby_mode_enable(true);
+    l2cc.set_dyn_clock_gating_enable(true);
+    l2cc.enable_event_counter(Counter::Counter0, EventCounterKind::IrHit);
+    l2cc.set_enable(true);
+    l2cc.invalidate_all();
+    l2cc.cache_sync();
 
     let mut pmc = Pmc::new();
     pmc.enable_peripheral_clock(PeripheralId::Trng);
@@ -159,6 +178,19 @@ fn _entry() -> ! {
 
         tc0.set_period(delay_ms * ticks_per_ms);
         tc0.start();
+
+        // Uncomment for cache benchmark
+        // writeln!(console, "Starting").ok();
+        // tc0.start();
+        // let mut x = 0.0f32;
+        // for i in 0..1_000_000 {
+        //     x += i as f32 * core::f32::consts::PI;
+        // }
+        // tc0.stop();
+        // let elapsed = tc0.counter() as f32 / ticks_per_ms as f32;
+        // writeln!(console, "Elapsed {} ms: {}", elapsed, x).ok();
+        // writeln!(console, "Instruction cache hits {}", l2cc.get_event_count(Counter::Counter0)).ok();
+
         loop {
             armv7::asm::wfi();
 
