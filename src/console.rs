@@ -7,18 +7,19 @@ use embedded_graphics::{
     prelude::*,
 };
 
-use crate::display::FramebufDisplay;
+use crate::display::DoubleBufferedDisplay;
 
-pub struct DisplayAndUartConsole<U: Write> {
+pub struct DisplayAndUartConsole<'a, U: Write> {
     uart: U,
-    display: FramebufDisplay,
+    display: DoubleBufferedDisplay<'a>,
     curr_pos_y: u32,
     curr_pos_x: u32,
 }
 
-impl<U: Write> DisplayAndUartConsole<U> {
-    pub fn new(mut display: FramebufDisplay, uart: U) -> DisplayAndUartConsole<U> {
+impl<'a, U: Write> DisplayAndUartConsole<'a, U> {
+    pub fn new(mut display: DoubleBufferedDisplay<'a>, uart: U) -> DisplayAndUartConsole<U> {
         display.clear(Rgb888::BLACK).expect("can't clear display");
+        display.flush();
 
         Self {
             uart,
@@ -72,6 +73,8 @@ impl<U: Write> DisplayAndUartConsole<U> {
         } else {
             self.curr_pos_x += line_width;
         }
+
+        self.display.flush();
     }
 
     fn draw_line(&mut self, line: &str) {
@@ -82,7 +85,7 @@ impl<U: Write> DisplayAndUartConsole<U> {
     }
 }
 
-impl<U: Write> Write for DisplayAndUartConsole<U> {
+impl<U: Write> Write for DisplayAndUartConsole<'_, U> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.add_line(s);
         Ok(())

@@ -1,23 +1,7 @@
 //! LCD controller (LCDC) implementation.
 
-use utralib::utra::lcdc::{
-    ATTR_BASE, ATTR_HEO, ATTR_OVR1, ATTR_OVR2, BASEADDR_ADDR, BASECFG0_BLEN, BASECFG0_DLBO,
-    BASECFG1_RGBMODE, BASECFG4_DMA, BASECHDR_CHDIS, BASECHER_CHEN, BASECHER_UPDATEEN,
-    BASECTRL_DFETCH, BASEHEAD_HEAD, BASENEXT_NEXT, HEOADDR_ADDR, HEOCFG0_BLEN, HEOCFG0_DLBO,
-    HEOCFG12_DMA, HEOCFG1_RGBMODE, HEOCHDR_CHDIS, HEOCHER_CHEN, HEOCHER_UPDATEEN, HEOCTRL_DFETCH,
-    HEOHEAD_HEAD, HEONEXT_NEXT, LCDCFG0_CGDISBASE, LCDCFG0_CGDISHEO, LCDCFG0_CGDISOVR1,
-    LCDCFG0_CGDISOVR2, LCDCFG0_CLKDIV, LCDCFG0_CLKPWMSEL, LCDCFG1_HSPW, LCDCFG1_VSPW, LCDCFG2_VBPW,
-    LCDCFG2_VFPW, LCDCFG3_HBPW, LCDCFG3_HFPW, LCDCFG4_PPL, LCDCFG4_RPF, LCDCFG5_DISPDLY,
-    LCDCFG5_GUARDTIME, LCDCFG5_HSPOL, LCDCFG5_MODE, LCDCFG5_VSPDLYS, LCDCFG5_VSPOL,
-    LCDCFG6_PWMCVAL, LCDCFG6_PWMPS, LCDDIS_CLKDIS, LCDDIS_DISPDIS, LCDDIS_PWMDIS, LCDDIS_SYNCDIS,
-    LCDEN_CLKEN, LCDEN_DISPEN, LCDEN_PWMEN, LCDEN_SYNCEN, LCDSR_CLKSTS, LCDSR_DISPSTS,
-    LCDSR_LCDSTS, LCDSR_SIPSTS, OVR1ADDR_ADDR, OVR1CFG0_BLEN, OVR1CFG0_DLBO, OVR1CFG1_RGBMODE,
-    OVR1CFG9_DMA, OVR1CHDR_CHDIS, OVR1CHER_CHEN, OVR1CHER_UPDATEEN, OVR1CTRL_DFETCH, OVR1HEAD_HEAD,
-    OVR1NEXT_NEXT, OVR2ADDR_ADDR, OVR2CFG0_BLEN, OVR2CFG0_DLBO, OVR2CFG1_RGBMODE, OVR2CFG9_DMA,
-    OVR2CHDR_CHDIS, OVR2CHER_CHEN, OVR2CHER_UPDATEEN, OVR2CTRL_DFETCH, OVR2HEAD_HEAD,
-    OVR2NEXT_NEXT,
-};
-use utralib::*;
+use utralib::utra::lcdc::*;
+use utralib::{HW_LCDC_BASE, *};
 
 #[repr(align(8))]
 #[derive(Debug, Default)]
@@ -27,10 +11,10 @@ pub struct LcdDmaDesc {
     pub next: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
 #[repr(u8)]
-enum LcdcLayerId {
+pub enum LcdcLayerId {
     /// Base layer.
     Base = 0,
 
@@ -130,48 +114,51 @@ const UPPER_MARGIN: u16 = 29;
 const RIGHT_MARGIN: u16 = 40;
 const LEFT_MARGIN: u16 = 40;
 
-pub struct Lcdc {
-    base_addr: u32,
-    fb: usize,
-    w: u16,
-    h: u16,
+pub struct LayerConfig {
+    id: LcdcLayerId,
+    fb_phys_addr: usize,
     dma_desc_addr: usize,
     dma_desc_phys_addr: usize,
 }
 
+impl LayerConfig {
+    pub fn new(
+        id: LcdcLayerId,
+        fb_phys_addr: usize,
+        dma_desc_addr: usize,
+        dma_desc_phys_addr: usize,
+    ) -> LayerConfig {
+        Self {
+            id,
+            fb_phys_addr,
+            dma_desc_addr,
+            dma_desc_phys_addr,
+        }
+    }
+}
+
+pub struct Lcdc {
+    base_addr: u32,
+    w: u16,
+    h: u16,
+}
+
 impl Lcdc {
-    pub fn new(fb: usize, w: u16, h: u16, dma_desc_addr: usize) -> Lcdc {
+    pub fn new(w: u16, h: u16) -> Lcdc {
         Lcdc {
             base_addr: HW_LCDC_BASE as u32,
-            fb,
             w,
             h,
-            dma_desc_addr,
-            dma_desc_phys_addr: dma_desc_addr,
         }
     }
 
     /// Creates a new LCDC instance with the specified base address and
     /// DMA descriptor's virtual and physical addresses.
-    pub fn new_vma(
-        base_addr: u32,
-        fb: usize,
-        w: u16,
-        h: u16,
-        dma_desc_addr: usize,
-        dma_desc_phys_addr: usize,
-    ) -> Lcdc {
-        Lcdc {
-            base_addr,
-            fb,
-            w,
-            h,
-            dma_desc_addr,
-            dma_desc_phys_addr,
-        }
+    pub fn new_vma(base_addr: u32, w: u16, h: u16) -> Lcdc {
+        Lcdc { base_addr, w, h }
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, layers: &[LayerConfig]) {
         // Configure the LCD timing parameters
         self.wait_for_sync_in_progress();
         self.select_pwm_clock_source(PWM_CLOCK_SOURCE);
@@ -237,28 +224,43 @@ impl Lcdc {
         self.wait_for_sync_in_progress();
         self.set_pwm_enable(true);
 
-        let dma_desc_base_layer = self.dma_desc_addr as *mut LcdDmaDesc;
+        for layer in layers {
+            self.update_layer(layer);
+
+            self.set_layer_clock_gating_disable(layer.id, false);
+            self.set_use_dma_path_enable(layer.id, true);
+            self.set_rgb_mode_input(layer.id, DEFAULT_GFX_COLOR_MODE);
+
+            self.set_transfer_descriptor_fetch_enable(layer.id, true);
+            self.update_overlay_attributes_enable(layer.id);
+            self.update_attribute(layer.id);
+
+            self.set_system_bus_dma_burst_length(layer.id, BurstLength::Incr16);
+            self.set_system_bus_dma_burst_enable(layer.id, true);
+
+            self.set_channel_enable(layer.id, true);
+        }
+    }
+
+    pub fn update_layer(&self, layer: &LayerConfig) {
+        let dma_desc = layer.dma_desc_addr as *mut LcdDmaDesc;
         unsafe {
-            (*dma_desc_base_layer).addr = self.fb as u32;
-            (*dma_desc_base_layer).ctrl = 0x01;
-            (*dma_desc_base_layer).next = self.dma_desc_phys_addr as u32;
+            (*dma_desc).addr = layer.fb_phys_addr as u32;
+            (*dma_desc).ctrl = 0x01;
+            (*dma_desc).next = layer.dma_desc_phys_addr as u32;
         }
 
-        self.set_layer_clock_gating_disable(LcdcLayerId::Base, false);
-        self.set_use_dma_path_enable(LcdcLayerId::Base, true);
-        self.set_rgb_mode_input(LcdcLayerId::Base, DEFAULT_GFX_COLOR_MODE);
+        self.set_dma_address_register(layer.id, layer.fb_phys_addr as u32);
+        self.set_dma_descriptor_next_address(layer.id, layer.dma_desc_phys_addr as u32);
+        self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
+    }
 
-        self.set_dma_address_register(LcdcLayerId::Base, self.fb as u32);
-        self.set_dma_descriptor_next_address(LcdcLayerId::Base, self.dma_desc_phys_addr as u32);
-        self.set_dma_head_pointer(LcdcLayerId::Base, self.dma_desc_phys_addr as u32);
-        self.set_transfer_descriptor_fetch_enable(LcdcLayerId::Base, true);
-        self.update_overlay_attributes_enable(LcdcLayerId::Base);
-        self.update_attribute(LcdcLayerId::Base);
-
-        self.set_system_bus_dma_burst_length(LcdcLayerId::Base, BurstLength::Incr16);
-        self.set_system_bus_dma_burst_enable(LcdcLayerId::Base, true);
-
-        self.set_channel_enable(LcdcLayerId::Base, true);
+    pub fn update_buffer(&self, id: LcdcLayerId, next_dma_addr_phys: u32) {
+        // self.set_channel_enable(id, false);
+        self.set_dma_head_pointer(id, next_dma_addr_phys);
+        // self.add_dma_desc_to_queue(id);
+        // self.reset_channel(id);
+        // self.set_channel_enable(id, true);
     }
 
     fn wait_for_sync_in_progress(&self) {
@@ -475,6 +477,17 @@ impl Lcdc {
         }
     }
 
+    fn get_dma_head_pointer(&self, layer: LcdcLayerId) -> u32 {
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rf(BASEHEAD_HEAD),
+            LcdcLayerId::Ovr1 => lcdc_csr.rf(OVR1HEAD_HEAD),
+            LcdcLayerId::Ovr2 => lcdc_csr.rf(OVR2HEAD_HEAD),
+            LcdcLayerId::Heo => lcdc_csr.rf(HEOHEAD_HEAD),
+        }
+    }
+
     fn set_dma_descriptor_next_address(&self, layer: LcdcLayerId, addr: u32) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
@@ -483,6 +496,17 @@ impl Lcdc {
             LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1NEXT_NEXT, addr),
             LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2NEXT_NEXT, addr),
             LcdcLayerId::Heo => lcdc_csr.rmwf(HEONEXT_NEXT, addr),
+        }
+    }
+
+    fn get_dma_descriptor_next_address(&self, layer: LcdcLayerId) -> u32 {
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rf(BASENEXT_NEXT),
+            LcdcLayerId::Ovr1 => lcdc_csr.rf(OVR1NEXT_NEXT),
+            LcdcLayerId::Ovr2 => lcdc_csr.rf(OVR2NEXT_NEXT),
+            LcdcLayerId::Heo => lcdc_csr.rf(HEONEXT_NEXT),
         }
     }
 
@@ -593,6 +617,28 @@ impl Lcdc {
             LcdcLayerId::Ovr1 => lcdc_csr.rmwf(ATTR_OVR1, 1),
             LcdcLayerId::Ovr2 => lcdc_csr.rmwf(ATTR_OVR2, 1),
             LcdcLayerId::Heo => lcdc_csr.rmwf(ATTR_HEO, 1),
+        }
+    }
+
+    fn reset_channel(&self, layer: LcdcLayerId) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rmwf(BASECHDR_CHRST, 1),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CHDR_CHRST, 1),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CHDR_CHRST, 1),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCHDR_CHRST, 1),
+        }
+    }
+
+    fn add_dma_desc_to_queue(&self, layer: LcdcLayerId) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rmwf(BASECHER_A2QEN, 1),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CHER_A2QEN, 1),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CHER_A2QEN, 1),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCHER_A2QEN, 1),
         }
     }
 }

@@ -14,7 +14,7 @@ use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 // use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "lcd-console")]
-use atsama5d27::lcdc::{LcdDmaDesc, Lcdc};
+use atsama5d27::lcdc::{LcdDmaDesc, Lcdc, LayerConfig, LcdcLayerId};
 use atsama5d27::tc::Tc;
 
 #[cfg(feature = "lcd-console")]
@@ -26,9 +26,15 @@ const HEIGHT: usize = 480;
 #[repr(align(4))]
 struct Aligned4([u32; WIDTH * HEIGHT]);
 #[cfg(feature = "lcd-console")]
-static mut FRAMEBUFFER: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
+static mut FRAMEBUFFER_ONE: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
 #[cfg(feature = "lcd-console")]
-static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
+static mut FRAMEBUFFER_TWO: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
+static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
+    addr: 0,
+    ctrl: 0,
+    next: 0,
+};
+static mut DMA_DESC_TWO: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
     next: 0,
@@ -40,7 +46,7 @@ use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 use atsama5d27::l2cc::{Counter, EventCounterKind, L2cc};
 use atsama5d27::sfr::Sfr;
 #[cfg(feature = "lcd-console")]
-use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
+use atsama5d27::{console::DisplayAndUartConsole, display::DoubleBufferedDisplay};
 
 global_asm!(include_str!("start.S"));
 
@@ -123,22 +129,29 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
-    #[cfg(feature = "lcd-console")]
-    let dma_desc_addr = (unsafe { &mut DMA_DESC } as *const _) as usize;
-    #[cfg(feature = "lcd-console")]
-    let fb_addr = unsafe { FRAMEBUFFER.0.as_ptr() as usize };
-    #[cfg(feature = "lcd-console")]
-    {
-        configure_lcdc_pins();
-        pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-        let mut lcdc = Lcdc::new(fb_addr, WIDTH as u16, HEIGHT as u16, dma_desc_addr);
-        lcdc.init();
-    }
+    let dma_desc_addr_one = (unsafe { &mut DMA_DESC_ONE } as *const _) as usize;
+    let dma_desc_addr_two = (unsafe { &mut DMA_DESC_TWO } as *const _) as usize;
+    let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
+    configure_lcdc_pins();
+    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
+    let mut lcdc = Lcdc::new(
+        WIDTH as u16,
+        HEIGHT as u16,
+    );
+    lcdc.init(&[
+        LayerConfig::new(LcdcLayerId::Base, fb1, dma_desc_addr_one, dma_desc_addr_one)
+    ]);
 
     #[cfg(not(feature = "lcd-console"))]
     let mut console = uart;
     #[cfg(feature = "lcd-console")]
-    let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER.0 }, WIDTH, HEIGHT);
+    let display = DoubleBufferedDisplay::new(
+        lcdc,
+        unsafe { &mut FRAMEBUFFER_ONE.0 },
+        unsafe { &mut FRAMEBUFFER_TWO.0 },
+        dma_desc_addr_one,
+        dma_desc_addr_two,
+        WIDTH, HEIGHT);
     #[cfg(feature = "lcd-console")]
     let mut console = DisplayAndUartConsole::new(display, uart);
 
