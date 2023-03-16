@@ -13,15 +13,21 @@ use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 // use atsama5d27::pit::{Pit, PIV_MAX};
+#[cfg(feature = "lcd-console")]
 use atsama5d27::lcdc::{LcdDmaDesc, Lcdc};
 use atsama5d27::tc::Tc;
 
+#[cfg(feature = "lcd-console")]
 const WIDTH: usize = 800;
+#[cfg(feature = "lcd-console")]
 const HEIGHT: usize = 480;
 
+#[cfg(feature = "lcd-console")]
 #[repr(align(4))]
 struct Aligned4([u32; WIDTH * HEIGHT]);
+#[cfg(feature = "lcd-console")]
 static mut FRAMEBUFFER: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
+#[cfg(feature = "lcd-console")]
 static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
@@ -117,7 +123,9 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
+    #[cfg(feature = "lcd-console")]
     let dma_desc_addr = (unsafe { &mut DMA_DESC } as *const _) as usize;
+    #[cfg(feature = "lcd-console")]
     let fb_addr = unsafe { FRAMEBUFFER.0.as_ptr() as usize };
     #[cfg(feature = "lcd-console")]
     {
@@ -267,6 +275,7 @@ fn panic(_info: &PanicInfo) -> ! {
     }
 }
 
+#[cfg_attr(not(feature = "lcd-console"), allow(dead_code))]
 fn configure_lcdc_pins() {
     PioB::configure_pins_by_mask(None, 0xe7e7e000, Func::A, None);
     PioB::configure_pins_by_mask(None, 0x2, Func::A, None);

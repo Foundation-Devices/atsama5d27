@@ -1,6 +1,7 @@
 #![no_std]
 
 pub mod aic;
+pub mod cache;
 pub mod l1cache;
 pub mod l2cc;
 pub mod lcdc;

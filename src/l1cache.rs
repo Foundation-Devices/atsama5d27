@@ -37,6 +37,12 @@ pub fn disable_icache() {
     }
 }
 
+
+pub fn is_icache_enabled() -> bool {
+    let sctlr = read_cp15_sctlr();
+    sctlr & CP15_SCTLR_I != 0
+}
+
 pub fn enable_dcache() {
     let sctlr = read_cp15_sctlr();
     if (sctlr & CP15_SCTLR_C) == 0 {
@@ -53,6 +59,11 @@ pub fn disable_dcache() {
         write_cp15_sctlr(sctlr & !CP15_SCTLR_C);
         invalidate_dcache();
     }
+}
+
+pub fn is_dcache_enabled() -> bool {
+    let sctlr = read_cp15_sctlr();
+    sctlr & (CP15_SCTLR_C | CP15_SCTLR_M) == (CP15_SCTLR_C | CP15_SCTLR_M)
 }
 
 pub fn invalidate_icache() {

@@ -3,6 +3,9 @@
 use utralib::utra::l2cc::*;
 use utralib::{HW_L2CC_BASE, *};
 
+const L2CC_OFFSET_BIT: u32 = 5;
+const L2CC_INDEX_BIT: u32 = 9;
+
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub enum Counter {
@@ -58,6 +61,11 @@ impl L2cc {
     pub fn set_enable(&mut self, enable: bool) {
         let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
         l2cc_csr.rmwf(CR_L2CEN, enable as u32);
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        let l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        l2cc_csr.rf(CR_L2CEN) != 0
     }
 
     pub fn set_inst_prefetch_enable(&mut self, enable: bool) {
@@ -125,11 +133,11 @@ impl L2cc {
             Counter::Counter0 => {
                 l2cc_csr.rmwf(ECFGR0_ESRC, kind as u32);
                 self.reset_event_count(counter);
-            },
+            }
             Counter::Counter1 => {
                 l2cc_csr.rmwf(ECFGR1_ESRC, kind as u32);
                 self.reset_event_count(counter);
-            },
+            }
         }
 
         l2cc_csr.rmwf(ECR_EVCEN, 1);
@@ -179,5 +187,135 @@ impl L2cc {
         while l2cc_csr.r(CIWR) & 0xffff != 0 {}
 
         self.cache_sync();
+    }
+
+    pub fn invalidate_pal(&mut self, phys_addr: u32) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
+        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
+        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
+        l2cc_csr.wo(IPALR, reg);
+
+        while l2cc_csr.r(IPALR) & 1 != 0 {}
+    }
+
+    pub fn clean_pal(&mut self, phys_addr: u32) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
+        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
+        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
+        l2cc_csr.wo(CPALR, reg);
+
+        while l2cc_csr.r(CPALR) & 1 != 0 {}
+    }
+
+    pub fn clean_invalidate_pal(&mut self, phys_addr: u32) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
+        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
+        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
+        l2cc_csr.wo(CIPALR, reg);
+
+        while l2cc_csr.r(CIPALR) & 1 != 0 {}
+    }
+
+    pub fn invalidate_way(&mut self, way: u32) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        l2cc_csr.wo(IWR, way);
+
+        while (l2cc_csr.r(IWR) & way) != 0 {}
+    }
+
+    pub fn clean_way(&mut self, way: u8) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        l2cc_csr.wo(CWR, way as u32);
+
+        while (l2cc_csr.r(CWR) & way as u32) != 0 {}
+    }
+
+    pub fn clean_invalidate_way(&mut self, way: u8) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        l2cc_csr.wo(CIWR, way as u32);
+
+        while (l2cc_csr.r(CIWR) & way as u32) != 0 {}
+    }
+
+    pub fn clean_index(&mut self, phys_addr: u32, way: u8) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
+        l2cc_csr.wo(CIR, (index & 0x1ff << 5) | ((way as u32 & 0x7) << 28) | 1);
+
+        while (l2cc_csr.r(CIR) & 0x1) != 0 {}
+    }
+
+    pub fn clean_invalidate_index(&mut self, phys_addr: u32, way: u8) {
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
+        l2cc_csr.wo(CIIR, (index & 0x1ff << 5) | ((way as u32 & 0x7) << 28) | 1);
+
+        while (l2cc_csr.r(CIIR) & 0x1) != 0 {}
+    }
+
+    pub fn cache_clean(&mut self) {
+        if self.is_enabled() {
+            self.clean_way(0xff);
+            self.cache_sync();
+        }
+    }
+
+    pub fn cache_invalidate(&mut self) {
+        if self.is_enabled() {
+            self.invalidate_way(0xff);
+            self.cache_sync();
+        }
+    }
+
+    pub fn cache_clean_invalidate(&mut self) {
+        if self.is_enabled() {
+            self.clean_invalidate_way(0xff);
+            self.cache_sync();
+        }
+    }
+
+    pub fn invalidate_region(&mut self, start: u32, end: u32) {
+        assert!(start < end);
+
+        let mut current = start & !0x1f;
+        if self.is_enabled() {
+            while current <= end {
+                self.invalidate_pal(current);
+                current += 32;
+            }
+            self.invalidate_pal(end);
+        }
+    }
+
+    pub fn clean_region(&mut self, start: u32, end: u32) {
+        assert!(start < end);
+
+        let mut current = start & !0x1f;
+        if self.is_enabled() {
+            while current <= end {
+                self.clean_pal(current);
+                current += 32;
+            }
+            self.clean_pal(end);
+        }
+    }
+
+    pub fn clean_invalidate_region(&mut self, start: u32, end: u32) {
+        assert!(start < end);
+
+        let mut current = start & !0x1f;
+        if self.is_enabled() {
+            while current <= end {
+                self.clean_invalidate_pal(current);
+                current += 32;
+            }
+            self.clean_invalidate_pal(end);
+        }
     }
 }
