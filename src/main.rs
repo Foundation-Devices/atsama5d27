@@ -37,10 +37,10 @@ static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
-#[cfg(feature = "lcd-console")]
-use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 use atsama5d27::l2cc::{Counter, EventCounterKind, L2cc};
 use atsama5d27::sfr::Sfr;
+#[cfg(feature = "lcd-console")]
+use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 
 global_asm!(include_str!("start.S"));
 
@@ -131,12 +131,7 @@ fn _entry() -> ! {
     {
         configure_lcdc_pins();
         pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-        let mut lcdc = Lcdc::new(
-            fb_addr,
-            WIDTH as u16,
-            HEIGHT as u16,
-            dma_desc_addr,
-        );
+        let mut lcdc = Lcdc::new(fb_addr, WIDTH as u16, HEIGHT as u16, dma_desc_addr);
         lcdc.init();
     }
 

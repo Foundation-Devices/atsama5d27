@@ -37,7 +37,6 @@ pub fn disable_icache() {
     }
 }
 
-
 pub fn is_icache_enabled() -> bool {
     let sctlr = read_cp15_sctlr();
     sctlr & CP15_SCTLR_I != 0

@@ -1,4 +1,4 @@
-use crate::l1cache::{is_dcache_enabled, invalidate_region_dcache, clean_region_dcache};
+use crate::l1cache::{clean_region_dcache, invalidate_region_dcache, is_dcache_enabled};
 use crate::l2cc::L2cc;
 
 pub fn invalidate_region(l2cc: &mut L2cc, start: usize, length: usize) {
