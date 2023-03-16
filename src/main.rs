@@ -13,15 +13,21 @@ use atsama5d27::pmc::{PeripheralId, Pmc};
 use atsama5d27::trng::Trng;
 use atsama5d27::uart::{Uart, Uart1};
 // use atsama5d27::pit::{Pit, PIV_MAX};
+#[cfg(feature = "lcd-console")]
 use atsama5d27::lcdc::{LcdDmaDesc, Lcdc};
 use atsama5d27::tc::Tc;
 
+#[cfg(feature = "lcd-console")]
 const WIDTH: usize = 800;
+#[cfg(feature = "lcd-console")]
 const HEIGHT: usize = 480;
 
+#[cfg(feature = "lcd-console")]
 #[repr(align(4))]
 struct Aligned4([u32; WIDTH * HEIGHT]);
+#[cfg(feature = "lcd-console")]
 static mut FRAMEBUFFER: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
+#[cfg(feature = "lcd-console")]
 static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
@@ -31,6 +37,8 @@ static mut DMA_DESC: LcdDmaDesc = LcdDmaDesc {
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
+use atsama5d27::l2cc::{Counter, EventCounterKind, L2cc};
+use atsama5d27::sfr::Sfr;
 #[cfg(feature = "lcd-console")]
 use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 
@@ -62,6 +70,23 @@ fn _entry() -> ! {
         rprintln!("");
         rprintln!("Hello from ATSAMA5D27 & Rust");
     }
+
+    let mut sfr = Sfr::new();
+    sfr.set_l2_cache_sram_enabled(true);
+
+    let mut l2cc = L2cc::new();
+    l2cc.set_data_prefetch_enable(true);
+    l2cc.set_inst_prefetch_enable(true);
+    l2cc.set_double_line_fill_enable(true);
+    l2cc.set_force_write_alloc(0);
+    l2cc.set_prefetch_offset(1);
+    l2cc.set_prefetch_drop_enable(true);
+    l2cc.set_standby_mode_enable(true);
+    l2cc.set_dyn_clock_gating_enable(true);
+    l2cc.enable_event_counter(Counter::Counter0, EventCounterKind::IrHit);
+    l2cc.set_enable(true);
+    l2cc.invalidate_all();
+    l2cc.cache_sync();
 
     let mut pmc = Pmc::new();
     pmc.enable_peripheral_clock(PeripheralId::Trng);
@@ -98,17 +123,17 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
+    #[cfg(feature = "lcd-console")]
     let dma_desc_addr = (unsafe { &mut DMA_DESC } as *const _) as usize;
+    #[cfg(feature = "lcd-console")]
     let fb_addr = unsafe { FRAMEBUFFER.0.as_ptr() as usize };
-    configure_lcdc_pins();
-    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-    let mut lcdc = Lcdc::new(
-        fb_addr,
-        WIDTH as u16,
-        HEIGHT as u16,
-        dma_desc_addr,
-    );
-    lcdc.init();
+    #[cfg(feature = "lcd-console")]
+    {
+        configure_lcdc_pins();
+        pmc.enable_peripheral_clock(PeripheralId::Lcdc);
+        let mut lcdc = Lcdc::new(fb_addr, WIDTH as u16, HEIGHT as u16, dma_desc_addr);
+        lcdc.init();
+    }
 
     #[cfg(not(feature = "lcd-console"))]
     let mut console = uart;
@@ -159,6 +184,19 @@ fn _entry() -> ! {
 
         tc0.set_period(delay_ms * ticks_per_ms);
         tc0.start();
+
+        // Uncomment for cache benchmark
+        // writeln!(console, "Starting").ok();
+        // tc0.start();
+        // let mut x = 0.0f32;
+        // for i in 0..1_000_000 {
+        //     x += i as f32 * core::f32::consts::PI;
+        // }
+        // tc0.stop();
+        // let elapsed = tc0.counter() as f32 / ticks_per_ms as f32;
+        // writeln!(console, "Elapsed {} ms: {}", elapsed, x).ok();
+        // writeln!(console, "Instruction cache hits {}", l2cc.get_event_count(Counter::Counter0)).ok();
+
         loop {
             armv7::asm::wfi();
 
@@ -232,6 +270,7 @@ fn panic(_info: &PanicInfo) -> ! {
     }
 }
 
+#[cfg_attr(not(feature = "lcd-console"), allow(dead_code))]
 fn configure_lcdc_pins() {
     PioB::configure_pins_by_mask(None, 0xe7e7e000, Func::A, None);
     PioB::configure_pins_by_mask(None, 0x2, Func::A, None);
