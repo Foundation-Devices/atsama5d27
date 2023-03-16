@@ -119,15 +119,18 @@ fn _entry() -> ! {
 
     let dma_desc_addr = (unsafe { &mut DMA_DESC } as *const _) as usize;
     let fb_addr = unsafe { FRAMEBUFFER.0.as_ptr() as usize };
-    configure_lcdc_pins();
-    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-    let mut lcdc = Lcdc::new(
-        fb_addr,
-        WIDTH as u16,
-        HEIGHT as u16,
-        dma_desc_addr,
-    );
-    lcdc.init();
+    #[cfg(feature = "lcd-console")]
+    {
+        configure_lcdc_pins();
+        pmc.enable_peripheral_clock(PeripheralId::Lcdc);
+        let mut lcdc = Lcdc::new(
+            fb_addr,
+            WIDTH as u16,
+            HEIGHT as u16,
+            dma_desc_addr,
+        );
+        lcdc.init();
+    }
 
     #[cfg(not(feature = "lcd-console"))]
     let mut console = uart;
