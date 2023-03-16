@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export JLINK_GDB_SERVER_PATH=/Applications/SEGGER/JLink_V782c/JLinkGDBServer
+export JLINK_GDB_SERVER_PATH=/Applications/SEGGER/JLink_V786d/JLinkGDBServer
 
 set -e
 
