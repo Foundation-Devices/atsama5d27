@@ -3,21 +3,20 @@ use embedded_graphics::{
     prelude::*,
     primitives::Rectangle,
 };
-use crate::lcdc::{Lcdc, LcdcLayerId, LcdDmaDesc};
+use crate::lcdc::{LayerConfig, Lcdc, LcdcLayerId};
 
 pub struct DoubleBufferedDisplay<'a> {
     lcdc: Lcdc,
     fb1: &'a mut [u32],
     fb2: &'a mut [u32],
     dma1: usize,
-    dma2: usize,
     w: usize,
     h: usize,
 }
 
 impl<'a> DoubleBufferedDisplay<'a> {
-    pub fn new(lcdc: Lcdc, fb1: &'a mut [u32], fb2: &'a mut [u32], dma1: usize, dma2: usize, w: usize, h: usize) -> DoubleBufferedDisplay<'a> {
-        DoubleBufferedDisplay { lcdc, fb1, fb2, dma1, dma2, w, h }
+    pub fn new(lcdc: Lcdc, fb1: &'a mut [u32], fb2: &'a mut [u32], dma1: usize, w: usize, h: usize) -> DoubleBufferedDisplay<'a> {
+        DoubleBufferedDisplay { lcdc, fb1, fb2, dma1, w, h }
     }
 
     pub fn scroll_up(&mut self, amount: usize) {
@@ -78,27 +77,25 @@ impl DrawTarget for DoubleBufferedDisplay<'_> {
 impl<'a> DoubleBufferedDisplay<'a> {
     /// Swaps two buffers to apply drawing changes.
     pub fn flush(&mut self) {
-        /*
         let len = self.fb1.len();
         let fb1 = self.fb1.as_mut_ptr();
         let fb2 = self.fb2.as_mut_ptr();
+
+        let dma_addr = self.dma1;
+
+        let layer = LayerConfig::new(
+            LcdcLayerId::Base,
+            fb1 as usize,
+            dma_addr,
+            dma_addr,
+        );
+
+        self.lcdc.update_layer_dma(&layer);
+
+        // Swap buffers
         unsafe {
             self.fb1 = core::slice::from_raw_parts_mut(fb2, len);
             self.fb2 = core::slice::from_raw_parts_mut(fb1, len);
-        }*/
-
-        /*let swap = self.dma2;
-        self.dma2 = self.dma1;
-        self.dma1 = swap;*/
-
-        let dma_addr = self.dma1;
-        let dma_desc = dma_addr as *mut LcdDmaDesc;
-        unsafe {
-            (*dma_desc).addr = self.fb1.as_ptr() as u32;
-            (*dma_desc).ctrl = 0x01;
-            (*dma_desc).next = dma_addr as u32;
         }
-
-        self.lcdc.update_buffer(LcdcLayerId::Base,  dma_addr as u32);
     }
 }

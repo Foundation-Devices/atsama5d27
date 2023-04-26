@@ -34,11 +34,6 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     ctrl: 0,
     next: 0,
 };
-static mut DMA_DESC_TWO: LcdDmaDesc = LcdDmaDesc {
-    addr: 0,
-    ctrl: 0,
-    next: 0,
-};
 
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
@@ -130,7 +125,6 @@ fn _entry() -> ! {
     uart.set_rx(true);
 
     let dma_desc_addr_one = (unsafe { &mut DMA_DESC_ONE } as *const _) as usize;
-    let dma_desc_addr_two = (unsafe { &mut DMA_DESC_TWO } as *const _) as usize;
     let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
@@ -150,7 +144,6 @@ fn _entry() -> ! {
         unsafe { &mut FRAMEBUFFER_ONE.0 },
         unsafe { &mut FRAMEBUFFER_TWO.0 },
         dma_desc_addr_one,
-        dma_desc_addr_two,
         WIDTH, HEIGHT);
     #[cfg(feature = "lcd-console")]
     let mut console = DisplayAndUartConsole::new(display, uart);

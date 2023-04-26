@@ -655,9 +655,7 @@ impl Lcdc {
         }
     }
 
-    pub fn wait_for_dma_transfer_complete(&self, layer: LcdcLayerId) -> usize {
-        let mut num_cycles = 0;
-
+    pub fn wait_for_dma_transfer_complete(&self, layer: LcdcLayerId) {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         let field = match layer {
@@ -668,22 +666,15 @@ impl Lcdc {
         };
 
         while lcdc_csr.rf(field) == 0 {
-            num_cycles += 1;
             armv7::asm::nop();
         }
-
-        num_cycles
     }
 
-    pub fn wait_for_next_frame(&self) -> usize {
-        let mut num_cycles = 0;
+    pub fn wait_for_next_frame(&self) {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         while lcdc_csr.rf(LCDISR_SOF) == 0 {
-            num_cycles += 1;
             armv7::asm::nop();
         }
-
-        num_cycles
     }
 }
