@@ -255,12 +255,14 @@ impl Lcdc {
         self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
     }
 
-    pub fn update_buffer(&self, id: LcdcLayerId, next_dma_addr_phys: u32) {
-        // self.set_channel_enable(id, false);
-        self.set_dma_head_pointer(id, next_dma_addr_phys);
-        // self.add_dma_desc_to_queue(id);
-        // self.reset_channel(id);
-        // self.set_channel_enable(id, true);
+    pub fn update_layer_dma(&self, layer: &LayerConfig) {
+        let dma_desc = layer.dma_desc_addr as *mut LcdDmaDesc;
+        unsafe {
+            (*dma_desc).addr = layer.fb_phys_addr as u32;
+        }
+
+        self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
+        // self.add_dma_desc_to_queue(layer.id);
     }
 
     fn wait_for_sync_in_progress(&self) {
@@ -631,14 +633,57 @@ impl Lcdc {
         }
     }
 
+    pub fn set_add_to_queue_enable(&self, layer: LcdcLayerId, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rmwf(BASECHER_A2QEN, enable as u32),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CHER_A2QEN, enable as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CHER_A2QEN, enable as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCHER_A2QEN, enable as u32),
+        }
+    }
+
     fn add_dma_desc_to_queue(&self, layer: LcdcLayerId) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
-            LcdcLayerId::Base => lcdc_csr.rmwf(BASECHER_A2QEN, 1),
-            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CHER_A2QEN, 1),
-            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CHER_A2QEN, 1),
-            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCHER_A2QEN, 1),
+            LcdcLayerId::Base => lcdc_csr.rmwf(ATTR_BASEA2Q, 1),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(ATTR_OVR1A2Q, 1),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(ATTR_OVR2A2Q, 1),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(ATTR_HEOA2Q, 1),
         }
+    }
+
+    pub fn wait_for_dma_transfer_complete(&self, layer: LcdcLayerId) -> usize {
+        let mut num_cycles = 0;
+
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let field = match layer {
+            LcdcLayerId::Base => BASEISR_DMA,
+            LcdcLayerId::Ovr1 => OVR1ISR_DMA,
+            LcdcLayerId::Ovr2 => OVR2ISR_DMA,
+            LcdcLayerId::Heo => HEOISR_DMA,
+        };
+
+        while lcdc_csr.rf(field) == 0 {
+            num_cycles += 1;
+            armv7::asm::nop();
+        }
+
+        num_cycles
+    }
+
+    pub fn wait_for_next_frame(&self) -> usize {
+        let mut num_cycles = 0;
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        while lcdc_csr.rf(LCDISR_SOF) == 0 {
+            num_cycles += 1;
+            armv7::asm::nop();
+        }
+
+        num_cycles
     }
 }
