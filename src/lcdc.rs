@@ -69,7 +69,7 @@ enum SignalPolarity {
 
 #[derive(Debug)]
 #[allow(dead_code)]
-enum ColorMode {
+pub enum ColorMode {
     Rgb444 = 0,
     Argb444,
     Rgba444,
@@ -89,7 +89,7 @@ enum ColorMode {
 
 #[derive(Debug)]
 #[allow(dead_code)]
-enum BurstLength {
+pub enum BurstLength {
     Single = 0,
     Incr4,
     Incr8,
@@ -108,7 +108,7 @@ const VSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
 const HSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
 const DEFAULT_BRIGHTNESS_PCT: u32 = 100;
 const PWM_SIGNAL_POLARITY: SignalPolarity = SignalPolarity::Positive;
-const DEFAULT_GFX_COLOR_MODE: ColorMode = ColorMode::Argb8888;
+pub const DEFAULT_GFX_COLOR_MODE: ColorMode = ColorMode::Argb8888;
 const LOWER_MARGIN: u16 = 3;
 const UPPER_MARGIN: u16 = 29;
 const RIGHT_MARGIN: u16 = 40;
@@ -195,7 +195,7 @@ impl Lcdc {
         self.set_hsync_polarity(HSYNC_POLARITY);
 
         self.wait_for_sync_in_progress();
-        self.set_pwm_compare_value(DEFAULT_BRIGHTNESS_PCT * 0xFF / 100);
+        self.set_pwm_compare_value((DEFAULT_BRIGHTNESS_PCT * 0xFF / 100) as u8);
         self.set_pwm_signal_polarity(PWM_SIGNAL_POLARITY);
         self.set_pwm_prescaler(PWM_PRESCALER);
 
@@ -250,7 +250,6 @@ impl Lcdc {
         }
 
         self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
-        // self.add_dma_desc_to_queue(layer.id);
     }
 
     pub fn enable_layer(&self, layer: LcdcLayerId) {
@@ -258,8 +257,8 @@ impl Lcdc {
         self.set_blender_overlay_layer_enable(layer, true);
         self.set_blender_dma_layer_enable(layer, true);
         self.set_blender_local_alpha_enable(layer, true);
-        self.set_blender_iterated_color_enable(layer, false);
-        self.set_blender_use_iterated_color(layer, true);
+        // self.set_blender_iterated_color_enable(layer, false);
+        // self.set_blender_use_iterated_color(layer, true);
 
         self.set_layer_clock_gating_disable(layer, false);
         self.set_use_dma_path_enable(layer, true);
@@ -269,10 +268,32 @@ impl Lcdc {
         self.update_overlay_attributes_enable(layer);
         self.update_attribute(layer);
 
-        self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
-        self.set_system_bus_dma_burst_enable(layer, true);
+        // self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
+        // self.set_system_bus_dma_burst_enable(layer, true);
 
         self.set_channel_enable(layer, true);
+    }
+
+    pub fn disable_layer(&self, layer: LcdcLayerId) {
+        self.set_transfer_descriptor_fetch_enable(layer, false);
+        self.set_blender_overlay_layer_enable(layer, false);
+        self.set_blender_dma_layer_enable(layer, false);
+        self.set_blender_local_alpha_enable(layer, false);
+        self.set_blender_iterated_color_enable(layer, false);
+        self.set_blender_use_iterated_color(layer, false);
+
+        self.set_layer_clock_gating_disable(layer, true);
+        self.set_use_dma_path_enable(layer, false);
+        self.set_rgb_mode_input(layer, DEFAULT_GFX_COLOR_MODE);
+
+        self.set_transfer_descriptor_fetch_enable(layer, false);
+        self.update_overlay_attributes_enable(layer);
+        self.update_attribute(layer);
+
+        self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
+        self.set_system_bus_dma_burst_enable(layer, false);
+
+        self.set_channel_enable(layer, false);
     }
 
     fn wait_for_sync_in_progress(&self) {
@@ -303,7 +324,7 @@ impl Lcdc {
         lcdc_csr.rmwf(LCDCFG1_VSPW, value as u32);
     }
 
-    fn set_layer_clock_gating_disable(&self, layer: LcdcLayerId, disable: bool) {
+    pub fn set_layer_clock_gating_disable(&self, layer: LcdcLayerId, disable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -354,9 +375,9 @@ impl Lcdc {
         lcdc_csr.rmwf(LCDCFG5_HSPOL, polarity as u32);
     }
 
-    fn set_pwm_compare_value(&mut self, value: u32) {
+    pub fn set_pwm_compare_value(&mut self, value: u8) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
-        lcdc_csr.rmwf(LCDCFG6_PWMCVAL, value);
+        lcdc_csr.rmwf(LCDCFG6_PWMCVAL, value as u32);
     }
 
     fn set_pwm_signal_polarity(&mut self, polarity: SignalPolarity) {
@@ -437,9 +458,15 @@ impl Lcdc {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
-            LcdcLayerId::Ovr1 => lcdc_csr.wo(OVR1CFG3, (((height - 1) as u32) << 16) | (width - 1) as u32),
-            LcdcLayerId::Ovr2 => lcdc_csr.wo(OVR2CFG3, (((height - 1) as u32) << 16) | (width - 1) as u32),
-            LcdcLayerId::Heo => lcdc_csr.wo(HEOCFG3, (((height - 1) as u32) << 16) | (width - 1) as u32),
+            LcdcLayerId::Ovr1 => {
+                lcdc_csr.wo(OVR1CFG3, (((height - 1) as u32) << 16) | (width - 1) as u32)
+            }
+            LcdcLayerId::Ovr2 => {
+                lcdc_csr.wo(OVR2CFG3, (((height - 1) as u32) << 16) | (width - 1) as u32)
+            }
+            LcdcLayerId::Heo => {
+                lcdc_csr.wo(HEOCFG3, (((height - 1) as u32) << 16) | (width - 1) as u32)
+            }
             LcdcLayerId::Base => (), // Unsupported
         }
     }
@@ -455,7 +482,17 @@ impl Lcdc {
         }
     }
 
-    fn set_use_dma_path_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn configure_heo(&self) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.wo(HEOCFG0, 0x00001130);
+        self.set_rgb_mode_input(LcdcLayerId::Heo, DEFAULT_GFX_COLOR_MODE);
+        lcdc_csr.wo(HEOCFG12, 0x00ff0020);
+        lcdc_csr.wo(HEOCFG14, 0x00ff0020);
+        lcdc_csr.wo(HEOCFG15, 0x7cde1c94);
+        lcdc_csr.wo(HEOCFG16, 0x50200094);
+    }
+
+    pub fn set_use_dma_path_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -466,7 +503,7 @@ impl Lcdc {
         }
     }
 
-    fn set_rgb_mode_input(&self, layer: LcdcLayerId, mode: ColorMode) {
+    pub fn set_rgb_mode_input(&self, layer: LcdcLayerId, mode: ColorMode) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -477,7 +514,7 @@ impl Lcdc {
         }
     }
 
-    fn set_dma_address_register(&self, layer: LcdcLayerId, addr: u32) {
+    pub fn set_dma_address_register(&self, layer: LcdcLayerId, addr: u32) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -488,7 +525,7 @@ impl Lcdc {
         }
     }
 
-    fn set_dma_head_pointer(&self, layer: LcdcLayerId, addr: u32) {
+    pub fn set_dma_head_pointer(&self, layer: LcdcLayerId, addr: u32) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -499,7 +536,7 @@ impl Lcdc {
         }
     }
 
-    fn get_dma_head_pointer(&self, layer: LcdcLayerId) -> u32 {
+    pub fn get_dma_head_pointer(&self, layer: LcdcLayerId) -> u32 {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -510,7 +547,7 @@ impl Lcdc {
         }
     }
 
-    fn set_dma_descriptor_next_address(&self, layer: LcdcLayerId, addr: u32) {
+    pub fn set_dma_descriptor_next_address(&self, layer: LcdcLayerId, addr: u32) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -521,7 +558,7 @@ impl Lcdc {
         }
     }
 
-    fn get_dma_descriptor_next_address(&self, layer: LcdcLayerId) -> u32 {
+    pub fn get_dma_descriptor_next_address(&self, layer: LcdcLayerId) -> u32 {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -532,7 +569,7 @@ impl Lcdc {
         }
     }
 
-    fn set_transfer_descriptor_fetch_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_transfer_descriptor_fetch_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -543,7 +580,7 @@ impl Lcdc {
         }
     }
 
-    fn set_system_bus_dma_burst_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_system_bus_dma_burst_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -554,7 +591,7 @@ impl Lcdc {
         }
     }
 
-    fn set_system_bus_dma_burst_length(&self, layer: LcdcLayerId, len: BurstLength) {
+    pub fn set_system_bus_dma_burst_length(&self, layer: LcdcLayerId, len: BurstLength) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -565,7 +602,7 @@ impl Lcdc {
         }
     }
 
-    fn set_channel_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_channel_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -698,7 +735,7 @@ impl Lcdc {
         }
     }
 
-    fn set_blender_overlay_layer_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_blender_overlay_layer_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -709,7 +746,7 @@ impl Lcdc {
         }
     }
 
-    fn set_blender_dma_layer_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_blender_dma_layer_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -720,7 +757,7 @@ impl Lcdc {
         }
     }
 
-    fn set_blender_local_alpha_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_blender_local_alpha_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -731,7 +768,7 @@ impl Lcdc {
         }
     }
 
-    fn set_blender_iterated_color_enable(&self, layer: LcdcLayerId, enable: bool) {
+    pub fn set_blender_iterated_color_enable(&self, layer: LcdcLayerId, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -742,7 +779,7 @@ impl Lcdc {
         }
     }
 
-    fn set_blender_use_iterated_color(&self, layer: LcdcLayerId, do_use: bool) {
+    pub fn set_blender_use_iterated_color(&self, layer: LcdcLayerId, do_use: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -762,7 +799,7 @@ impl Lcdc {
                 lcdc_csr.rmwf(BASECFG5_DISCYPOS, y as u32);
                 lcdc_csr.rmwf(BASECFG6_DISCXSIZE, w as u32);
                 lcdc_csr.rmwf(BASECFG6_DISCYSIZE, h as u32);
-            },
+            }
             _ => todo!(),
         }
     }
@@ -773,6 +810,91 @@ impl Lcdc {
         match layer {
             LcdcLayerId::Base => lcdc_csr.rmwf(BASECFG4_DISCEN, enable as u32),
             _ => todo!(),
+        }
+    }
+
+    pub fn set_horiz_stride(&self, layer: LcdcLayerId, xstride: i32) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rmwf(BASECFG2_XSTRIDE, xstride as u32),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG4_XSTRIDE, xstride as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG4_XSTRIDE, xstride as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG5_XSTRIDE, xstride as u32),
+        }
+    }
+
+    pub fn set_pixel_stride(&self, layer: LcdcLayerId, pstride: i32) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (),
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG5_PSTRIDE, pstride as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG5_PSTRIDE, pstride as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG6_PSTRIDE, pstride as u32),
+        }
+    }
+
+    pub fn set_heo_mem_size(&self, w: u16, h: u16) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.wo(HEOCFG4, (((h - 1) as u32) << 16) | (w - 1) as u32);
+    }
+
+    pub fn set_heo_on_top(&self, heo_on_top: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.rmwf(HEOCFG12_VIDPRI, heo_on_top as u32);
+    }
+
+    /// Enables scaling and automatically calculates internal scaling factors based on the difference
+    /// Between framebuffer size and the window size configured for the `HEO` layer.
+    pub fn set_heo_scaling(&self, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let reg = if enable {
+            let (xf, yf) = self.compute_scaling_factors();
+            (1 << 31) | ((yf as u32) << 16) | xf as u32
+        } else {
+            0u32
+        };
+
+        lcdc_csr.wo(HEOCFG13, reg);
+    }
+
+    // SAMA5D2x datasheet, sections 38.6.9.2 and 38.6.9.3
+    pub fn compute_scaling_factors(&self) -> (u16, u16) {
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        let xmemsize = lcdc_csr.rf(HEOCFG4_XMEMSIZE) as u16;
+        let ymemsize = lcdc_csr.rf(HEOCFG4_YMEMSIZE) as u16;
+        let xsize = lcdc_csr.rf(HEOCFG3_XSIZE) as u16;
+        let ysize = lcdc_csr.rf(HEOCFG3_YSIZE) as u16;
+
+        // Calculate in u32 to avoid overflow
+        let xfactor_1st = ((2048 as u32 * xmemsize as u32 / xsize as u32) + 1) as u16;
+        let yfactor_1st = ((2048 as u32 * ymemsize as u32 / ysize as u32) + 1) as u16;
+
+        let xfactor = if (xfactor_1st * xsize / 2048) > xmemsize {
+            xfactor_1st - 1
+        } else {
+            xfactor_1st
+        };
+
+        let yfactor = if (yfactor_1st * ysize / 2048) > ymemsize {
+            yfactor_1st - 1
+        } else {
+            yfactor_1st
+        };
+
+        (xfactor, yfactor)
+    }
+
+    pub fn blender_set_global_alpha(&self, layer: LcdcLayerId, alpha: u8) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_GA, alpha as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_GA, alpha as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_GA, alpha as u32),
         }
     }
 }

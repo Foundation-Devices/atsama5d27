@@ -9,6 +9,7 @@ rtt-target = { git = "https://github.com/Foundation-Devices/rtt-target.git", bra
 utralib = { version = "0.1.15", default_features=false, features = ["atsama5d27"] }
 r0 = "1.0.0"
 embedded-graphics = { version = "0.7.1", optional = true }
+#log = "0.4.17"
 
 [features]
 rtt = ["rtt-target"]
