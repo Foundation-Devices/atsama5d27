@@ -1,21 +1,29 @@
 #![no_std]
 #![no_main]
 
-use core::arch::global_asm;
-use core::fmt::Write;
-use core::panic::PanicInfo;
-use core::sync::atomic::Ordering::{Acquire, Release};
-use core::sync::atomic::{compiler_fence, AtomicBool, Ordering::Relaxed, Ordering::SeqCst};
-
-use atsama5d27::aic::{Aic, InterruptEntry, SourceKind};
-use atsama5d27::pio::{Direction, Func, Pio, PioB, PioC, PioD, PioPort};
-use atsama5d27::pmc::{PeripheralId, Pmc};
-use atsama5d27::trng::Trng;
-use atsama5d27::uart::{Uart, Uart1};
 // use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "lcd-console")]
-use atsama5d27::lcdc::{LcdDmaDesc, Lcdc, LayerConfig, LcdcLayerId};
-use atsama5d27::tc::Tc;
+use atsama5d27::lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId};
+use {
+    atsama5d27::{
+        aic::{Aic, InterruptEntry, SourceKind},
+        pio::{Direction, Func, Pio, PioB, PioC, PioD, PioPort},
+        pmc::{PeripheralId, Pmc},
+        tc::Tc,
+        trng::Trng,
+        uart::{Uart, Uart1},
+    },
+    core::{
+        arch::global_asm,
+        fmt::Write,
+        panic::PanicInfo,
+        sync::atomic::{
+            compiler_fence,
+            AtomicBool,
+            Ordering::{Acquire, Relaxed, Release, SeqCst},
+        },
+    },
+};
 
 #[cfg(feature = "lcd-console")]
 const WIDTH: usize = 800;
@@ -35,13 +43,14 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     next: 0,
 };
 
-#[cfg(feature = "rtt")]
-use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
-
-use atsama5d27::l2cc::{Counter, EventCounterKind, L2cc};
-use atsama5d27::sfr::Sfr;
 #[cfg(feature = "lcd-console")]
 use atsama5d27::{console::DisplayAndUartConsole, display::DoubleBufferedDisplay};
+use atsama5d27::{
+    l2cc::{Counter, EventCounterKind, L2cc},
+    sfr::Sfr,
+};
+#[cfg(feature = "rtt")]
+use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
 
 global_asm!(include_str!("start.S"));
 
@@ -91,11 +100,14 @@ fn _entry() -> ! {
 
     let mut pmc = Pmc::new();
     pmc.enable_peripheral_clock(PeripheralId::Trng);
-    // pmc.enable_peripheral_clock(PeripheralId::Pit); // PIT is disabled in favor of TC0
+    // pmc.enable_peripheral_clock(PeripheralId::Pit); // PIT is disabled in favor
+    // of TC0
     pmc.enable_peripheral_clock(PeripheralId::Tc0);
     pmc.enable_peripheral_clock(PeripheralId::Aic);
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
     pmc.enable_peripheral_clock(PeripheralId::Piod);
+    pmc.enable_peripheral_clock(PeripheralId::Aes);
+    pmc.enable_peripheral_clock(PeripheralId::Xdmac0);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -128,13 +140,13 @@ fn _entry() -> ! {
     let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-    let mut lcdc = Lcdc::new(
-        WIDTH as u16,
-        HEIGHT as u16,
-    );
-    lcdc.init(&[
-        LayerConfig::new(LcdcLayerId::Base, fb1, dma_desc_addr_one, dma_desc_addr_one)
-    ]);
+    let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
+    lcdc.init(&[LayerConfig::new(
+        LcdcLayerId::Base,
+        fb1,
+        dma_desc_addr_one,
+        dma_desc_addr_one,
+    )]);
 
     #[cfg(not(feature = "lcd-console"))]
     let mut console = uart;
@@ -144,7 +156,9 @@ fn _entry() -> ! {
         unsafe { &mut FRAMEBUFFER_ONE.0 },
         unsafe { &mut FRAMEBUFFER_TWO.0 },
         dma_desc_addr_one,
-        WIDTH, HEIGHT);
+        WIDTH,
+        HEIGHT,
+    );
     #[cfg(feature = "lcd-console")]
     let mut console = DisplayAndUartConsole::new(display, uart);
 
@@ -201,7 +215,8 @@ fn _entry() -> ! {
         // tc0.stop();
         // let elapsed = tc0.counter() as f32 / ticks_per_ms as f32;
         // writeln!(console, "Elapsed {} ms: {}", elapsed, x).ok();
-        // writeln!(console, "Instruction cache hits {}", l2cc.get_event_count(Counter::Counter0)).ok();
+        // writeln!(console, "Instruction cache hits {}",
+        // l2cc.get_event_count(Counter::Counter0)).ok();
 
         loop {
             armv7::asm::wfi();
@@ -215,6 +230,40 @@ fn _entry() -> ! {
         tc0.stop();
 
         hi = !hi;
+
+        let plaintext = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        let mut ciphertext = [0; 16];
+
+        /* TODO These calls don't work.
+        let src = atsama5d27::dma::Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+        let mut dst = atsama5d27::dma::Buffer([0; 16]);
+        atsama5d27::dma::memory_to_memory(&src, &mut dst).unwrap();
+        writeln!(console, "hello world: {:?}", dst.0).ok();
+        let result = atsama5d27::aes::encrypt(
+            atsama5d27::aes::Key([2; 32]),
+            atsama5d27::aes::Iv([12; 16]),
+            &plaintext,
+            &mut ciphertext,
+        ).unwrap();
+        */
+        let aes = atsama5d27::aes::Aes::default();
+        aes.encrypt_no_dma(
+            atsama5d27::aes::Key([2; 32]),
+            atsama5d27::aes::Iv([12; 16]),
+            &plaintext,
+            &mut ciphertext,
+        )
+        .unwrap();
+        writeln!(console, "ciphertext: {ciphertext:?}").ok();
+        let mut plaintext = [0; 16];
+        aes.decrypt_no_dma(
+            atsama5d27::aes::Key([2; 32]),
+            atsama5d27::aes::Iv([12; 16]),
+            &ciphertext,
+            &mut plaintext,
+        )
+        .unwrap();
+        writeln!(console, "plaintext: {plaintext:?}").ok();
     }
 }
 
@@ -268,10 +317,10 @@ fn panic(_info: &PanicInfo) -> ! {
     }
 
     let mut console = Uart::<Uart1>::new();
-    writeln!(console, "{}", _info).ok();
 
     loop {
         compiler_fence(SeqCst);
+        writeln!(console, "{}", _info).ok();
         armv7::asm::nop();
     }
 }
