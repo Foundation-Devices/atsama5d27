@@ -1,8 +1,7 @@
-use {
-    crate::console::DisplayAndUartConsole,
-    core::fmt::Write,
-    utralib::{utra::xdmac0, CSR},
-};
+use utralib::{utra::xdmac0, CSR};
+
+// TODO I was not able to get the DMA functions to work. I'm going to leave them
+// as-is for now and tackle them again later.
 
 /// Every memory buffer used for DMA must be aligned to 4 bytes.
 #[derive(Debug, Clone, Copy)]
@@ -45,16 +44,19 @@ pub fn memory_to_memory<const NSRC: usize, const NDST: usize>(
     dma.wfo(xdmac0::XDMAC_CC0_MBSIZE, 0);
 
     // Set the source memory addressing mode to increment.
-    dma.wfo(xdmac0::XDMAC_CC0_SAM, 0);
+    dma.wfo(xdmac0::XDMAC_CC0_SAM, 1);
 
-    // Set the destination memory addressing mode to not change the address.
-    dma.wfo(xdmac0::XDMAC_CC0_DAM, 0);
+    // Set the destination memory addressing to increment.
+    dma.wfo(xdmac0::XDMAC_CC0_DAM, 1);
 
     // Use a secured channel.
     dma.wfo(xdmac0::XDMAC_CC0_PROT, 0);
 
     // Data width is 1 byte.
     dma.wfo(xdmac0::XDMAC_CC0_DWIDTH, 0);
+
+    // Set the peripheral ID for a memory-to-memory transfer.
+    dma.wfo(xdmac0::XDMAC_CC0_PERID, 127);
 
     // Enable the DMA channel.
     dma.wfo(xdmac0::XDMAC_GE_EN0, 1);
@@ -74,9 +76,6 @@ pub struct Peripheral {
     /// The address of the input register for this peripheral.
     pub address: u32,
 }
-
-// TODO I was not able to get the functions below to work. I'm going to leave
-// them as-is for now and tackle them again later.
 
 /// Execute a memory-to-peripheral DMA transfer using channel 0.
 pub fn memory_to_peripheral<const N: usize>(
