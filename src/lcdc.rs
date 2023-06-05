@@ -296,7 +296,7 @@ impl Lcdc {
         self.set_channel_enable(layer, false);
     }
 
-    fn wait_for_sync_in_progress(&self) {
+    pub fn wait_for_sync_in_progress(&self) {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         while lcdc_csr.rf(LCDSR_SIPSTS) != 0 {
@@ -375,7 +375,7 @@ impl Lcdc {
         lcdc_csr.rmwf(LCDCFG5_HSPOL, polarity as u32);
     }
 
-    pub fn set_pwm_compare_value(&mut self, value: u8) {
+    pub fn set_pwm_compare_value(&self, value: u8) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
         lcdc_csr.rmwf(LCDCFG6_PWMCVAL, value as u32);
     }
@@ -390,7 +390,7 @@ impl Lcdc {
         lcdc_csr.rmwf(LCDCFG6_PWMPS, div as u32);
     }
 
-    fn set_pixel_clock_enable(&mut self, enable: bool) {
+    pub fn set_pixel_clock_enable(&self, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         if enable {
