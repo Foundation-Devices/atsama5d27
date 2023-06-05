@@ -2,12 +2,15 @@
 
 use core::marker::PhantomData;
 use utralib::utra::pio::{
-    HW_PIO_BASE, PIO_CFGR0, PIO_CFGR0_DIR, PIO_CFGR0_FUNC, PIO_CODR0, PIO_MSKR0, PIO_ODSR0,
-    PIO_SODR0,
+    HW_PIO_BASE, PIO_CFGR0, PIO_CFGR0_DIR, PIO_CFGR0_EVTSEL, PIO_CFGR0_FUNC, PIO_CFGR0_IFEN,
+    PIO_CFGR0_IFSCEN, PIO_CODR0, PIO_IDR0, PIO_IER0, PIO_MSKR0, PIO_PDSR0, PIO_SODR0, PIO_ISR0,
 };
+use utralib::utra::spio::{PIO_WPMR_WPEN, PIO_WPMR, PIO_SCDR};
 use utralib::*;
 
 use crate::pio::sealed::Sealed;
+
+const S_PIO_WPKEY: u32 = 0x50494F;
 
 pub struct PioA {}
 pub struct PioB {}
@@ -29,6 +32,13 @@ pub trait PioPort: Sealed {
         if let Some(dir) = dir.into() {
             pio_csr.rmwf(PIO_CFGR0_DIR, dir as u32);
         }
+    }
+
+    /// Returns a bitmap of pins with an active interrupt.
+    /// Bits are reset by the hardware on every read.
+    fn get_interrupt_status(base_addr: impl Into<Option<u32>>) -> u32 {
+        let pio_csr = CSR::new(Self::get_base_address(base_addr) as *mut u32);
+        pio_csr.r(PIO_ISR0)
     }
 
     fn clear_all(base_addr: impl Into<Option<u32>>) {
@@ -72,12 +82,26 @@ pub enum Direction {
     Output = 1,
 }
 
+#[derive(Debug)]
+pub enum Event {
+    Falling = 0,
+    Rising = 1,
+    Both = 2,
+    Low = 3,
+    High = 4,
+}
+
 #[derive(Default)]
 pub struct Pio<P: PioPort, const PIN: u32> {
     port: PhantomData<P>,
+    alt_base_addr: Option<u32>,
 }
 
 impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
+    pub fn set_alt_base_addr(&mut self, alt_base_addr: u32) {
+        self.alt_base_addr = Some(alt_base_addr);
+    }
+
     /// Sets the pin into HIGH or LOW logic level.
     pub fn set(&mut self, hi: bool) {
         let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
@@ -92,14 +116,14 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
     /// Returns `true` if pin is in HIGH logic level.
     pub fn get(&self) -> bool {
-        let pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
+        let pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
         let pin_bit = 1 << PIN;
 
-        pio_csr.r(PIO_ODSR0) & pin_bit != 0
+        pio_csr.r(PIO_PDSR0) & pin_bit != 0
     }
 
     pub fn set_func(&self, func: Func) {
-        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.wo(PIO_MSKR0, pin_bit);
@@ -107,11 +131,85 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
     }
 
     pub fn set_direction(&self, direction: Direction) {
-        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.wo(PIO_MSKR0, pin_bit);
         pio_csr.rmwf(PIO_CFGR0_DIR, direction as u32);
+    }
+
+    pub fn set_interrupt(&self, enabled: bool) {
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
+        let pin_bit = 1 << PIN;
+        if enabled {
+            pio_csr.wo(PIO_IER0, pin_bit);
+        } else {
+            pio_csr.wo(PIO_IDR0, pin_bit);
+        }
+    }
+
+    pub fn set_event_detection(&self, event: Event) {
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
+        let pin_bit = 1 << PIN;
+
+        pio_csr.wo(PIO_MSKR0, pin_bit);
+        pio_csr.rmwf(PIO_CFGR0_EVTSEL, event as u32);
+    }
+
+    pub fn set_debounce_filter(&self, enabled: bool) {
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
+        let pin_bit = 1 << PIN;
+
+        pio_csr.wo(PIO_MSKR0, pin_bit);
+        pio_csr.rmwf(PIO_CFGR0_IFSCEN, enabled as u32);
+        pio_csr.rmwf(PIO_CFGR0_IFEN, enabled as u32);
+    }
+
+    /// Returns `true` if the pin did fire an interrupt.
+    ///
+    /// *NOTE*: it reads the whole port's ISR bits which makes information about interrupt status for other pins lost.
+    /// If there's a need to check multiple pins then use `PioX::get_interrupt_status()`.
+    pub fn get_interrupt_status(&self) -> bool {
+        let pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
+        let pin_bit = 1 << PIN;
+
+        pio_csr.r(PIO_ISR0) & pin_bit != 0
+    }
+}
+
+pub struct SecurePio {
+    base_addr: u32,
+}
+
+impl SecurePio {
+    pub fn new() -> Self {
+        SecurePio {
+            base_addr: HW_SPIO_BASE as u32,
+        }
+    }
+
+    pub fn with_alt_base_addr(base_addr: u32) -> Self {
+        SecurePio {
+            base_addr,
+        }
+    }
+
+    pub fn is_write_protected(&self) -> bool {
+        let csr = CSR::new(self.base_addr as *mut u32);
+        csr.rf(PIO_WPMR_WPEN) != 0
+    }
+
+    pub fn set_write_protected(&self, protected: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        let wpen_bit = protected as u32;
+        let reg = S_PIO_WPKEY << 8 | wpen_bit;
+        csr.wo(PIO_WPMR, reg);
+    }
+
+    pub fn set_debounce_filter(&self, pmc_slow_clock_freq: u32, cutoff_hz: u32) {
+        let cutoff = ((pmc_slow_clock_freq / (2 * cutoff_hz)) - 1) & 0x3FFF;
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wo(PIO_SCDR, cutoff);
     }
 }
 
@@ -135,7 +233,7 @@ macro_rules! impl_pins {
         $(
             impl Pio<$port, $pin> {
                 pub fn $name() -> Self {
-                    Self { port: PhantomData }
+                    Self { port: PhantomData, alt_base_addr: None }
                 }
             }
         )+
