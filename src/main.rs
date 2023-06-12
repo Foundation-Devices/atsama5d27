@@ -247,22 +247,12 @@ fn _entry() -> ! {
         ).unwrap();
         */
         let aes = atsama5d27::aes::Aes::default();
-        aes.encrypt_no_dma(
-            atsama5d27::aes::Key([2; 32]),
-            atsama5d27::aes::Iv([12; 16]),
-            &plaintext,
-            &mut ciphertext,
-        )
-        .unwrap();
+        aes.encrypt_no_dma([2; 32], [12; 16], &plaintext, &mut ciphertext)
+            .unwrap();
         writeln!(console, "ciphertext: {ciphertext:?}").ok();
         let mut plaintext = [0; 16];
-        aes.decrypt_no_dma(
-            atsama5d27::aes::Key([2; 32]),
-            atsama5d27::aes::Iv([12; 16]),
-            &ciphertext,
-            &mut plaintext,
-        )
-        .unwrap();
+        aes.decrypt_no_dma([2; 32], [12; 16], &ciphertext, &mut plaintext)
+            .unwrap();
         writeln!(console, "plaintext: {plaintext:?}").ok();
     }
 }
