@@ -3,12 +3,6 @@ use {
     utralib::{utra::aes, CSR},
 };
 
-#[derive(Debug, Copy, Clone)]
-pub struct Key(pub [u8; 32]);
-
-#[derive(Debug, Copy, Clone)]
-pub struct Iv(pub [u8; 16]);
-
 /// The AES peripheral.
 pub struct Aes {
     base_addr: u32,
@@ -31,8 +25,8 @@ impl Aes {
     /// Encrypt a buffer using AES-256 in CBC mode without DMA.
     pub fn encrypt_no_dma(
         &self,
-        key: Key,
-        iv: Iv,
+        key: [u8; 32],
+        iv: [u8; 16],
         plaintext: &[u8],
         ciphertext: &mut [u8],
     ) -> Result<(), &'static str> {
@@ -69,53 +63,44 @@ impl Aes {
             // Set the key.
             aes.wo(
                 aes::KEYWR0,
-                u32::from_ne_bytes(key.0[0..4].try_into().unwrap()),
+                u32::from_ne_bytes(key[0..4].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR1,
-                u32::from_ne_bytes(key.0[4..8].try_into().unwrap()),
+                u32::from_ne_bytes(key[4..8].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR2,
-                u32::from_ne_bytes(key.0[8..12].try_into().unwrap()),
+                u32::from_ne_bytes(key[8..12].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR3,
-                u32::from_ne_bytes(key.0[12..16].try_into().unwrap()),
+                u32::from_ne_bytes(key[12..16].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR4,
-                u32::from_ne_bytes(key.0[16..20].try_into().unwrap()),
+                u32::from_ne_bytes(key[16..20].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR5,
-                u32::from_ne_bytes(key.0[20..24].try_into().unwrap()),
+                u32::from_ne_bytes(key[20..24].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR6,
-                u32::from_ne_bytes(key.0[24..28].try_into().unwrap()),
+                u32::from_ne_bytes(key[24..28].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR7,
-                u32::from_ne_bytes(key.0[28..32].try_into().unwrap()),
+                u32::from_ne_bytes(key[28..32].try_into().unwrap()),
             );
 
             // Set the IV.
-            aes.wo(
-                aes::IVR0,
-                u32::from_ne_bytes(iv.0[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IVR1,
-                u32::from_ne_bytes(iv.0[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IVR2,
-                u32::from_ne_bytes(iv.0[8..12].try_into().unwrap()),
-            );
+            aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
+            aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
+            aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
             aes.wo(
                 aes::IVR3,
-                u32::from_ne_bytes(iv.0[12..16].try_into().unwrap()),
+                u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
             );
 
             // Write the input data.
@@ -156,8 +141,8 @@ impl Aes {
     /// Decrypt a buffer using AES-256 in CBC mode without DMA.
     pub fn decrypt_no_dma(
         &self,
-        key: Key,
-        iv: Iv,
+        key: [u8; 32],
+        iv: [u8; 16],
         ciphertext: &[u8],
         plaintext: &mut [u8],
     ) -> Result<(), &'static str> {
@@ -194,53 +179,44 @@ impl Aes {
             // Set the key.
             aes.wo(
                 aes::KEYWR0,
-                u32::from_ne_bytes(key.0[0..4].try_into().unwrap()),
+                u32::from_ne_bytes(key[0..4].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR1,
-                u32::from_ne_bytes(key.0[4..8].try_into().unwrap()),
+                u32::from_ne_bytes(key[4..8].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR2,
-                u32::from_ne_bytes(key.0[8..12].try_into().unwrap()),
+                u32::from_ne_bytes(key[8..12].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR3,
-                u32::from_ne_bytes(key.0[12..16].try_into().unwrap()),
+                u32::from_ne_bytes(key[12..16].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR4,
-                u32::from_ne_bytes(key.0[16..20].try_into().unwrap()),
+                u32::from_ne_bytes(key[16..20].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR5,
-                u32::from_ne_bytes(key.0[20..24].try_into().unwrap()),
+                u32::from_ne_bytes(key[20..24].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR6,
-                u32::from_ne_bytes(key.0[24..28].try_into().unwrap()),
+                u32::from_ne_bytes(key[24..28].try_into().unwrap()),
             );
             aes.wo(
                 aes::KEYWR7,
-                u32::from_ne_bytes(key.0[28..32].try_into().unwrap()),
+                u32::from_ne_bytes(key[28..32].try_into().unwrap()),
             );
 
             // Set the IV.
-            aes.wo(
-                aes::IVR0,
-                u32::from_ne_bytes(iv.0[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IVR1,
-                u32::from_ne_bytes(iv.0[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IVR2,
-                u32::from_ne_bytes(iv.0[8..12].try_into().unwrap()),
-            );
+            aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
+            aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
+            aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
             aes.wo(
                 aes::IVR3,
-                u32::from_ne_bytes(iv.0[12..16].try_into().unwrap()),
+                u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
             );
 
             // Write the input data.
@@ -283,8 +259,8 @@ impl Aes {
     /// Encrypt a buffer using AES-256 in CBC mode with DMA.
     pub fn encrypt<const NP: usize, const NC: usize>(
         &self,
-        key: Key,
-        iv: Iv,
+        key: [u8; 32],
+        iv: [u8; 16],
         plaintext: &dma::Buffer<NP>,
         ciphertext: &mut dma::Buffer<NC>,
     ) -> Result<(), &'static str> {
@@ -307,53 +283,44 @@ impl Aes {
         // Set the key.
         aes.wo(
             aes::KEYWR0,
-            u32::from_ne_bytes(key.0[0..4].try_into().unwrap()),
+            u32::from_ne_bytes(key[0..4].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR1,
-            u32::from_ne_bytes(key.0[4..8].try_into().unwrap()),
+            u32::from_ne_bytes(key[4..8].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR2,
-            u32::from_ne_bytes(key.0[8..12].try_into().unwrap()),
+            u32::from_ne_bytes(key[8..12].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR3,
-            u32::from_ne_bytes(key.0[12..16].try_into().unwrap()),
+            u32::from_ne_bytes(key[12..16].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR4,
-            u32::from_ne_bytes(key.0[16..20].try_into().unwrap()),
+            u32::from_ne_bytes(key[16..20].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR5,
-            u32::from_ne_bytes(key.0[20..24].try_into().unwrap()),
+            u32::from_ne_bytes(key[20..24].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR6,
-            u32::from_ne_bytes(key.0[24..28].try_into().unwrap()),
+            u32::from_ne_bytes(key[24..28].try_into().unwrap()),
         );
         aes.wo(
             aes::KEYWR7,
-            u32::from_ne_bytes(key.0[28..32].try_into().unwrap()),
+            u32::from_ne_bytes(key[28..32].try_into().unwrap()),
         );
 
         // Set the IV.
-        aes.wo(
-            aes::IVR0,
-            u32::from_ne_bytes(iv.0[0..4].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::IVR1,
-            u32::from_ne_bytes(iv.0[4..8].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::IVR2,
-            u32::from_ne_bytes(iv.0[8..12].try_into().unwrap()),
-        );
+        aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
+        aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
+        aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
         aes.wo(
             aes::IVR3,
-            u32::from_ne_bytes(iv.0[12..16].try_into().unwrap()),
+            u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
         );
 
         dma::memory_to_peripheral(
