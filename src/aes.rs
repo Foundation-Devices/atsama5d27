@@ -27,24 +27,15 @@ impl Aes {
         &self,
         key: [u8; 32],
         iv: [u8; 16],
-        plaintext: &[u8],
-        ciphertext: &mut [u8],
+        data: &mut [u8],
     ) -> Result<(), &'static str> {
-        if plaintext.len() > ciphertext.len() {
-            return Err("Not enough space in ciphertext buffer.");
-        }
-
-        if plaintext.len() % 16 != 0 {
+        if data.len() % 16 != 0 {
             return Err("Plaintext buffer must be aligned to 16 bytes (AES block size).");
-        }
-
-        if ciphertext.len() % 16 != 0 {
-            return Err("Ciphertext buffer must be aligned to 16 bytes (AES block size).");
         }
 
         let mut aes = CSR::new(self.base_addr as *mut u32);
 
-        for (i, chunk) in plaintext.chunks(16).enumerate() {
+        for (i, chunk) in data.chunks_mut(16).enumerate() {
             // Clear the DATRDY bit by reading ODATAR.
             aes.r(aes::ODATAR0);
 
@@ -129,10 +120,10 @@ impl Aes {
 
             // Copy the output data.
             let start = i * 16;
-            ciphertext[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
-            ciphertext[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
-            ciphertext[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
-            ciphertext[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
+            chunk[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
+            chunk[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
+            chunk[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
+            chunk[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
         }
 
         Ok(())
@@ -143,24 +134,15 @@ impl Aes {
         &self,
         key: [u8; 32],
         iv: [u8; 16],
-        ciphertext: &[u8],
-        plaintext: &mut [u8],
+        data: &mut [u8],
     ) -> Result<(), &'static str> {
-        if ciphertext.len() > plaintext.len() {
-            return Err("Not enough space in plaintext buffer.");
-        }
-
-        if ciphertext.len() % 16 != 0 {
+        if data.len() % 16 != 0 {
             return Err("Ciphertext buffer must be aligned to 16 bytes (AES block size).");
-        }
-
-        if plaintext.len() % 16 != 0 {
-            return Err("Plaintext buffer must be aligned to 16 bytes (AES block size).");
         }
 
         let mut aes = CSR::new(self.base_addr as *mut u32);
 
-        for (i, chunk) in ciphertext.chunks(16).enumerate() {
+        for (i, chunk) in data.chunks_mut(16).enumerate() {
             // Clear the DATRDY bit by reading ODATAR.
             aes.r(aes::ODATAR0);
 
@@ -245,10 +227,10 @@ impl Aes {
 
             // Copy the output data.
             let start = i * 16;
-            plaintext[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
-            plaintext[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
-            plaintext[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
-            plaintext[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
+            chunk[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
+            chunk[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
+            chunk[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
+            chunk[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
         }
 
         Ok(())

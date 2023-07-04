@@ -231,29 +231,12 @@ fn _entry() -> ! {
 
         hi = !hi;
 
-        let plaintext = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-        let mut ciphertext = [0; 16];
-
-        /* TODO These calls don't work.
-        let src = atsama5d27::dma::Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
-        let mut dst = atsama5d27::dma::Buffer([0; 16]);
-        atsama5d27::dma::memory_to_memory(&src, &mut dst).unwrap();
-        writeln!(console, "hello world: {:?}", dst.0).ok();
-        let result = atsama5d27::aes::encrypt(
-            atsama5d27::aes::Key([2; 32]),
-            atsama5d27::aes::Iv([12; 16]),
-            &plaintext,
-            &mut ciphertext,
-        ).unwrap();
-        */
+        let mut data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
         let aes = atsama5d27::aes::Aes::default();
-        aes.encrypt_no_dma([2; 32], [12; 16], &plaintext, &mut ciphertext)
-            .unwrap();
-        writeln!(console, "ciphertext: {ciphertext:?}").ok();
-        let mut plaintext = [0; 16];
-        aes.decrypt_no_dma([2; 32], [12; 16], &ciphertext, &mut plaintext)
-            .unwrap();
-        writeln!(console, "plaintext: {plaintext:?}").ok();
+        aes.encrypt_no_dma([2; 32], [12; 16], &mut data).unwrap();
+        writeln!(console, "ciphertext: {data:?}").ok();
+        aes.decrypt_no_dma([2; 32], [12; 16], &mut data).unwrap();
+        writeln!(console, "plaintext: {data:?}").ok();
     }
 }
 
