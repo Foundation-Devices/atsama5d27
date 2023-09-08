@@ -246,6 +246,9 @@ impl Aes {
         plaintext: &dma::Buffer<NP>,
         ciphertext: &mut dma::Buffer<NC>,
     ) -> Result<(), &'static str> {
+        todo!();
+
+        /*
         let mut aes = CSR::new(self.base_addr as *mut u32);
 
         // Write the CKEY. This is necessary to allow the MR register to be programmed.
@@ -323,6 +326,6 @@ impl Aes {
         )?;
         dma::execute_peripheral_transfer();
 
-        Ok(())
+        Ok(())*/
     }
 }

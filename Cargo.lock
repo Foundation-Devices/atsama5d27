@@ -123,9 +123,9 @@ dependencies = [
 
 [[package]]
 name = "svd2utra"
-version = "0.1.17"
+version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a17017dc85299398ec96405b495ea093403ef69252aabbc88a72dad27074a3b4"
+checksum = "2fbb573d9b7f48e88d4927d99a4e8b86a98e423e812f7245a36319031c1c0ca4"
 dependencies = [
  "convert_case",
  "quick-xml",
