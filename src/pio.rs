@@ -104,7 +104,7 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
     /// Sets the pin into HIGH or LOW logic level.
     pub fn set(&mut self, hi: bool) {
-        let mut pio_csr = CSR::new(P::get_base_address(None) as *mut u32);
+        let mut pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
         let pin_bit = 1 << PIN;
 
         if hi {
