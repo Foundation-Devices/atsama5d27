@@ -18,33 +18,32 @@ use {
         fmt::Write,
         panic::PanicInfo,
         sync::atomic::{
-            compiler_fence,
-            AtomicBool,
+            compiler_fence, AtomicBool,
             Ordering::{Acquire, Relaxed, Release, SeqCst},
         },
     },
 };
 
 #[cfg(feature = "lcd-console")]
-const WIDTH: usize = 800;
+const WIDTH: usize = 480;
 #[cfg(feature = "lcd-console")]
-const HEIGHT: usize = 480;
+const HEIGHT: usize = 800;
 
 #[cfg(feature = "lcd-console")]
 #[repr(align(4))]
 struct Aligned4([u32; WIDTH * HEIGHT]);
 #[cfg(feature = "lcd-console")]
 static mut FRAMEBUFFER_ONE: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
-#[cfg(feature = "lcd-console")]
-static mut FRAMEBUFFER_TWO: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
 static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
     next: 0,
 };
 
+use atsama5d27::lcdspi::LcdSpi;
+use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "lcd-console")]
-use atsama5d27::{console::DisplayAndUartConsole, display::DoubleBufferedDisplay};
+use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 use atsama5d27::{
     l2cc::{Counter, EventCounterKind, L2cc},
     sfr::Sfr,
@@ -59,6 +58,10 @@ const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 const TC_PERIPH_ID: PeripheralId = PeripheralId::Tc0;
 
 static HAD_TC0_IRQ: AtomicBool = AtomicBool::new(false);
+
+// MCK: 164MHz
+// Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
+const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -100,8 +103,7 @@ fn _entry() -> ! {
 
     let mut pmc = Pmc::new();
     pmc.enable_peripheral_clock(PeripheralId::Trng);
-    // pmc.enable_peripheral_clock(PeripheralId::Pit); // PIT is disabled in favor
-    // of TC0
+    pmc.enable_peripheral_clock(PeripheralId::Pit);
     pmc.enable_peripheral_clock(PeripheralId::Tc0);
     pmc.enable_peripheral_clock(PeripheralId::Aic);
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
@@ -147,26 +149,17 @@ fn _entry() -> ! {
         dma_desc_addr_one,
         dma_desc_addr_one,
     )]);
+    lcdc.wait_for_sync_in_progress();
+    lcdc.set_pwm_compare_value(0xff / 2);
 
     #[cfg(not(feature = "lcd-console"))]
     let mut console = uart;
     #[cfg(feature = "lcd-console")]
-    let display = DoubleBufferedDisplay::new(
-        lcdc,
-        unsafe { &mut FRAMEBUFFER_ONE.0 },
-        unsafe { &mut FRAMEBUFFER_TWO.0 },
-        dma_desc_addr_one,
-        WIDTH,
-        HEIGHT,
-    );
+    let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER_ONE.0 }, WIDTH, HEIGHT);
     #[cfg(feature = "lcd-console")]
     let mut console = DisplayAndUartConsole::new(display, uart);
 
     print_banner(&mut console);
-
-    // MCK: 164MHz
-    // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
-    const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
 
     // Enable the TRNG
     let trng = Trng::new().enable();
@@ -300,9 +293,35 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[cfg_attr(not(feature = "lcd-console"), allow(dead_code))]
 fn configure_lcdc_pins() {
-    PioB::configure_pins_by_mask(None, 0xe7e7e000, Func::A, None);
-    PioB::configure_pins_by_mask(None, 0x2, Func::A, None);
+    let mut pit = Pit::new();
+    pit.set_interval(PIV_MAX);
+    pit.set_enabled(true);
+
+    // PB1: reset LCD panel
+    let mut pio = Pio::pb1();
+    pio.set_func(Func::Gpio);
+    pio.set_direction(Direction::Output);
+    pio.set(false);
+    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
+    pio.set(true);
+    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
+
+    let mosi = Pio::pa15();
+    mosi.set_func(Func::Gpio);
+    mosi.set_direction(Direction::Output);
+    let sck = Pio::pa14();
+    sck.set_func(Func::Gpio);
+    sck.set_direction(Direction::Output);
+    let cs = Pio::pa19();
+    cs.set_func(Func::Gpio);
+    cs.set_direction(Direction::Output);
+    let mut lcdspi = LcdSpi::new(mosi, sck, cs, MASTER_CLOCK_SPEED, pit);
+    lcdspi.run_init_sequence();
+
+    // PB11 - PB31
+    PioB::configure_pins_by_mask(None, 0xFFFFF800, Func::A, None);
     PioB::clear_all(None);
+
+    // PC0 - PC8
     PioC::configure_pins_by_mask(None, 0x1ff, Func::A, None);
-    PioD::configure_pins_by_mask(None, 0x30, Func::A, None);
 }
