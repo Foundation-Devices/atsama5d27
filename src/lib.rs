@@ -20,3 +20,4 @@ pub mod dma;
 pub mod console;
 #[cfg(feature = "lcd-console")]
 pub mod display;
+pub mod lcdspi;
