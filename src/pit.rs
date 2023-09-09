@@ -52,7 +52,8 @@ impl Pit {
         pit_csr.r(PIIR)
     }
 
-    pub fn busy_wait_ms(&self, curr_clock_speed: u32, ms: u32) {
+    pub fn busy_wait_ms(&mut self, curr_clock_speed: u32, ms: u32) {
+        self.reset();
         let base = self.read();
         let delay = ((curr_clock_speed / 1000) * ms) / 16;
         let mut current;
