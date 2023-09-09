@@ -29,4 +29,9 @@ impl Sfr {
         let mut sfr_csr = CSR::new(self.base_addr as *mut u32);
         sfr_csr.rmwf(SFR_L2CC_HRAMC_SRAM_SEL, enabled as u32);
     }
+
+    pub fn l2_cache_sram_enabled(&self) -> bool {
+        let mut sfr_csr = CSR::new(self.base_addr as *mut u32);
+        sfr_csr.rf(SFR_L2CC_HRAMC_SRAM_SEL) != 0
+    }
 }
