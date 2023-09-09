@@ -98,19 +98,19 @@ pub enum BurstLength {
 
 const PWM_CLOCK_SOURCE: LcdcPwmClockSource = LcdcPwmClockSource::System;
 const PWM_PRESCALER: u8 = 5;
-const HSYNC_LENGTH: u16 = 48;
-const VSYNC_LENGTH: u16 = 3;
+const HSYNC_LENGTH: u16 = 60;
+const VSYNC_LENGTH: u16 = 60;
 const PIXEL_CLOCK_DIV: u8 = 6;
-const DISPLAY_GUARD_NUM_FRAMES: u16 = 30;
+const DISPLAY_GUARD_NUM_FRAMES: u16 = 1;
 const OUTPUT_COLOR_MODE: OutputColorMode = OutputColorMode::Mode24Bpp;
 const SYNC_EDGE: VsyncSyncEdge = VsyncSyncEdge::First;
 const VSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
 const HSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
-const DEFAULT_BRIGHTNESS_PCT: u32 = 100;
+const DEFAULT_BRIGHTNESS_PCT: u32 = 55;
 const PWM_SIGNAL_POLARITY: SignalPolarity = SignalPolarity::Positive;
 pub const DEFAULT_GFX_COLOR_MODE: ColorMode = ColorMode::Argb8888;
-const LOWER_MARGIN: u16 = 3;
-const UPPER_MARGIN: u16 = 29;
+const LOWER_MARGIN: u16 = 0x02;
+const UPPER_MARGIN: u16 = 0x10;
 const RIGHT_MARGIN: u16 = 40;
 const LEFT_MARGIN: u16 = 40;
 
@@ -195,7 +195,6 @@ impl Lcdc {
         self.set_hsync_polarity(HSYNC_POLARITY);
 
         self.wait_for_sync_in_progress();
-        self.set_pwm_compare_value((DEFAULT_BRIGHTNESS_PCT * 0xFF / 100) as u8);
         self.set_pwm_signal_polarity(PWM_SIGNAL_POLARITY);
         self.set_pwm_prescaler(PWM_PRESCALER);
 
@@ -223,6 +222,10 @@ impl Lcdc {
         // 8. Enable the backlight
         self.wait_for_sync_in_progress();
         self.set_pwm_enable(true);
+        self.wait_for_sync_in_progress();
+        self.set_pwm_compare_value(
+            0xff_u8.saturating_sub((DEFAULT_BRIGHTNESS_PCT * 0xFF / 100) as u8),
+        );
 
         for layer in layers {
             self.update_layer(layer);
