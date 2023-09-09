@@ -1,8 +1,8 @@
 use std::env;
 use std::fs::OpenOptions;
-use std::io::Write;
 #[cfg(not(feature = "hosted"))]
 use std::io::Read;
+use std::io::Write;
 use std::path::PathBuf;
 
 fn out_dir() -> PathBuf {
@@ -88,11 +88,7 @@ fn main() {
     allow_single_target_feature!("precursor", "hosted", "renode", "atsama5d27");
 
     #[cfg(feature = "precursor")]
-    allow_single_gitrev_feature!(
-        "precursor-perflib",
-        "precursor-dvt",
-        "precursor-pvt"
-    );
+    allow_single_gitrev_feature!("precursor-perflib", "precursor-dvt", "precursor-pvt");
 
     // ----- select an SVD file based on a specific revision -----
     #[cfg(feature = "precursor-perflib")]
@@ -143,7 +139,9 @@ fn main() {
         // If the file doesn't exist, or if it's different, write out a new utra file.
         let should_write = if let Ok(mut existing_file) = std::fs::File::open(generated_filename) {
             let mut existing_file_contents = vec![];
-            existing_file.read_to_end(&mut existing_file_contents).expect("couldn't read existing utra generated file");
+            existing_file
+                .read_to_end(&mut existing_file_contents)
+                .expect("couldn't read existing utra generated file");
             existing_file_contents != dest_vec
         } else {
             true

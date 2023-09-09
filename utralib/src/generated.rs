@@ -1,24 +1,24 @@
 // Feature flags are checked inside build.rs for sanity, so we
 // can use them here assuming all targets are mutually exclusive.
 
-#[cfg(feature="precursor-perflib")]
+#[cfg(feature = "precursor-perflib")]
 mod precursor_perf;
-#[cfg(feature="precursor-perflib")]
+#[cfg(feature = "precursor-perflib")]
 pub use precursor_perf::*;
 
-#[cfg(feature="precursor-dvt")]
+#[cfg(feature = "precursor-dvt")]
 mod precursor_dvt;
-#[cfg(feature="precursor-dvt")]
+#[cfg(feature = "precursor-dvt")]
 pub use precursor_dvt::*;
 
-#[cfg(feature="renode")]
+#[cfg(feature = "renode")]
 mod renode;
-#[cfg(feature="renode")]
+#[cfg(feature = "renode")]
 pub use renode::*;
 
-#[cfg(feature="precursor-pvt")]
+#[cfg(feature = "precursor-pvt")]
 mod precursor_pvt;
-#[cfg(feature="precursor-pvt")]
+#[cfg(feature = "precursor-pvt")]
 pub use precursor_pvt::*;
 
 #[cfg(feature = "atsama5d27")]

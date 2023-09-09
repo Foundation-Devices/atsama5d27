@@ -1,4 +1,3 @@
-
 #![allow(dead_code)]
 use core::convert::TryInto;
 use core::sync::atomic::AtomicPtr;
@@ -114,8 +113,8 @@ where
     pub fn rmwf(&mut self, field: Field, value: T) {
         let usize_base: *mut usize = unsafe { core::mem::transmute(self.base) };
         let value_as_usize: usize = value.try_into().unwrap_or_default() << field.offset;
-        let previous =
-            unsafe { usize_base.add(field.register.offset).read_volatile() } & !(field.mask << field.offset);
+        let previous = unsafe { usize_base.add(field.register.offset).read_volatile() }
+            & !(field.mask << field.offset);
         unsafe {
             usize_base
                 .add(field.register.offset)
@@ -127,7 +126,8 @@ where
     /// Write a given field without reading it first
     pub fn wfo(&mut self, field: Field, value: T) {
         let usize_base: *mut usize = unsafe { core::mem::transmute(self.base) };
-        let value_as_usize: usize = (value.try_into().unwrap_or_default() & field.mask) << field.offset;
+        let value_as_usize: usize =
+            (value.try_into().unwrap_or_default() & field.mask) << field.offset;
         unsafe {
             usize_base
                 .add(field.register.offset)
@@ -174,7 +174,7 @@ where
 {
     pub fn new(base: *mut T) -> Self {
         AtomicCsr {
-            base: AtomicPtr::new(base)
+            base: AtomicPtr::new(base),
         }
     }
     /// In reality, we should wrap this in an `Arc` so we can be truly safe across a multi-core
@@ -185,7 +185,7 @@ where
     /// addressed.
     pub fn clone(&self) -> Self {
         AtomicCsr {
-            base: AtomicPtr::new(self.base.load(core::sync::atomic::Ordering::SeqCst))
+            base: AtomicPtr::new(self.base.load(core::sync::atomic::Ordering::SeqCst)),
         }
     }
     /// Read the contents of this register
@@ -193,7 +193,8 @@ where
         // prevent re-ordering
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 
-        let usize_base: *mut usize = unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
+        let usize_base: *mut usize =
+            unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
         unsafe { usize_base.add(reg.offset).read_volatile() }
             .try_into()
             .unwrap_or_default()
@@ -203,7 +204,8 @@ where
         // prevent re-ordering
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 
-        let usize_base: *mut usize = unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
+        let usize_base: *mut usize =
+            unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
         ((unsafe { usize_base.add(field.register.offset).read_volatile() } >> field.offset)
             & field.mask)
             .try_into()
@@ -211,10 +213,11 @@ where
     }
     /// Read-modify-write a given field in this CSR
     pub fn rmwf(&self, field: Field, value: T) {
-        let usize_base: *mut usize = unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
+        let usize_base: *mut usize =
+            unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
         let value_as_usize: usize = value.try_into().unwrap_or_default() << field.offset;
-        let previous =
-            unsafe { usize_base.add(field.register.offset).read_volatile() } & !(field.mask << field.offset);
+        let previous = unsafe { usize_base.add(field.register.offset).read_volatile() }
+            & !(field.mask << field.offset);
         unsafe {
             usize_base
                 .add(field.register.offset)
@@ -225,8 +228,10 @@ where
     }
     /// Write a given field without reading it first
     pub fn wfo(&self, field: Field, value: T) {
-        let usize_base: *mut usize = unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
-        let value_as_usize: usize = (value.try_into().unwrap_or_default() & field.mask) << field.offset;
+        let usize_base: *mut usize =
+            unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
+        let value_as_usize: usize =
+            (value.try_into().unwrap_or_default() & field.mask) << field.offset;
         unsafe {
             usize_base
                 .add(field.register.offset)
@@ -239,7 +244,8 @@ where
     }
     /// Write the entire contents of a register without reading it first
     pub fn wo(&self, reg: Register, value: T) {
-        let usize_base: *mut usize = unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
+        let usize_base: *mut usize =
+            unsafe { core::mem::transmute(self.base.load(core::sync::atomic::Ordering::SeqCst)) };
         let value_as_usize: usize = value.try_into().unwrap_or_default();
         unsafe { usize_base.add(reg.offset).write_volatile(value_as_usize) };
         // Ensure the compiler doesn't re-order the write.
@@ -263,58 +269,57 @@ where
     }
 }
 // Physical base addresses of memory regions
-pub const HW_ROM_MEM:     usize = 0x80000000;
+pub const HW_ROM_MEM: usize = 0x80000000;
 pub const HW_ROM_MEM_LEN: usize = 65536;
-pub const HW_SRAM_EXT_MEM:     usize = 0x40000000;
+pub const HW_SRAM_EXT_MEM: usize = 0x40000000;
 pub const HW_SRAM_EXT_MEM_LEN: usize = 16777216;
-pub const HW_MEMLCD_MEM:     usize = 0xb0000000;
+pub const HW_MEMLCD_MEM: usize = 0xb0000000;
 pub const HW_MEMLCD_MEM_LEN: usize = 23584;
-pub const HW_SPIFLASH_MEM:     usize = 0x20000000;
+pub const HW_SPIFLASH_MEM: usize = 0x20000000;
 pub const HW_SPIFLASH_MEM_LEN: usize = 134217728;
-pub const HW_AUDIO_MEM:     usize = 0xe0000000;
+pub const HW_AUDIO_MEM: usize = 0xe0000000;
 pub const HW_AUDIO_MEM_LEN: usize = 4;
-pub const HW_SHA512_MEM:     usize = 0xe0002000;
+pub const HW_SHA512_MEM: usize = 0xe0002000;
 pub const HW_SHA512_MEM_LEN: usize = 4;
-pub const HW_ENGINE_MEM:     usize = 0xe0020000;
+pub const HW_ENGINE_MEM: usize = 0xe0020000;
 pub const HW_ENGINE_MEM_LEN: usize = 131072;
-pub const HW_USBDEV_MEM:     usize = 0xe0040000;
+pub const HW_USBDEV_MEM: usize = 0xe0040000;
 pub const HW_USBDEV_MEM_LEN: usize = 65536;
-pub const HW_CSR_MEM:     usize = 0xf0000000;
+pub const HW_CSR_MEM: usize = 0xf0000000;
 pub const HW_CSR_MEM_LEN: usize = 262144;
 
 // Physical base addresses of registers
-pub const HW_REBOOT_BASE :   usize = 0xf0000000;
-pub const HW_TIMER0_BASE :   usize = 0xf0001000;
-pub const HW_GPIO_BASE :   usize = 0xf0003000;
-pub const HW_UART_BASE :   usize = 0xf0005000;
-pub const HW_CONSOLE_BASE :   usize = 0xf0007000;
-pub const HW_APP_UART_BASE :   usize = 0xf0009000;
-pub const HW_INFO_BASE :   usize = 0xf000a000;
-pub const HW_MEMLCD_BASE :   usize = 0xf000c000;
-pub const HW_COM_BASE :   usize = 0xf000d000;
-pub const HW_I2C_BASE :   usize = 0xf000e000;
-pub const HW_BTEVENTS_BASE :   usize = 0xf000f000;
-pub const HW_TICKTIMER_BASE :   usize = 0xf0012000;
-pub const HW_SUSRES_BASE :   usize = 0xf0013000;
-pub const HW_POWER_BASE :   usize = 0xf0014000;
-pub const HW_SPINOR_SOFT_INT_BASE :   usize = 0xf0015000;
-pub const HW_SPINOR_BASE :   usize = 0xf0016000;
-pub const HW_KEYBOARD_BASE :   usize = 0xf0017000;
-pub const HW_KEYINJECT_BASE :   usize = 0xf0018000;
-pub const HW_SEED_BASE :   usize = 0xf0019000;
-pub const HW_KEYROM_BASE :   usize = 0xf001a000;
-pub const HW_AUDIO_BASE :   usize = 0xf001b000;
-pub const HW_TRNG_KERNEL_BASE :   usize = 0xf001c000;
-pub const HW_TRNG_SERVER_BASE :   usize = 0xf001d000;
-pub const HW_TRNG_BASE :   usize = 0xf001e000;
-pub const HW_SHA512_BASE :   usize = 0xf001f000;
-pub const HW_ENGINE_BASE :   usize = 0xf0020000;
-pub const HW_JTAG_BASE :   usize = 0xf0021000;
-pub const HW_WDT_BASE :   usize = 0xf0022000;
-pub const HW_USBDEV_BASE :   usize = 0xf0023000;
-pub const HW_D11CTIME_BASE :   usize = 0xf0024000;
-pub const HW_WFI_BASE :   usize = 0xf0025000;
-
+pub const HW_REBOOT_BASE: usize = 0xf0000000;
+pub const HW_TIMER0_BASE: usize = 0xf0001000;
+pub const HW_GPIO_BASE: usize = 0xf0003000;
+pub const HW_UART_BASE: usize = 0xf0005000;
+pub const HW_CONSOLE_BASE: usize = 0xf0007000;
+pub const HW_APP_UART_BASE: usize = 0xf0009000;
+pub const HW_INFO_BASE: usize = 0xf000a000;
+pub const HW_MEMLCD_BASE: usize = 0xf000c000;
+pub const HW_COM_BASE: usize = 0xf000d000;
+pub const HW_I2C_BASE: usize = 0xf000e000;
+pub const HW_BTEVENTS_BASE: usize = 0xf000f000;
+pub const HW_TICKTIMER_BASE: usize = 0xf0012000;
+pub const HW_SUSRES_BASE: usize = 0xf0013000;
+pub const HW_POWER_BASE: usize = 0xf0014000;
+pub const HW_SPINOR_SOFT_INT_BASE: usize = 0xf0015000;
+pub const HW_SPINOR_BASE: usize = 0xf0016000;
+pub const HW_KEYBOARD_BASE: usize = 0xf0017000;
+pub const HW_KEYINJECT_BASE: usize = 0xf0018000;
+pub const HW_SEED_BASE: usize = 0xf0019000;
+pub const HW_KEYROM_BASE: usize = 0xf001a000;
+pub const HW_AUDIO_BASE: usize = 0xf001b000;
+pub const HW_TRNG_KERNEL_BASE: usize = 0xf001c000;
+pub const HW_TRNG_SERVER_BASE: usize = 0xf001d000;
+pub const HW_TRNG_BASE: usize = 0xf001e000;
+pub const HW_SHA512_BASE: usize = 0xf001f000;
+pub const HW_ENGINE_BASE: usize = 0xf0020000;
+pub const HW_JTAG_BASE: usize = 0xf0021000;
+pub const HW_WDT_BASE: usize = 0xf0022000;
+pub const HW_USBDEV_BASE: usize = 0xf0023000;
+pub const HW_D11CTIME_BASE: usize = 0xf0024000;
+pub const HW_WFI_BASE: usize = 0xf0025000;
 
 pub mod utra {
 
@@ -331,7 +336,8 @@ pub mod utra {
         pub const CPU_RESET_CPU_RESET: crate::Field = crate::Field::new(1, 0, CPU_RESET);
 
         pub const CPU_HOLD_RESET: crate::Register = crate::Register::new(3, 0x1);
-        pub const CPU_HOLD_RESET_CPU_HOLD_RESET: crate::Field = crate::Field::new(1, 0, CPU_HOLD_RESET);
+        pub const CPU_HOLD_RESET_CPU_HOLD_RESET: crate::Field =
+            crate::Field::new(1, 0, CPU_HOLD_RESET);
 
         pub const HW_REBOOT_BASE: usize = 0xf0000000;
     }
@@ -550,16 +556,20 @@ pub mod utra {
         pub const GIT_DIRTY_DIRTY: crate::Field = crate::Field::new(1, 0, GIT_DIRTY);
 
         pub const PLATFORM_PLATFORM1: crate::Register = crate::Register::new(8, 0xffffffff);
-        pub const PLATFORM_PLATFORM1_PLATFORM_PLATFORM: crate::Field = crate::Field::new(32, 0, PLATFORM_PLATFORM1);
+        pub const PLATFORM_PLATFORM1_PLATFORM_PLATFORM: crate::Field =
+            crate::Field::new(32, 0, PLATFORM_PLATFORM1);
 
         pub const PLATFORM_PLATFORM0: crate::Register = crate::Register::new(9, 0xffffffff);
-        pub const PLATFORM_PLATFORM0_PLATFORM_PLATFORM: crate::Field = crate::Field::new(32, 0, PLATFORM_PLATFORM0);
+        pub const PLATFORM_PLATFORM0_PLATFORM_PLATFORM: crate::Field =
+            crate::Field::new(32, 0, PLATFORM_PLATFORM0);
 
         pub const PLATFORM_TARGET1: crate::Register = crate::Register::new(10, 0xffffffff);
-        pub const PLATFORM_TARGET1_PLATFORM_TARGET: crate::Field = crate::Field::new(32, 0, PLATFORM_TARGET1);
+        pub const PLATFORM_TARGET1_PLATFORM_TARGET: crate::Field =
+            crate::Field::new(32, 0, PLATFORM_TARGET1);
 
         pub const PLATFORM_TARGET0: crate::Register = crate::Register::new(11, 0xffffffff);
-        pub const PLATFORM_TARGET0_PLATFORM_TARGET: crate::Field = crate::Field::new(32, 0, PLATFORM_TARGET0);
+        pub const PLATFORM_TARGET0_PLATFORM_TARGET: crate::Field =
+            crate::Field::new(32, 0, PLATFORM_TARGET0);
 
         pub const HW_INFO_BASE: usize = 0xf000a000;
     }
@@ -713,10 +723,12 @@ pub mod utra {
         pub const TIME0_TIME: crate::Field = crate::Field::new(32, 0, TIME0);
 
         pub const MSLEEP_TARGET1: crate::Register = crate::Register::new(3, 0xffffffff);
-        pub const MSLEEP_TARGET1_MSLEEP_TARGET: crate::Field = crate::Field::new(32, 0, MSLEEP_TARGET1);
+        pub const MSLEEP_TARGET1_MSLEEP_TARGET: crate::Field =
+            crate::Field::new(32, 0, MSLEEP_TARGET1);
 
         pub const MSLEEP_TARGET0: crate::Register = crate::Register::new(4, 0xffffffff);
-        pub const MSLEEP_TARGET0_MSLEEP_TARGET: crate::Field = crate::Field::new(32, 0, MSLEEP_TARGET0);
+        pub const MSLEEP_TARGET0_MSLEEP_TARGET: crate::Field =
+            crate::Field::new(32, 0, MSLEEP_TARGET0);
 
         pub const EV_STATUS: crate::Register = crate::Register::new(5, 0x1);
         pub const EV_STATUS_ALARM: crate::Field = crate::Field::new(1, 0, EV_STATUS);
@@ -812,11 +824,14 @@ pub mod utra {
         pub const WAKEUP_SOURCE_CONSOLE: crate::Field = crate::Field::new(1, 7, WAKEUP_SOURCE);
 
         pub const ACTIVITY_RATE: crate::Register = crate::Register::new(3, 0x7fffffff);
-        pub const ACTIVITY_RATE_COUNTS_AWAKE: crate::Field = crate::Field::new(31, 0, ACTIVITY_RATE);
+        pub const ACTIVITY_RATE_COUNTS_AWAKE: crate::Field =
+            crate::Field::new(31, 0, ACTIVITY_RATE);
 
         pub const SAMPLING_PERIOD: crate::Register = crate::Register::new(4, 0xffffffff);
-        pub const SAMPLING_PERIOD_SAMPLE_PERIOD: crate::Field = crate::Field::new(31, 0, SAMPLING_PERIOD);
-        pub const SAMPLING_PERIOD_KILL_SAMPLER: crate::Field = crate::Field::new(1, 31, SAMPLING_PERIOD);
+        pub const SAMPLING_PERIOD_SAMPLE_PERIOD: crate::Field =
+            crate::Field::new(31, 0, SAMPLING_PERIOD);
+        pub const SAMPLING_PERIOD_KILL_SAMPLER: crate::Field =
+            crate::Field::new(1, 31, SAMPLING_PERIOD);
 
         pub const VIBE: crate::Register = crate::Register::new(5, 0x1);
         pub const VIBE_VIBE: crate::Field = crate::Field::new(1, 0, VIBE);
@@ -1082,7 +1097,8 @@ pub mod utra {
         pub const URANDOM_URANDOM: crate::Field = crate::Field::new(32, 0, URANDOM);
 
         pub const URANDOM_VALID: crate::Register = crate::Register::new(3, 0x1);
-        pub const URANDOM_VALID_URANDOM_VALID: crate::Field = crate::Field::new(1, 0, URANDOM_VALID);
+        pub const URANDOM_VALID_URANDOM_VALID: crate::Field =
+            crate::Field::new(1, 0, URANDOM_VALID);
 
         pub const EV_STATUS: crate::Register = crate::Register::new(4, 0x3);
         pub const EV_STATUS_AVAIL: crate::Field = crate::Field::new(1, 0, EV_STATUS);
@@ -1202,99 +1218,133 @@ pub mod utra {
         pub const RO_RUN0_CTRL_WINDOW: crate::Field = crate::Field::new(11, 0, RO_RUN0_CTRL);
 
         pub const RO_RUN0_FRESH: crate::Register = crate::Register::new(20, 0xf);
-        pub const RO_RUN0_FRESH_RO_RUN0_FRESH: crate::Field = crate::Field::new(4, 0, RO_RUN0_FRESH);
+        pub const RO_RUN0_FRESH_RO_RUN0_FRESH: crate::Field =
+            crate::Field::new(4, 0, RO_RUN0_FRESH);
 
         pub const RO_RUN0_COUNT1: crate::Register = crate::Register::new(21, 0x7ff);
-        pub const RO_RUN0_COUNT1_RO_RUN0_COUNT1: crate::Field = crate::Field::new(11, 0, RO_RUN0_COUNT1);
+        pub const RO_RUN0_COUNT1_RO_RUN0_COUNT1: crate::Field =
+            crate::Field::new(11, 0, RO_RUN0_COUNT1);
 
         pub const RO_RUN0_COUNT2: crate::Register = crate::Register::new(22, 0x7ff);
-        pub const RO_RUN0_COUNT2_RO_RUN0_COUNT2: crate::Field = crate::Field::new(11, 0, RO_RUN0_COUNT2);
+        pub const RO_RUN0_COUNT2_RO_RUN0_COUNT2: crate::Field =
+            crate::Field::new(11, 0, RO_RUN0_COUNT2);
 
         pub const RO_RUN0_COUNT3: crate::Register = crate::Register::new(23, 0x7ff);
-        pub const RO_RUN0_COUNT3_RO_RUN0_COUNT3: crate::Field = crate::Field::new(11, 0, RO_RUN0_COUNT3);
+        pub const RO_RUN0_COUNT3_RO_RUN0_COUNT3: crate::Field =
+            crate::Field::new(11, 0, RO_RUN0_COUNT3);
 
         pub const RO_RUN0_COUNT4: crate::Register = crate::Register::new(24, 0x7ff);
-        pub const RO_RUN0_COUNT4_RO_RUN0_COUNT4: crate::Field = crate::Field::new(11, 0, RO_RUN0_COUNT4);
+        pub const RO_RUN0_COUNT4_RO_RUN0_COUNT4: crate::Field =
+            crate::Field::new(11, 0, RO_RUN0_COUNT4);
 
         pub const RO_RUN1_CTRL: crate::Register = crate::Register::new(25, 0x7ff);
         pub const RO_RUN1_CTRL_WINDOW: crate::Field = crate::Field::new(11, 0, RO_RUN1_CTRL);
 
         pub const RO_RUN1_FRESH: crate::Register = crate::Register::new(26, 0xf);
-        pub const RO_RUN1_FRESH_RO_RUN1_FRESH: crate::Field = crate::Field::new(4, 0, RO_RUN1_FRESH);
+        pub const RO_RUN1_FRESH_RO_RUN1_FRESH: crate::Field =
+            crate::Field::new(4, 0, RO_RUN1_FRESH);
 
         pub const RO_RUN1_COUNT1: crate::Register = crate::Register::new(27, 0x7ff);
-        pub const RO_RUN1_COUNT1_RO_RUN1_COUNT1: crate::Field = crate::Field::new(11, 0, RO_RUN1_COUNT1);
+        pub const RO_RUN1_COUNT1_RO_RUN1_COUNT1: crate::Field =
+            crate::Field::new(11, 0, RO_RUN1_COUNT1);
 
         pub const RO_RUN1_COUNT2: crate::Register = crate::Register::new(28, 0x7ff);
-        pub const RO_RUN1_COUNT2_RO_RUN1_COUNT2: crate::Field = crate::Field::new(11, 0, RO_RUN1_COUNT2);
+        pub const RO_RUN1_COUNT2_RO_RUN1_COUNT2: crate::Field =
+            crate::Field::new(11, 0, RO_RUN1_COUNT2);
 
         pub const RO_RUN1_COUNT3: crate::Register = crate::Register::new(29, 0x7ff);
-        pub const RO_RUN1_COUNT3_RO_RUN1_COUNT3: crate::Field = crate::Field::new(11, 0, RO_RUN1_COUNT3);
+        pub const RO_RUN1_COUNT3_RO_RUN1_COUNT3: crate::Field =
+            crate::Field::new(11, 0, RO_RUN1_COUNT3);
 
         pub const RO_RUN1_COUNT4: crate::Register = crate::Register::new(30, 0x7ff);
-        pub const RO_RUN1_COUNT4_RO_RUN1_COUNT4: crate::Field = crate::Field::new(11, 0, RO_RUN1_COUNT4);
+        pub const RO_RUN1_COUNT4_RO_RUN1_COUNT4: crate::Field =
+            crate::Field::new(11, 0, RO_RUN1_COUNT4);
 
         pub const RO_RUN2_CTRL: crate::Register = crate::Register::new(31, 0x7ff);
         pub const RO_RUN2_CTRL_WINDOW: crate::Field = crate::Field::new(11, 0, RO_RUN2_CTRL);
 
         pub const RO_RUN2_FRESH: crate::Register = crate::Register::new(32, 0xf);
-        pub const RO_RUN2_FRESH_RO_RUN2_FRESH: crate::Field = crate::Field::new(4, 0, RO_RUN2_FRESH);
+        pub const RO_RUN2_FRESH_RO_RUN2_FRESH: crate::Field =
+            crate::Field::new(4, 0, RO_RUN2_FRESH);
 
         pub const RO_RUN2_COUNT1: crate::Register = crate::Register::new(33, 0x7ff);
-        pub const RO_RUN2_COUNT1_RO_RUN2_COUNT1: crate::Field = crate::Field::new(11, 0, RO_RUN2_COUNT1);
+        pub const RO_RUN2_COUNT1_RO_RUN2_COUNT1: crate::Field =
+            crate::Field::new(11, 0, RO_RUN2_COUNT1);
 
         pub const RO_RUN2_COUNT2: crate::Register = crate::Register::new(34, 0x7ff);
-        pub const RO_RUN2_COUNT2_RO_RUN2_COUNT2: crate::Field = crate::Field::new(11, 0, RO_RUN2_COUNT2);
+        pub const RO_RUN2_COUNT2_RO_RUN2_COUNT2: crate::Field =
+            crate::Field::new(11, 0, RO_RUN2_COUNT2);
 
         pub const RO_RUN2_COUNT3: crate::Register = crate::Register::new(35, 0x7ff);
-        pub const RO_RUN2_COUNT3_RO_RUN2_COUNT3: crate::Field = crate::Field::new(11, 0, RO_RUN2_COUNT3);
+        pub const RO_RUN2_COUNT3_RO_RUN2_COUNT3: crate::Field =
+            crate::Field::new(11, 0, RO_RUN2_COUNT3);
 
         pub const RO_RUN2_COUNT4: crate::Register = crate::Register::new(36, 0x7ff);
-        pub const RO_RUN2_COUNT4_RO_RUN2_COUNT4: crate::Field = crate::Field::new(11, 0, RO_RUN2_COUNT4);
+        pub const RO_RUN2_COUNT4_RO_RUN2_COUNT4: crate::Field =
+            crate::Field::new(11, 0, RO_RUN2_COUNT4);
 
         pub const RO_RUN3_CTRL: crate::Register = crate::Register::new(37, 0x7ff);
         pub const RO_RUN3_CTRL_WINDOW: crate::Field = crate::Field::new(11, 0, RO_RUN3_CTRL);
 
         pub const RO_RUN3_FRESH: crate::Register = crate::Register::new(38, 0xf);
-        pub const RO_RUN3_FRESH_RO_RUN3_FRESH: crate::Field = crate::Field::new(4, 0, RO_RUN3_FRESH);
+        pub const RO_RUN3_FRESH_RO_RUN3_FRESH: crate::Field =
+            crate::Field::new(4, 0, RO_RUN3_FRESH);
 
         pub const RO_RUN3_COUNT1: crate::Register = crate::Register::new(39, 0x7ff);
-        pub const RO_RUN3_COUNT1_RO_RUN3_COUNT1: crate::Field = crate::Field::new(11, 0, RO_RUN3_COUNT1);
+        pub const RO_RUN3_COUNT1_RO_RUN3_COUNT1: crate::Field =
+            crate::Field::new(11, 0, RO_RUN3_COUNT1);
 
         pub const RO_RUN3_COUNT2: crate::Register = crate::Register::new(40, 0x7ff);
-        pub const RO_RUN3_COUNT2_RO_RUN3_COUNT2: crate::Field = crate::Field::new(11, 0, RO_RUN3_COUNT2);
+        pub const RO_RUN3_COUNT2_RO_RUN3_COUNT2: crate::Field =
+            crate::Field::new(11, 0, RO_RUN3_COUNT2);
 
         pub const RO_RUN3_COUNT3: crate::Register = crate::Register::new(41, 0x7ff);
-        pub const RO_RUN3_COUNT3_RO_RUN3_COUNT3: crate::Field = crate::Field::new(11, 0, RO_RUN3_COUNT3);
+        pub const RO_RUN3_COUNT3_RO_RUN3_COUNT3: crate::Field =
+            crate::Field::new(11, 0, RO_RUN3_COUNT3);
 
         pub const RO_RUN3_COUNT4: crate::Register = crate::Register::new(42, 0x7ff);
-        pub const RO_RUN3_COUNT4_RO_RUN3_COUNT4: crate::Field = crate::Field::new(11, 0, RO_RUN3_COUNT4);
+        pub const RO_RUN3_COUNT4_RO_RUN3_COUNT4: crate::Field =
+            crate::Field::new(11, 0, RO_RUN3_COUNT4);
 
         pub const AV_EXCURSION0_CTRL: crate::Register = crate::Register::new(43, 0xffffffff);
-        pub const AV_EXCURSION0_CTRL_CUTOFF: crate::Field = crate::Field::new(12, 0, AV_EXCURSION0_CTRL);
-        pub const AV_EXCURSION0_CTRL_RESET: crate::Field = crate::Field::new(1, 12, AV_EXCURSION0_CTRL);
-        pub const AV_EXCURSION0_CTRL_WINDOW: crate::Field = crate::Field::new(19, 13, AV_EXCURSION0_CTRL);
+        pub const AV_EXCURSION0_CTRL_CUTOFF: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION0_CTRL);
+        pub const AV_EXCURSION0_CTRL_RESET: crate::Field =
+            crate::Field::new(1, 12, AV_EXCURSION0_CTRL);
+        pub const AV_EXCURSION0_CTRL_WINDOW: crate::Field =
+            crate::Field::new(19, 13, AV_EXCURSION0_CTRL);
 
         pub const AV_EXCURSION0_STAT: crate::Register = crate::Register::new(44, 0xffffff);
-        pub const AV_EXCURSION0_STAT_MIN: crate::Field = crate::Field::new(12, 0, AV_EXCURSION0_STAT);
-        pub const AV_EXCURSION0_STAT_MAX: crate::Field = crate::Field::new(12, 12, AV_EXCURSION0_STAT);
+        pub const AV_EXCURSION0_STAT_MIN: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION0_STAT);
+        pub const AV_EXCURSION0_STAT_MAX: crate::Field =
+            crate::Field::new(12, 12, AV_EXCURSION0_STAT);
 
         pub const AV_EXCURSION0_LAST_ERR: crate::Register = crate::Register::new(45, 0xffffff);
-        pub const AV_EXCURSION0_LAST_ERR_MIN: crate::Field = crate::Field::new(12, 0, AV_EXCURSION0_LAST_ERR);
-        pub const AV_EXCURSION0_LAST_ERR_MAX: crate::Field = crate::Field::new(12, 12, AV_EXCURSION0_LAST_ERR);
+        pub const AV_EXCURSION0_LAST_ERR_MIN: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION0_LAST_ERR);
+        pub const AV_EXCURSION0_LAST_ERR_MAX: crate::Field =
+            crate::Field::new(12, 12, AV_EXCURSION0_LAST_ERR);
 
         pub const AV_EXCURSION1_CTRL: crate::Register = crate::Register::new(46, 0xffffffff);
-        pub const AV_EXCURSION1_CTRL_CUTOFF: crate::Field = crate::Field::new(12, 0, AV_EXCURSION1_CTRL);
-        pub const AV_EXCURSION1_CTRL_RESET: crate::Field = crate::Field::new(1, 12, AV_EXCURSION1_CTRL);
-        pub const AV_EXCURSION1_CTRL_WINDOW: crate::Field = crate::Field::new(19, 13, AV_EXCURSION1_CTRL);
+        pub const AV_EXCURSION1_CTRL_CUTOFF: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION1_CTRL);
+        pub const AV_EXCURSION1_CTRL_RESET: crate::Field =
+            crate::Field::new(1, 12, AV_EXCURSION1_CTRL);
+        pub const AV_EXCURSION1_CTRL_WINDOW: crate::Field =
+            crate::Field::new(19, 13, AV_EXCURSION1_CTRL);
 
         pub const AV_EXCURSION1_STAT: crate::Register = crate::Register::new(47, 0xffffff);
-        pub const AV_EXCURSION1_STAT_MIN: crate::Field = crate::Field::new(12, 0, AV_EXCURSION1_STAT);
-        pub const AV_EXCURSION1_STAT_MAX: crate::Field = crate::Field::new(12, 12, AV_EXCURSION1_STAT);
+        pub const AV_EXCURSION1_STAT_MIN: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION1_STAT);
+        pub const AV_EXCURSION1_STAT_MAX: crate::Field =
+            crate::Field::new(12, 12, AV_EXCURSION1_STAT);
 
         pub const AV_EXCURSION1_LAST_ERR: crate::Register = crate::Register::new(48, 0xffffff);
-        pub const AV_EXCURSION1_LAST_ERR_MIN: crate::Field = crate::Field::new(12, 0, AV_EXCURSION1_LAST_ERR);
-        pub const AV_EXCURSION1_LAST_ERR_MAX: crate::Field = crate::Field::new(12, 12, AV_EXCURSION1_LAST_ERR);
+        pub const AV_EXCURSION1_LAST_ERR_MIN: crate::Field =
+            crate::Field::new(12, 0, AV_EXCURSION1_LAST_ERR);
+        pub const AV_EXCURSION1_LAST_ERR_MAX: crate::Field =
+            crate::Field::new(12, 12, AV_EXCURSION1_LAST_ERR);
 
         pub const READY: crate::Register = crate::Register::new(49, 0xff);
         pub const READY_AV_EXCURSION: crate::Field = crate::Field::new(2, 0, READY);
@@ -1334,7 +1384,8 @@ pub mod utra {
         pub const URANDOM_URANDOM: crate::Field = crate::Field::new(32, 0, URANDOM);
 
         pub const URANDOM_VALID: crate::Register = crate::Register::new(56, 0x1);
-        pub const URANDOM_VALID_URANDOM_VALID: crate::Field = crate::Field::new(1, 0, URANDOM_VALID);
+        pub const URANDOM_VALID_URANDOM_VALID: crate::Field =
+            crate::Field::new(1, 0, URANDOM_VALID);
 
         pub const TEST: crate::Register = crate::Register::new(57, 0x1);
         pub const TEST_SIMULTANEOUS: crate::Field = crate::Field::new(1, 0, TEST);
@@ -1347,7 +1398,8 @@ pub mod utra {
         pub const TRNG_NUMREGS: usize = 20;
 
         pub const XADC_TEMPERATURE: crate::Register = crate::Register::new(0, 0xfff);
-        pub const XADC_TEMPERATURE_XADC_TEMPERATURE: crate::Field = crate::Field::new(12, 0, XADC_TEMPERATURE);
+        pub const XADC_TEMPERATURE_XADC_TEMPERATURE: crate::Field =
+            crate::Field::new(12, 0, XADC_TEMPERATURE);
 
         pub const XADC_VCCINT: crate::Register = crate::Register::new(1, 0xfff);
         pub const XADC_VCCINT_XADC_VCCINT: crate::Field = crate::Field::new(12, 0, XADC_VCCINT);
@@ -1386,25 +1438,31 @@ pub mod utra {
         pub const XADC_GPIO2_XADC_GPIO2: crate::Field = crate::Field::new(12, 0, XADC_GPIO2);
 
         pub const XADC_DRP_ENABLE: crate::Register = crate::Register::new(13, 0x1);
-        pub const XADC_DRP_ENABLE_XADC_DRP_ENABLE: crate::Field = crate::Field::new(1, 0, XADC_DRP_ENABLE);
+        pub const XADC_DRP_ENABLE_XADC_DRP_ENABLE: crate::Field =
+            crate::Field::new(1, 0, XADC_DRP_ENABLE);
 
         pub const XADC_DRP_READ: crate::Register = crate::Register::new(14, 0x1);
-        pub const XADC_DRP_READ_XADC_DRP_READ: crate::Field = crate::Field::new(1, 0, XADC_DRP_READ);
+        pub const XADC_DRP_READ_XADC_DRP_READ: crate::Field =
+            crate::Field::new(1, 0, XADC_DRP_READ);
 
         pub const XADC_DRP_WRITE: crate::Register = crate::Register::new(15, 0x1);
-        pub const XADC_DRP_WRITE_XADC_DRP_WRITE: crate::Field = crate::Field::new(1, 0, XADC_DRP_WRITE);
+        pub const XADC_DRP_WRITE_XADC_DRP_WRITE: crate::Field =
+            crate::Field::new(1, 0, XADC_DRP_WRITE);
 
         pub const XADC_DRP_DRDY: crate::Register = crate::Register::new(16, 0x1);
-        pub const XADC_DRP_DRDY_XADC_DRP_DRDY: crate::Field = crate::Field::new(1, 0, XADC_DRP_DRDY);
+        pub const XADC_DRP_DRDY_XADC_DRP_DRDY: crate::Field =
+            crate::Field::new(1, 0, XADC_DRP_DRDY);
 
         pub const XADC_DRP_ADR: crate::Register = crate::Register::new(17, 0x7f);
         pub const XADC_DRP_ADR_XADC_DRP_ADR: crate::Field = crate::Field::new(7, 0, XADC_DRP_ADR);
 
         pub const XADC_DRP_DAT_W: crate::Register = crate::Register::new(18, 0xffff);
-        pub const XADC_DRP_DAT_W_XADC_DRP_DAT_W: crate::Field = crate::Field::new(16, 0, XADC_DRP_DAT_W);
+        pub const XADC_DRP_DAT_W_XADC_DRP_DAT_W: crate::Field =
+            crate::Field::new(16, 0, XADC_DRP_DAT_W);
 
         pub const XADC_DRP_DAT_R: crate::Register = crate::Register::new(19, 0xffff);
-        pub const XADC_DRP_DAT_R_XADC_DRP_DAT_R: crate::Field = crate::Field::new(16, 0, XADC_DRP_DAT_R);
+        pub const XADC_DRP_DAT_R_XADC_DRP_DAT_R: crate::Field =
+            crate::Field::new(16, 0, XADC_DRP_DAT_R);
 
         pub const HW_TRNG_BASE: usize = 0xf001e000;
     }
@@ -1636,7 +1694,8 @@ pub mod utra {
         pub const WFI_WFI: crate::Field = crate::Field::new(1, 0, WFI);
 
         pub const IGNORE_LOCKED: crate::Register = crate::Register::new(1, 0x1);
-        pub const IGNORE_LOCKED_IGNORE_LOCKED: crate::Field = crate::Field::new(1, 0, IGNORE_LOCKED);
+        pub const IGNORE_LOCKED_IGNORE_LOCKED: crate::Field =
+            crate::Field::new(1, 0, IGNORE_LOCKED);
 
         pub const HW_WFI_BASE: usize = 0xf0025000;
     }
@@ -1679,7 +1738,6 @@ pub const LITEX_TRNG_SERVER_INTERRUPT: usize = 16;
 pub const LITEX_UART_INTERRUPT: usize = 2;
 pub const LITEX_USBDEV_INTERRUPT: usize = 19;
 
-
 #[cfg(test)]
 mod tests {
 
@@ -1720,7 +1778,7 @@ mod tests {
         let mut baz = reboot_csr.zf(utra::reboot::CPU_HOLD_RESET_CPU_HOLD_RESET, bar);
         baz |= reboot_csr.ms(utra::reboot::CPU_HOLD_RESET_CPU_HOLD_RESET, 1);
         reboot_csr.wfo(utra::reboot::CPU_HOLD_RESET_CPU_HOLD_RESET, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -1775,7 +1833,7 @@ mod tests {
         let mut baz = timer0_csr.zf(utra::timer0::EV_ENABLE_ZERO, bar);
         baz |= timer0_csr.ms(utra::timer0::EV_ENABLE_ZERO, 1);
         timer0_csr.wfo(utra::timer0::EV_ENABLE_ZERO, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -1972,7 +2030,7 @@ mod tests {
         let mut baz = gpio_csr.zf(utra::gpio::EV_ENABLE_EVENT7, bar);
         baz |= gpio_csr.ms(utra::gpio::EV_ENABLE_EVENT7, 1);
         gpio_csr.wfo(utra::gpio::EV_ENABLE_EVENT7, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2058,7 +2116,7 @@ mod tests {
         let mut baz = uart_csr.zf(utra::uart::RXFULL_RXFULL, bar);
         baz |= uart_csr.ms(utra::uart::RXFULL_RXFULL, 1);
         uart_csr.wfo(utra::uart::RXFULL_RXFULL, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2144,7 +2202,7 @@ mod tests {
         let mut baz = console_csr.zf(utra::console::RXFULL_RXFULL, bar);
         baz |= console_csr.ms(utra::console::RXFULL_RXFULL, 1);
         console_csr.wfo(utra::console::RXFULL_RXFULL, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2230,7 +2288,7 @@ mod tests {
         let mut baz = app_uart_csr.zf(utra::app_uart::RXFULL_RXFULL, bar);
         baz |= app_uart_csr.ms(utra::app_uart::RXFULL_RXFULL, 1);
         app_uart_csr.wfo(utra::app_uart::RXFULL_RXFULL, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2333,7 +2391,7 @@ mod tests {
         let mut baz = info_csr.zf(utra::info::PLATFORM_TARGET0_PLATFORM_TARGET, bar);
         baz |= info_csr.ms(utra::info::PLATFORM_TARGET0_PLATFORM_TARGET, 1);
         info_csr.wfo(utra::info::PLATFORM_TARGET0_PLATFORM_TARGET, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2409,7 +2467,7 @@ mod tests {
         let mut baz = memlcd_csr.zf(utra::memlcd::DEVSTATUS_DEVSTATUS, bar);
         baz |= memlcd_csr.ms(utra::memlcd::DEVSTATUS_DEVSTATUS, 1);
         memlcd_csr.wfo(utra::memlcd::DEVSTATUS_DEVSTATUS, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2497,7 +2555,7 @@ mod tests {
         let mut baz = com_csr.zf(utra::com::EV_ENABLE_SPI_HOLD, bar);
         baz |= com_csr.ms(utra::com::EV_ENABLE_SPI_HOLD, 1);
         com_csr.wfo(utra::com::EV_ENABLE_SPI_HOLD, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2664,7 +2722,7 @@ mod tests {
         let mut baz = i2c_csr.zf(utra::i2c::EV_ENABLE_TXRX_DONE, bar);
         baz |= i2c_csr.ms(utra::i2c::EV_ENABLE_TXRX_DONE, 1);
         i2c_csr.wfo(utra::i2c::EV_ENABLE_TXRX_DONE, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2710,7 +2768,7 @@ mod tests {
         let mut baz = btevents_csr.zf(utra::btevents::EV_ENABLE_RTC_INT, bar);
         baz |= btevents_csr.ms(utra::btevents::EV_ENABLE_RTC_INT, 1);
         btevents_csr.wfo(utra::btevents::EV_ENABLE_RTC_INT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2781,7 +2839,7 @@ mod tests {
         let mut baz = ticktimer_csr.zf(utra::ticktimer::EV_ENABLE_ALARM, bar);
         baz |= ticktimer_csr.ms(utra::ticktimer::EV_ENABLE_ALARM, 1);
         ticktimer_csr.wfo(utra::ticktimer::EV_ENABLE_ALARM, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -2902,7 +2960,7 @@ mod tests {
         let mut baz = susres_csr.zf(utra::susres::EV_ENABLE_SOFT_INT, bar);
         baz |= susres_csr.ms(utra::susres::EV_ENABLE_SOFT_INT, 1);
         susres_csr.wfo(utra::susres::EV_ENABLE_SOFT_INT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3101,7 +3159,7 @@ mod tests {
         let mut baz = power_csr.zf(utra::power::EV_ENABLE_ACTIVITY_UPDATE, bar);
         baz |= power_csr.ms(utra::power::EV_ENABLE_ACTIVITY_UPDATE, 1);
         power_csr.wfo(utra::power::EV_ENABLE_ACTIVITY_UPDATE, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3140,7 +3198,7 @@ mod tests {
         let mut baz = spinor_soft_int_csr.zf(utra::spinor_soft_int::SOFTINT_SOFTINT, bar);
         baz |= spinor_soft_int_csr.ms(utra::spinor_soft_int::SOFTINT_SOFTINT, 1);
         spinor_soft_int_csr.wfo(utra::spinor_soft_int::SOFTINT_SOFTINT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3291,7 +3349,7 @@ mod tests {
         let mut baz = spinor_csr.zf(utra::spinor::ECC_STATUS_ECC_OVERFLOW, bar);
         baz |= spinor_csr.ms(utra::spinor::ECC_STATUS_ECC_OVERFLOW, 1);
         spinor_csr.wfo(utra::spinor::ECC_STATUS_ECC_OVERFLOW, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3422,7 +3480,7 @@ mod tests {
         let mut baz = keyboard_csr.zf(utra::keyboard::EV_ENABLE_INJECT, bar);
         baz |= keyboard_csr.ms(utra::keyboard::EV_ENABLE_INJECT, 1);
         keyboard_csr.wfo(utra::keyboard::EV_ENABLE_INJECT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3445,7 +3503,7 @@ mod tests {
         let mut baz = keyinject_csr.zf(utra::keyinject::DISABLE_DISABLE, bar);
         baz |= keyinject_csr.ms(utra::keyinject::DISABLE_DISABLE, 1);
         keyinject_csr.wfo(utra::keyinject::DISABLE_DISABLE, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3468,7 +3526,7 @@ mod tests {
         let mut baz = seed_csr.zf(utra::seed::SEED0_SEED, bar);
         baz |= seed_csr.ms(utra::seed::SEED0_SEED, 1);
         seed_csr.wfo(utra::seed::SEED0_SEED, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3507,7 +3565,7 @@ mod tests {
         let mut baz = keyrom_csr.zf(utra::keyrom::LOCKSTAT_LOCKSTAT, bar);
         baz |= keyrom_csr.ms(utra::keyrom::LOCKSTAT_LOCKSTAT, 1);
         keyrom_csr.wfo(utra::keyrom::LOCKSTAT_LOCKSTAT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3736,7 +3794,7 @@ mod tests {
         let mut baz = audio_csr.zf(utra::audio::TX_CONF_LRCK_FREQ, bar);
         baz |= audio_csr.ms(utra::audio::TX_CONF_LRCK_FREQ, 1);
         audio_csr.wfo(utra::audio::TX_CONF_LRCK_FREQ, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -3829,7 +3887,7 @@ mod tests {
         let mut baz = trng_kernel_csr.zf(utra::trng_kernel::EV_ENABLE_ERROR, bar);
         baz |= trng_kernel_csr.ms(utra::trng_kernel::EV_ENABLE_ERROR, 1);
         trng_kernel_csr.wfo(utra::trng_kernel::EV_ENABLE_ERROR, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -4610,7 +4668,7 @@ mod tests {
         let mut baz = trng_server_csr.zf(utra::trng_server::TEST_SIMULTANEOUS, bar);
         baz |= trng_server_csr.ms(utra::trng_server::TEST_SIMULTANEOUS, 1);
         trng_server_csr.wfo(utra::trng_server::TEST_SIMULTANEOUS, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -4777,7 +4835,7 @@ mod tests {
         let mut baz = trng_csr.zf(utra::trng::XADC_DRP_DAT_R_XADC_DRP_DAT_R, bar);
         baz |= trng_csr.ms(utra::trng::XADC_DRP_DAT_R_XADC_DRP_DAT_R, 1);
         trng_csr.wfo(utra::trng::XADC_DRP_DAT_R_XADC_DRP_DAT_R, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5074,7 +5132,7 @@ mod tests {
         let mut baz = sha512_csr.zf(utra::sha512::FIFO_RUNNING, bar);
         baz |= sha512_csr.ms(utra::sha512::FIFO_RUNNING, 1);
         sha512_csr.wfo(utra::sha512::FIFO_RUNNING, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5229,7 +5287,7 @@ mod tests {
         let mut baz = engine_csr.zf(utra::engine::INSTRUCTION_IMMEDIATE, bar);
         baz |= engine_csr.ms(utra::engine::INSTRUCTION_IMMEDIATE, 1);
         engine_csr.wfo(utra::engine::INSTRUCTION_IMMEDIATE, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5262,7 +5320,7 @@ mod tests {
         let mut baz = jtag_csr.zf(utra::jtag::TDO_READY, bar);
         baz |= jtag_csr.ms(utra::jtag::TDO_READY, 1);
         jtag_csr.wfo(utra::jtag::TDO_READY, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5313,7 +5371,7 @@ mod tests {
         let mut baz = wdt_csr.zf(utra::wdt::STATE_DISARMED, bar);
         baz |= wdt_csr.ms(utra::wdt::STATE_DISARMED, 1);
         wdt_csr.wfo(utra::wdt::STATE_DISARMED, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5365,7 +5423,7 @@ mod tests {
         let mut baz = usbdev_csr.zf(utra::usbdev::EV_ENABLE_USB, bar);
         baz |= usbdev_csr.ms(utra::usbdev::EV_ENABLE_USB, 1);
         usbdev_csr.wfo(utra::usbdev::EV_ENABLE_USB, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5388,7 +5446,7 @@ mod tests {
         let mut baz = d11ctime_csr.zf(utra::d11ctime::HEARTBEAT_BEAT, bar);
         baz |= d11ctime_csr.ms(utra::d11ctime::HEARTBEAT_BEAT, 1);
         d11ctime_csr.wfo(utra::d11ctime::HEARTBEAT_BEAT, baz);
-  }
+    }
 
     #[test]
     #[ignore]
@@ -5411,5 +5469,5 @@ mod tests {
         let mut baz = wfi_csr.zf(utra::wfi::IGNORE_LOCKED_IGNORE_LOCKED, bar);
         baz |= wfi_csr.ms(utra::wfi::IGNORE_LOCKED_IGNORE_LOCKED, 1);
         wfi_csr.wfo(utra::wfi::IGNORE_LOCKED_IGNORE_LOCKED, baz);
-  }
+    }
 }
