@@ -4,5 +4,6 @@ export JLINK_GDB_SERVER_PATH=/Applications/SEGGER/JLink_V786d/JLinkGDBServer
 
 set -e
 
-$JLINK_GDB_SERVER_PATH -select USB -device ATSAMA5D27C-CU -endian little -if JTAG -speed auto -noir -noLocalhostOnly \
-  -nologtofile -port 3333 -SWOPort 2311 -TelnetPort 2333
+GDB_SPEED_KHZ=100000
+$JLINK_GDB_SERVER_PATH -select USB -device ATSAMA5D27C-CU -endian little -if JTAG -speed $GDB_SPEED_KHZ -noir -noLocalhostOnly \
+  -nologtofile -port 3334 -SWOPort 2311 -TelnetPort 2333
