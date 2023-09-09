@@ -1,10 +1,10 @@
 //! Slow Clock (SCKC) module.
 
-use utralib::*;
 use utralib::utra::sckc::SCKC_CR_OSCSEL;
+use utralib::*;
 
 pub struct Sckc {
-    base_addr: u32
+    base_addr: u32,
 }
 
 const SLOW_CLOCK_INTERNAL_HZ: u32 = 64_000;
@@ -18,9 +18,7 @@ impl Sckc {
     }
 
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
-        Sckc {
-            base_addr,
-        }
+        Sckc { base_addr }
     }
 
     pub fn get_clock_freq_hz(&self) -> u32 {

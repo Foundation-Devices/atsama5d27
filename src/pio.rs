@@ -3,9 +3,9 @@
 use core::marker::PhantomData;
 use utralib::utra::pio::{
     HW_PIO_BASE, PIO_CFGR0, PIO_CFGR0_DIR, PIO_CFGR0_EVTSEL, PIO_CFGR0_FUNC, PIO_CFGR0_IFEN,
-    PIO_CFGR0_IFSCEN, PIO_CODR0, PIO_IDR0, PIO_IER0, PIO_MSKR0, PIO_PDSR0, PIO_SODR0, PIO_ISR0,
+    PIO_CFGR0_IFSCEN, PIO_CODR0, PIO_IDR0, PIO_IER0, PIO_ISR0, PIO_MSKR0, PIO_PDSR0, PIO_SODR0,
 };
-use utralib::utra::spio::{PIO_WPMR_WPEN, PIO_WPMR, PIO_SCDR};
+use utralib::utra::spio::{PIO_SCDR, PIO_WPMR, PIO_WPMR_WPEN};
 use utralib::*;
 
 use crate::pio::sealed::Sealed;
@@ -189,9 +189,7 @@ impl SecurePio {
     }
 
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
-        SecurePio {
-            base_addr,
-        }
+        SecurePio { base_addr }
     }
 
     pub fn is_write_protected(&self) -> bool {

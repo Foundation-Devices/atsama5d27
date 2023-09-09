@@ -3,6 +3,7 @@
 pub mod aes;
 pub mod aic;
 pub mod cache;
+pub mod dma;
 pub mod l1cache;
 pub mod l2cc;
 pub mod lcdc;
@@ -14,7 +15,6 @@ pub mod sfr;
 pub mod tc;
 pub mod trng;
 pub mod uart;
-pub mod dma;
 
 #[cfg(feature = "lcd-console")]
 pub mod console;
