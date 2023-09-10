@@ -1,6 +1,6 @@
 use utralib::utra::aic::{
     EOICR_ENDIT, IDCR_INTD, IECR_INTEN, IPR0, IPR1, IPR2, IPR3, ISR_IRQID, SMR_PRIORITY,
-    SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL, SVR_VECTOR,
+    SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL, SVR_VECTOR, IVR,
 };
 use utralib::*;
 
@@ -78,10 +78,6 @@ impl Aic {
     pub fn init(&mut self) {
         let mut aic_csr = CSR::new(self.base_addr as *mut u32);
 
-        disable_interrupts();
-        armv7::asm::dmb();
-        armv7::asm::isb();
-
         // Disable interrupts from all sources
         for i in 0..MAX_NUM_SOURCES {
             // Select interrupt source
@@ -98,16 +94,10 @@ impl Aic {
         for _ in 0..MAX_INTERRUPT_DEPTH {
             aic_csr.wfo(EOICR_ENDIT, 1);
         }
-
-        armv7::asm::dsb();
-        enable_interrupts();
-        armv7::asm::isb();
     }
 
     /// Sets the handler for the interrupt.
     pub fn set_interrupt_handler(&mut self, handler: InterruptEntry) {
-        disable_interrupts();
-
         let mut aic_csr = CSR::new(self.base_addr as *mut u32);
 
         aic_csr.wfo(SSR_INTSEL, handler.peripheral_id as u32);
@@ -118,8 +108,6 @@ impl Aic {
 
         // Enable the interrupt
         aic_csr.wfo(IECR_INTEN, 1);
-
-        enable_interrupts();
     }
 
     /// # Panics
@@ -131,6 +119,11 @@ impl Aic {
             .expect("invalid peripheral ID")
     }
 
+    pub fn pop_ivr(&self) -> u32 {
+        let aic_csr = CSR::new(self.base_addr as *mut u32);
+        aic_csr.r(IVR)
+    }
+
     /// Should be called from the end of the ISR.
     pub fn interrupt_completed(&mut self) {
         let mut aic_csr = CSR::new(self.base_addr as *mut u32);
@@ -139,17 +132,9 @@ impl Aic {
 
     /// Enables or disables specific IRQ.
     pub fn set_interrupt_enabled(&mut self, id: PeripheralId, enabled: bool) {
-        disable_interrupts();
-        armv7::asm::dmb();
-        armv7::asm::isb();
-
         let mut aic_csr = CSR::new(self.base_addr as *mut u32);
         aic_csr.wfo(SSR_INTSEL, id as u32);
         aic_csr.wfo(IECR_INTEN, enabled.into());
-
-        armv7::asm::dsb();
-        enable_interrupts();
-        armv7::asm::isb();
     }
 
     /// Returns a 128-bit mask of pending IRQs.
@@ -162,37 +147,5 @@ impl Aic {
             irqs_64_95: aic_csr.r(IPR2),
             irqs_96_127: aic_csr.r(IPR3),
         }
-    }
-}
-
-fn disable_interrupts() {
-    unsafe {
-        // Use a dummy variable to allocate a register for.
-        // Makes the compiler aware of the register being modified to avoid clobbering in-use registers.
-        // Otherwise, modifying any of the common registers unbeknown to the compiler may make a mess in --release mode.
-        let mut _dummy: u32 = 0;
-        core::arch::asm!(
-            "mrs {reg}, cpsr",
-            "orr {reg}, {reg}, #0xc0",
-            "msr cpsr_c, {reg}",
-            "cpsid if",
-            reg = inlateout(reg) _dummy,
-        );
-    }
-}
-
-fn enable_interrupts() {
-    unsafe {
-        // Use a dummy variable to allocate a register for.
-        // Makes the compiler aware of the register being modified to avoid clobbering in-use registers.
-        // Otherwise, modifying any of the common registers unbeknown to the compiler may make a mess in --release mode.
-        let mut _dummy: u32 = 0;
-        core::arch::asm!(
-            "mrs {reg}, cpsr",
-            "bic {reg}, {reg}, #0xc0",
-            "msr cpsr_c, {reg}",
-            "cpsie if",
-            reg = inlateout(reg) _dummy,
-        );
     }
 }
