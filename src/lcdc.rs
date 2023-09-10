@@ -800,8 +800,8 @@ impl Lcdc {
             LcdcLayerId::Base => {
                 lcdc_csr.rmwf(BASECFG5_DISCXPOS, x as u32);
                 lcdc_csr.rmwf(BASECFG5_DISCYPOS, y as u32);
-                lcdc_csr.rmwf(BASECFG6_DISCXSIZE, w as u32);
-                lcdc_csr.rmwf(BASECFG6_DISCYSIZE, h as u32);
+                lcdc_csr.rmwf(BASECFG6_DISCXSIZE, w.saturating_sub(1) as u32);
+                lcdc_csr.rmwf(BASECFG6_DISCYSIZE, h.saturating_sub(1) as u32);
             }
             _ => todo!(),
         }
@@ -872,8 +872,8 @@ impl Lcdc {
         let ysize = lcdc_csr.rf(HEOCFG3_YSIZE) as u16;
 
         // Calculate in u32 to avoid overflow
-        let xfactor_1st = ((2048 as u32 * xmemsize as u32 / xsize as u32) + 1) as u16;
-        let yfactor_1st = ((2048 as u32 * ymemsize as u32 / ysize as u32) + 1) as u16;
+        let xfactor_1st = ((2048_u32 * xmemsize as u32 / xsize as u32) + 1) as u16;
+        let yfactor_1st = ((2048_u32 * ymemsize as u32 / ysize as u32) + 1) as u16;
 
         let xfactor = if (xfactor_1st * xsize / 2048) > xmemsize {
             xfactor_1st - 1
