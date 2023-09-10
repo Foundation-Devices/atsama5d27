@@ -7,7 +7,7 @@ use atsama5d27::lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId};
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
-        pio::{Direction, Func, Pio, PioB, PioC, PioD, PioPort},
+        pio::{Direction, Func, Pio, PioB, PioC, PioPort},
         pmc::{PeripheralId, Pmc},
         tc::Tc,
         trng::Trng,
