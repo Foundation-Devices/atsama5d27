@@ -1,7 +1,9 @@
 //! Timer-Counter (TC) implementation.
 
-use utralib::utra::tc0::{CCR0, CMR0, CV0, IDR0, IER0, RC0, SR0};
-use utralib::*;
+use utralib::{
+    utra::tc0::{CCR0, CMR0, CV0, IDR0, IER0, RC0, SR0},
+    *,
+};
 
 const TC_CMR_TCCLKS_TIMER_CLOCK4: u32 = 0x3; // Clock selected: internal System bus clock divided by 128 clock signal (from PMC)
 const TC_CMR_WAVEFORM_WAVSEL_UP_RC: u32 = 0x03; // UP mode with automatic trigger on RC Compare Position

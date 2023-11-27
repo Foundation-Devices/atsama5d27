@@ -1,9 +1,12 @@
 //! ATSAMA5D2 TRNG driver.
 
-use core::marker::PhantomData;
-
-use utralib::utra::trng::{CR, ISR_DATRDY, ODATA_ODATA};
-use utralib::*;
+use {
+    core::marker::PhantomData,
+    utralib::{
+        utra::trng::{CR, ISR_DATRDY, ODATA_ODATA},
+        *,
+    },
+};
 
 pub trait TrngState {}
 pub struct Enabled;

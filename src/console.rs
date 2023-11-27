@@ -1,13 +1,13 @@
-use core::fmt::Write;
-
-use embedded_graphics::text::Text;
-use embedded_graphics::{
-    mono_font::{ascii::FONT_9X18, MonoTextStyle},
-    pixelcolor::Rgb888,
-    prelude::*,
+use {
+    crate::display::FramebufDisplay,
+    core::fmt::Write,
+    embedded_graphics::{
+        mono_font::{ascii::FONT_9X18, MonoTextStyle},
+        pixelcolor::Rgb888,
+        prelude::*,
+        text::Text,
+    },
 };
-
-use crate::display::FramebufDisplay;
 
 pub struct DisplayAndUartConsole<U: Write> {
     uart: U,

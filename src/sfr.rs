@@ -1,7 +1,6 @@
 //! Special function registers (SFR).
 
-use utralib::utra::sfr::*;
-use utralib::{HW_SFR_BASE, *};
+use utralib::{utra::sfr::*, HW_SFR_BASE, *};
 
 pub struct Sfr {
     base_addr: u32,

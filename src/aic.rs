@@ -1,10 +1,25 @@
-use utralib::utra::aic::{
-    EOICR_ENDIT, IDCR_INTD, IECR_INTEN, IPR0, IPR1, IPR2, IPR3, ISR_IRQID, SMR_PRIORITY,
-    SMR_SRCTYPE, SPU_SIVR, SSR_INTSEL, SVR_VECTOR, IVR,
+use {
+    crate::pmc::PeripheralId,
+    utralib::{
+        utra::aic::{
+            EOICR_ENDIT,
+            IDCR_INTD,
+            IECR_INTEN,
+            IPR0,
+            IPR1,
+            IPR2,
+            IPR3,
+            ISR_IRQID,
+            IVR,
+            SMR_PRIORITY,
+            SMR_SRCTYPE,
+            SPU_SIVR,
+            SSR_INTSEL,
+            SVR_VECTOR,
+        },
+        *,
+    },
 };
-use utralib::*;
-
-use crate::pmc::PeripheralId;
 
 pub struct Aic {
     base_addr: u32,
@@ -24,7 +39,8 @@ pub enum SourceKind {
     /// Negative-edge triggered for external source.
     ExternalNegativeEdge = 1,
 
-    /// High-level sensitive for internal source. High-level sensitive for external source.
+    /// High-level sensitive for internal source. High-level sensitive for external
+    /// source.
     ExternalHighLevel = 2,
 
     /// Positive-edge triggered for external source.
@@ -67,7 +83,8 @@ impl Aic {
     }
 
     /// Creates AIC instance with a different base address.
-    /// Used with virtual memory or when choosing between secured and non-secured versions of AIC.
+    /// Used with virtual memory or when choosing between secured and non-secured versions
+    /// of AIC.
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
         Self {
             base_addr,

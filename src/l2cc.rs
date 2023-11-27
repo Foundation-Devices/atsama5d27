@@ -1,7 +1,6 @@
 //! Level-2 cache controller (L2CC).
 
-use utralib::utra::l2cc::*;
-use utralib::{HW_L2CC_BASE, *};
+use utralib::{utra::l2cc::*, HW_L2CC_BASE, *};
 
 const L2CC_OFFSET_BIT: u32 = 5;
 const L2CC_INDEX_BIT: u32 = 9;

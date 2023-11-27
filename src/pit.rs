@@ -1,5 +1,7 @@
-use utralib::utra::pit::{MR_PITEN, MR_PITIEN, MR_PIV, PIIR, PIVR};
-use utralib::*;
+use utralib::{
+    utra::pit::{MR_PITEN, MR_PITIEN, MR_PIV, PIIR, PIVR},
+    *,
+};
 
 pub struct Pit {
     base_addr: u32,

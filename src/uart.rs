@@ -1,12 +1,21 @@
 //! UART controller.
 
-use core::fmt::Write;
-use core::marker::PhantomData;
-
-use utralib::utra::uart0::{
-    CR_RXDIS, CR_RXEN, IER_RXRDY, IMR_RXRDY, RHR_RXCHR, SR_RXRDY, SR_TXRDY, THR_TXCHR,
+use {
+    core::{fmt::Write, marker::PhantomData},
+    utralib::{
+        utra::uart0::{
+            CR_RXDIS,
+            CR_RXEN,
+            IER_RXRDY,
+            IMR_RXRDY,
+            RHR_RXCHR,
+            SR_RXRDY,
+            SR_TXRDY,
+            THR_TXCHR,
+        },
+        *,
+    },
 };
-use utralib::*;
 
 pub struct Uart0 {}
 pub struct Uart1 {}
@@ -64,7 +73,8 @@ impl<U: UartPeriph> Uart<U> {
     }
 
     /// Creates a driver instance with an alternative base address.
-    /// Useful when the UART peripheral is remapped to some other virtual address by the MMU.
+    /// Useful when the UART peripheral is remapped to some other virtual address by the
+    /// MMU.
     pub fn with_alt_base_addr(base_addr: u32) -> Uart<U> {
         Uart {
             base_addr,
