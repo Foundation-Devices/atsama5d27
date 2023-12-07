@@ -13,7 +13,7 @@ use {
         pmc::{PeripheralId, Pmc},
         sfr::Sfr,
         tc::Tc,
-        twi::{TWIStatus, Twi},
+        twi::Twi,
         uart::{Uart, Uart1},
     },
     core::{
@@ -23,7 +23,7 @@ use {
         sync::atomic::{
             compiler_fence,
             AtomicBool,
-            Ordering::{Acquire, Relaxed, Release, SeqCst},
+            Ordering::{Relaxed, SeqCst},
         },
     },
     drv2605::{Drv2605, Effect},
@@ -34,14 +34,13 @@ use {
         primitives::{
             Circle,
             Line,
-            PrimitiveStyle,
             PrimitiveStyleBuilder,
             Rectangle,
             StyledDrawable,
         },
         text::Text,
     },
-    ft3269::{Ft3269, Touch, TouchId, TouchKind},
+    ft3269::{Ft3269, Touch, TouchKind},
     is31fl32xx::{Is31fl32xx, OscillatorClock, PwmResolution, SoftwareShutdownMode, IS31FL3205},
 };
 
@@ -263,6 +262,7 @@ fn _entry() -> ! {
     led_shutdown.set_func(Func::Gpio);
     led_shutdown.set_direction(Direction::Output);
 
+    // RGB LED driver
     let mut leds =
         Is31fl32xx::<IS31FL3205, _, _>::init_with_i2c(0x34, led_shutdown, unsafe { twi0.clone() });
     let mut pit = Pit::new();
@@ -290,30 +290,11 @@ fn _entry() -> ! {
         LEDS = Some(leds);
     }
 
-    // RGB LED driver
-    // Power control register
-    let mut buf: [u8; 1] = [0x00];
-    if let Some(twi0) = unsafe { &mut TWI0 } {
-        twi0.write_bytes(0x34, 0x00, &[0x01]).ok();
-        twi0.read_bytes(0x34, 0x00, &mut buf).ok();
-
-        twi0.write_bytes(0x34, 0x6E, &[0xff]).ok();
-
-        for led_no in (0..4).chain((0..4).rev()) {
-            for ch in 0..3 {
-                let ch = 3 * led_no + ch;
-                let ch_reg = 0x07 + 2 * ch;
-                twi0.write_bytes(0x34, ch_reg, &[0x00, 0x00]).ok();
-                twi0.write_bytes(0x34, 0x49, &[0x00]).ok();
-            }
-        }
-    }
-
-    let callbacks = ft3269::Callbacks {
-        read_reg: read_reg_cb,
-        write_reg: write_reg_cb,
-    };
-    let mut ft3269 = Ft3269::new(callbacks);
+    // let callbacks = ft3269::Callbacks {
+    //     read_reg: read_reg_cb,
+    //     write_reg: write_reg_cb,
+    // };
+    // let mut ft3269 = Ft3269::new(callbacks);
     // let dimensions = ft3269.dimensions().unwrap();
     // writeln!(console, "CTP dimensions: ({}, {})", dimensions.x, dimensions.y).ok();
     // ft3269.dump_regs(&mut console);
@@ -815,7 +796,7 @@ fn set_led_color(led_no: u8, color: Rgb888) {
 
         leds.set(led_no * 3 + 2, r as u16).expect("set R");
         leds.set(led_no * 3 + 1, g as u16).expect("set R");
-        leds.set(led_no * 3 + 0, b as u16).expect("set R");
+        leds.set(led_no * 3, b as u16).expect("set R");
     }
 }
 

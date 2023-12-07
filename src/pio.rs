@@ -196,24 +196,30 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 }
 
 #[cfg(feature = "hal")]
-impl<P: PioPort, const PIN: u32> embedded_hal::digital::OutputPin for Pio<P, PIN> {
-    fn set_low(&mut self) {
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::v2::OutputPin for Pio<P, PIN> {
+    type Error = ();
+
+    fn set_low(&mut self) -> Result<(), ()> {
         self.set(false);
+        Ok(())
     }
 
-    fn set_high(&mut self) {
+    fn set_high(&mut self) -> Result<(), ()>  {
         self.set(true);
+        Ok(())
     }
 }
 
 #[cfg(feature = "hal")]
-impl<P: PioPort, const PIN: u32> embedded_hal::digital::InputPin for Pio<P, PIN> {
-    fn is_high(&self) -> bool {
-        self.get()
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::v2::InputPin for Pio<P, PIN> {
+    type Error = ();
+
+    fn is_high(&self) -> Result<bool, ()> {
+        Ok(self.get())
     }
 
-    fn is_low(&self) -> bool {
-        !self.get()
+    fn is_low(&self) -> Result<bool, ()> {
+        Ok(!self.get())
     }
 }
 

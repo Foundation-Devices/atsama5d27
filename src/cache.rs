@@ -27,12 +27,12 @@ pub fn clean_region(l2cc: &mut L2cc, start: usize, length: usize) {
 
 pub fn invalidate_slice<T>(l2cc: &mut L2cc, slice: &[T]) {
     let start_addr = slice.as_ptr() as usize;
-    let end_addr = start_addr + slice.len() * core::mem::size_of::<T>();
+    let end_addr = start_addr + core::mem::size_of_val(slice);
     invalidate_region(l2cc, start_addr, end_addr);
 }
 
 pub fn clean_slice<T>(l2cc: &mut L2cc, slice: &[T]) {
     let start_addr = slice.as_ptr() as usize;
-    let end_addr = start_addr + slice.len() * core::mem::size_of::<T>();
+    let end_addr = start_addr + core::mem::size_of_val(slice);
     clean_region(l2cc, start_addr, end_addr);
 }

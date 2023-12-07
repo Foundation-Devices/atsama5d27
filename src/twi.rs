@@ -409,7 +409,9 @@ impl Twi {
     }
 
     /// Clones the TWI instance for the use with `embedded-hal` drivers that want to own
-    /// I2C bus. # Safety
+    /// I2C bus.
+    ///
+    /// # Safety
     /// Ensure no two drivers are using the bus at the same time, or else everything will
     /// break.
     pub unsafe fn clone(&self) -> Self {
