@@ -1,7 +1,6 @@
 //! Slow Clock (SCKC) module.
 
-use utralib::utra::sckc::SCKC_CR_OSCSEL;
-use utralib::*;
+use utralib::{utra::sckc::SCKC_CR_OSCSEL, *};
 
 pub struct Sckc {
     base_addr: u32,

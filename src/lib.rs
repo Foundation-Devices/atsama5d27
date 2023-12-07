@@ -14,6 +14,7 @@ pub mod sckc;
 pub mod sfr;
 pub mod tc;
 pub mod trng;
+pub mod twi;
 pub mod uart;
 
 #[cfg(feature = "lcd-console")]

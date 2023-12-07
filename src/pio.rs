@@ -1,14 +1,31 @@
 //! Parallel I/O controller (GPIO).
 
-use core::marker::PhantomData;
-use utralib::utra::pio::{
-    HW_PIO_BASE, PIO_CFGR0, PIO_CFGR0_DIR, PIO_CFGR0_EVTSEL, PIO_CFGR0_FUNC, PIO_CFGR0_IFEN,
-    PIO_CFGR0_IFSCEN, PIO_CODR0, PIO_IDR0, PIO_IER0, PIO_ISR0, PIO_MSKR0, PIO_PDSR0, PIO_SODR0,
+use {
+    crate::pio::sealed::Sealed,
+    core::marker::PhantomData,
+    utralib::{
+        utra::{
+            pio::{
+                HW_PIO_BASE,
+                PIO_CFGR0,
+                PIO_CFGR0_DIR,
+                PIO_CFGR0_EVTSEL,
+                PIO_CFGR0_FUNC,
+                PIO_CFGR0_IFEN,
+                PIO_CFGR0_IFSCEN,
+                PIO_CODR0,
+                PIO_IDR0,
+                PIO_IER0,
+                PIO_ISR0,
+                PIO_MSKR0,
+                PIO_PDSR0,
+                PIO_SODR0,
+            },
+            spio::{PIO_SCDR, PIO_WPMR, PIO_WPMR_WPEN},
+        },
+        *,
+    },
 };
-use utralib::utra::spio::{PIO_SCDR, PIO_WPMR, PIO_WPMR_WPEN};
-use utralib::*;
-
-use crate::pio::sealed::Sealed;
 
 const S_PIO_WPKEY: u32 = 0x50494F;
 
@@ -167,13 +184,42 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
     /// Returns `true` if the pin did fire an interrupt.
     ///
-    /// *NOTE*: it reads the whole port's ISR bits which makes information about interrupt status for other pins lost.
-    /// If there's a need to check multiple pins then use `PioX::get_interrupt_status()`.
+    /// *NOTE*: it reads the whole port's ISR bits which makes information about interrupt
+    /// status for other pins lost. If there's a need to check multiple pins then use
+    /// `PioX::get_interrupt_status()`.
     pub fn get_interrupt_status(&self) -> bool {
         let pio_csr = CSR::new(P::get_base_address(self.alt_base_addr) as *mut u32);
         let pin_bit = 1 << PIN;
 
         pio_csr.r(PIO_ISR0) & pin_bit != 0
+    }
+}
+
+#[cfg(feature = "hal")]
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::v2::OutputPin for Pio<P, PIN> {
+    type Error = ();
+
+    fn set_low(&mut self) -> Result<(), ()> {
+        self.set(false);
+        Ok(())
+    }
+
+    fn set_high(&mut self) -> Result<(), ()>  {
+        self.set(true);
+        Ok(())
+    }
+}
+
+#[cfg(feature = "hal")]
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::v2::InputPin for Pio<P, PIN> {
+    type Error = ();
+
+    fn is_high(&self) -> Result<bool, ()> {
+        Ok(self.get())
+    }
+
+    fn is_low(&self) -> Result<bool, ()> {
+        Ok(!self.get())
     }
 }
 
@@ -223,8 +269,9 @@ mod sealed {
 }
 
 // The following code implements pin constructors for each port.
-// This way we exhaust all possible pins to allow for a compile-check of the pin number being correct.
-// This shall be simplified in future when compile-checks for const-generic parameters are stabilized.
+// This way we exhaust all possible pins to allow for a compile-check of the pin number
+// being correct. This shall be simplified in future when compile-checks for const-generic
+// parameters are stabilized.
 
 macro_rules! impl_pins {
     ($port:ty, [$($name:ident => $pin:expr),+]) => {

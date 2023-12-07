@@ -1,7 +1,6 @@
 //! LCD controller (LCDC) implementation.
 
-use utralib::utra::lcdc::*;
-use utralib::{HW_LCDC_BASE, *};
+use utralib::{utra::lcdc::*, HW_LCDC_BASE, *};
 
 #[repr(align(8))]
 #[derive(Debug, Default)]
@@ -848,8 +847,9 @@ impl Lcdc {
         lcdc_csr.rmwf(HEOCFG12_VIDPRI, heo_on_top as u32);
     }
 
-    /// Enables scaling and automatically calculates internal scaling factors based on the difference
-    /// Between framebuffer size and the window size configured for the `HEO` layer.
+    /// Enables scaling and automatically calculates internal scaling factors based on the
+    /// difference Between framebuffer size and the window size configured for the
+    /// `HEO` layer.
     pub fn set_heo_scaling(&self, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 

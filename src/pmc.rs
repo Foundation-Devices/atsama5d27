@@ -1,7 +1,9 @@
 //! Power Management Controller.
 
-use utralib::utra::pmc::{PMC_PCR, PMC_PCR_PID};
-use utralib::*;
+use utralib::{
+    utra::pmc::{PMC_PCR, PMC_PCR_PID},
+    *,
+};
 
 /// Peripheral ID in the AT91 system.
 #[derive(Debug, Clone, Copy)]

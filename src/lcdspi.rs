@@ -1,7 +1,9 @@
 //! 9-bit LCD-specific bit-banged SPI
 
-use crate::pio::{Pio, PioPort};
-use crate::pit::Pit;
+use crate::{
+    pio::{Pio, PioPort},
+    pit::Pit,
+};
 
 const DELAY_CYCLES: u32 = 5;
 

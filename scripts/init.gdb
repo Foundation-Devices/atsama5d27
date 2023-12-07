@@ -11,7 +11,4 @@ set pagination off
 target remote :3334
 
 load
-
-monitor halt
-monitor reg PC=0x20000000
 c
