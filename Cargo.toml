@@ -15,9 +15,9 @@ bitflags = "2.4.1"
 rtt-target = { git = "https://github.com/Foundation-Devices/rtt-target.git", branch = "cortex-a", features = ["cortex-a"], optional = true }
 utralib = { path = "./utralib", default_features=false, features = ["atsama5d27"] }
 r0 = "1.0.0"
-embedded-graphics = { version = "0.7.1", optional = true }
+embedded-graphics = { version = "0.8.1", optional = true }
 embedded-hal = { version = "0.2.7", features = ["unproven"], optional = true }
-ft3269 = { path = "../FT3269", optional = true }
+ft3269 = { git = "https://github.com/Foundation-Devices/ft3269.git", optional = true }
 drv2605 = "0.1.0"
 is31fl32xx = "0.1.0"
 
