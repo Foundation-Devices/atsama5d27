@@ -6,6 +6,9 @@ name = "atsama5d27"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "fitment"
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
@@ -14,13 +17,17 @@ utralib = { path = "./utralib", default_features=false, features = ["atsama5d27"
 r0 = "1.0.0"
 embedded-graphics = { version = "0.7.1", optional = true }
 embedded-hal = { version = "0.2.7", features = ["unproven"], optional = true }
+ft3269 = { path = "../FT3269", optional = true }
+drv2605 = "0.1.0"
+is31fl32xx = "0.1.0"
 
 [features]
 hal = ["embedded-hal"]
 rtt = ["rtt-target"]
 lcd-console = ["embedded-graphics"]
+touch = ["ft3269"]
 
-default = ["lcd-console"]
+default = ["lcd-console", "hal", "touch"]
 
 [profile.dev]
 #codegen-units = 1
