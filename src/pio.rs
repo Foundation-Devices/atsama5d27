@@ -195,6 +195,28 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
     }
 }
 
+#[cfg(feature = "hal")]
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::OutputPin for Pio<P, PIN> {
+    fn set_low(&mut self) {
+        self.set(false);
+    }
+
+    fn set_high(&mut self) {
+        self.set(true);
+    }
+}
+
+#[cfg(feature = "hal")]
+impl<P: PioPort, const PIN: u32> embedded_hal::digital::InputPin for Pio<P, PIN> {
+    fn is_high(&self) -> bool {
+        self.get()
+    }
+
+    fn is_low(&self) -> bool {
+        !self.get()
+    }
+}
+
 pub struct SecurePio {
     base_addr: u32,
 }

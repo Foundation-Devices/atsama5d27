@@ -1,5 +1,7 @@
 //! ATSAMA5D2 TWIHS (I2C) driver.
 
+#[cfg(feature = "hal")]
+use embedded_hal::blocking::i2c::SevenBitAddress;
 use {
     bitflags::bitflags,
     utralib::{utra::twihs0::*, HW_TWIHS0_BASE, HW_TWIHS1_BASE, *},
@@ -73,9 +75,12 @@ bitflags! {
     }
 }
 
+const TOP_TIMEOUT_CYCLES: usize = 100_000;
+
 #[derive(Debug)]
 pub enum I2cError {
     Nack,
+    Timeout,
 }
 
 const TWI_CLK_OFFSET: usize = 3;
@@ -221,8 +226,15 @@ impl Twi {
         csr.r(RHR)
     }
 
-    pub fn write_reg(&self, address: u8, reg: u8, bytes: &[u8]) -> Result<(), I2cError> {
-        self.init_write(address, reg as u32, 1);
+    pub fn write_bytes(
+        &self,
+        address: u8,
+        reg: impl Into<Option<u8>>,
+        bytes: &[u8],
+    ) -> Result<(), I2cError> {
+        let reg_opt = reg.into();
+        let reg = reg_opt.unwrap_or(0) as u32;
+        self.init_write(address, reg, if reg_opt.is_some() { 1 } else { 0 });
         self.send_start();
 
         if bytes.len() == 1 {
@@ -241,8 +253,15 @@ impl Twi {
         Ok(())
     }
 
-    pub fn read_reg(&self, address: u8, reg: u8, bytes: &mut [u8]) -> Result<(), I2cError> {
-        self.init_read(address, reg as u32, 1);
+    pub fn read_bytes(
+        &self,
+        address: u8,
+        reg: impl Into<Option<u8>>,
+        bytes: &mut [u8],
+    ) -> Result<(), I2cError> {
+        let reg_opt = reg.into();
+        let reg = reg_opt.unwrap_or(0) as u32;
+        self.init_read(address, reg, if reg_opt.is_some() { 1 } else { 0 });
         self.send_start();
 
         // Initiate STOP at the same time as START if we're only reading a single byte
@@ -320,20 +339,22 @@ impl Twi {
     }
 
     fn wait_for_status(&self, status: TWIStatus) -> Result<(), I2cError> {
-        loop {
+        let mut counter = TOP_TIMEOUT_CYCLES;
+        while counter > 0 {
             let curr_status = self.status();
             if curr_status.contains(TWIStatus::NACK) {
                 return Err(I2cError::Nack);
             }
 
             if curr_status.contains(status) {
-                break;
+                return Ok(());
             }
 
             armv7::asm::nop();
+            counter -= 1;
         }
 
-        Ok(())
+        Err(I2cError::Timeout)
     }
 
     fn enable_fifo(&self) {
@@ -387,5 +408,51 @@ impl Twi {
         csr.wfo(FMR_RXRDYM, len)
     }
 
+    /// Clones the TWI instance for the use with `embedded-hal` drivers that want to own
+    /// I2C bus. # Safety
+    /// Ensure no two drivers are using the bus at the same time, or else everything will
+    /// break.
+    pub unsafe fn clone(&self) -> Self {
+        Self {
+            base_addr: self.base_addr,
+        }
+    }
+
     // TODO: DMA
+}
+
+#[cfg(feature = "hal")]
+impl embedded_hal::blocking::i2c::Write for Twi {
+    type Error = I2cError;
+
+    fn write(&mut self, address: SevenBitAddress, bytes: &[u8]) -> Result<(), Self::Error> {
+        self.write_bytes(address, None, bytes)
+    }
+}
+
+#[cfg(feature = "hal")]
+impl embedded_hal::blocking::i2c::Read for Twi {
+    type Error = I2cError;
+
+    fn read(&mut self, address: SevenBitAddress, buffer: &mut [u8]) -> Result<(), Self::Error> {
+        self.read_bytes(address, None, buffer)
+    }
+}
+
+#[cfg(feature = "hal")]
+impl embedded_hal::blocking::i2c::WriteRead for Twi {
+    type Error = I2cError;
+
+    fn write_read(
+        &mut self,
+        address: SevenBitAddress,
+        bytes: &[u8],
+        buffer: &mut [u8],
+    ) -> Result<(), Self::Error> {
+        if bytes.len() == 1 {
+            self.read_bytes(address, Some(bytes[0]), buffer)
+        } else {
+            unimplemented!("can't write-read more than 1 byte yet");
+        }
+    }
 }
