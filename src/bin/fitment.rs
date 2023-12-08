@@ -394,18 +394,22 @@ pub fn twi_check_device_address(twi: &Twi, addr: u8) -> bool {
 unsafe extern "C" fn pioa_irq_handler() {
     let ctp_irq_pin = Pio::pa12();
     if ctp_irq_pin.get_interrupt_status() {
-        // let mut uart = UartType::new();
+        let mut uart = UartType::new();
         let callbacks = ft3269::Callbacks {
             read_reg: read_reg_cb,
             write_reg: write_reg_cb,
         };
         let mut ft3269 = Ft3269::new(callbacks);
         let mut touch_buf: [Touch; 5] = [Touch::default(); 5];
-        if let Ok(num_touches) = ft3269.touches(&mut touch_buf) {
-            // for (i, touch) in touch_buf.iter().enumerate().take(num_touches) {
-            //     writeln!(uart, "[touch #{}] {:?}", i + 1, touch).ok();
-            // }
-            process_touches(&touch_buf[..num_touches]);
+
+        let res = ft3269.touches(&mut touch_buf);
+        if let Ok(num_touches) = res {
+            for (i, touch) in touch_buf.iter().enumerate() {
+                if !touch.is_reserved() {
+                    writeln!(uart, "[touch #{}/{}] {:?}", i + 1, num_touches, touch).ok();
+                }
+            }
+            process_touches(&touch_buf);
         }
     }
 }
@@ -648,6 +652,7 @@ fn process_touches(touches: &[Touch]) {
         match touch.kind {
             TouchKind::Press => process_press(touch.x, touch.y),
             TouchKind::Drag => process_drag(touch.x, touch.y),
+            TouchKind::Release => process_release(touch.x, touch.y),
             _ => (),
         }
     }
@@ -743,6 +748,10 @@ fn process_drag(x: u16, y: u16) {
     if is_within_canvas(x, y) {
         draw_canvas_pen(x, y);
     }
+}
+
+fn process_release(_x: u16, _y: u16) {
+
 }
 
 fn draw_canvas_pen(x: u16, y: u16) {
