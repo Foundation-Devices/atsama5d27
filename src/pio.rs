@@ -193,6 +193,14 @@ impl<P: PioPort, const PIN: u32> Pio<P, PIN> {
 
         pio_csr.r(PIO_ISR0) & pin_bit != 0
     }
+
+    pub fn port_id(&self) -> u32 {
+        P::ID
+    }
+
+    pub fn pin_id(&self) -> u32 {
+        PIN
+    }
 }
 
 #[cfg(feature = "hal")]
