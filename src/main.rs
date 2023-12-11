@@ -18,7 +18,8 @@ use {
         fmt::Write,
         panic::PanicInfo,
         sync::atomic::{
-            compiler_fence, AtomicBool,
+            compiler_fence,
+            AtomicBool,
             Ordering::{Acquire, Relaxed, Release, SeqCst},
         },
     },
@@ -40,12 +41,12 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     next: 0,
 };
 
-use atsama5d27::lcdspi::LcdSpi;
-use atsama5d27::pit::{Pit, PIV_MAX};
 #[cfg(feature = "lcd-console")]
 use atsama5d27::{console::DisplayAndUartConsole, display::FramebufDisplay};
 use atsama5d27::{
     l2cc::{Counter, EventCounterKind, L2cc},
+    lcdspi::LcdSpi,
+    pit::{Pit, PIV_MAX},
     sfr::Sfr,
 };
 #[cfg(feature = "rtt")]
@@ -287,7 +288,9 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {
         compiler_fence(SeqCst);
         writeln!(console, "{}", _info).ok();
-        armv7::asm::nop();
+        unsafe {
+            core::arch::asm!("bkpt");
+        }
     }
 }
 

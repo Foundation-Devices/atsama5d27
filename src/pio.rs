@@ -212,7 +212,7 @@ impl<P: PioPort, const PIN: u32> embedded_hal::digital::v2::OutputPin for Pio<P,
         Ok(())
     }
 
-    fn set_high(&mut self) -> Result<(), ()>  {
+    fn set_high(&mut self) -> Result<(), ()> {
         self.set(true);
         Ok(())
     }

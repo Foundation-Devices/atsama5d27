@@ -31,13 +31,7 @@ use {
         mono_font::{ascii::FONT_9X18, MonoTextStyle},
         pixelcolor::Rgb888,
         prelude::*,
-        primitives::{
-            Circle,
-            Line,
-            PrimitiveStyleBuilder,
-            Rectangle,
-            StyledDrawable,
-        },
+        primitives::{Circle, Line, PrimitiveStyleBuilder, Rectangle, StyledDrawable},
         text::Text,
     },
     ft3269::{Ft3269, Touch, TouchKind},
@@ -235,6 +229,9 @@ fn _entry() -> ! {
     unsafe {
         HFB = Some(drv);
     }
+
+    haptic_click();
+
     unsafe { TWI0 = Some(twi0.clone()) };
 
     let mut touch_reset = Pio::pb2();
@@ -262,13 +259,16 @@ fn _entry() -> ! {
     led_shutdown.set_func(Func::Gpio);
     led_shutdown.set_direction(Direction::Output);
 
-    // RGB LED driver
-    let mut leds =
-        Is31fl32xx::<IS31FL3205, _, _>::init_with_i2c(0x34, led_shutdown, unsafe { twi0.clone() });
+    // Timer for delays
     let mut pit = Pit::new();
     pit.set_interval(PIV_MAX);
     pit.set_enabled(true);
     pit.set_clock_speed(MASTER_CLOCK_SPEED);
+    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 500);
+
+    // RGB LED driver
+    let mut leds =
+        Is31fl32xx::<IS31FL3205, _, _>::init_with_i2c(0x34, led_shutdown, unsafe { twi0.clone() });
     leds.enable_device(
         &mut pit,
         OscillatorClock::SixteenMHz,
@@ -290,13 +290,24 @@ fn _entry() -> ! {
         LEDS = Some(leds);
     }
 
-    // let callbacks = ft3269::Callbacks {
-    //     read_reg: read_reg_cb,
-    //     write_reg: write_reg_cb,
-    // };
-    // let mut ft3269 = Ft3269::new(callbacks);
-    // let dimensions = ft3269.dimensions().unwrap();
-    // writeln!(console, "CTP dimensions: ({}, {})", dimensions.x, dimensions.y).ok();
+    // let ft3269 = Ft3269::new(twi0);
+    // ft3269.dump_regs(&mut console);
+
+    // let mut touches = [Touch::default(); 5];
+    // ft3269.touches(&mut touches).expect("touches");
+
+    // ft3269.set_dimensions(&Dimensions { x: 0, y: 0 }).expect("set dims");
+    // ft3269.set_virt_key_pos(&Dimensions { x: 200, y: 820 }).expect("set virt key pos");
+    // ft3269.set_virt_key_dimensions(&Dimensions { x: 100, y: 20 }).expect("set virt key
+    // dims");
+
+    // let dims = ft3269.dimensions().unwrap();
+    // let virt_key_pos = ft3269.virt_key_pos().unwrap();
+    // let virt_key_dim = ft3269.virt_key_dimensions().unwrap();
+    // writeln!(console, "dims: ({}, {})", dims.x, dims.y).ok();
+    // writeln!(console, "key pos: ({}, {})", virt_key_pos.x, virt_key_pos.y).ok();
+    // writeln!(console, "key dim: ({}, {})", virt_key_dim.x, virt_key_dim.y).ok();
+
     // ft3269.dump_regs(&mut console);
 
     for (i, button) in [
@@ -369,46 +380,14 @@ fn _entry() -> ! {
     }
 }
 
-fn read_reg_cb(addr: u8, reg: u8, buf: &mut [u8]) -> Result<(), ()> {
-    if let Some(twi0) = unsafe { &mut TWI0 } {
-        twi0.read_bytes(addr, reg, buf).map_err(|_| ())
-    } else {
-        Err(())
-    }
-}
-
-fn write_reg_cb(addr: u8, reg: u8, bytes: &[u8]) -> Result<(), ()> {
-    if let Some(twi0) = unsafe { &mut TWI0 } {
-        twi0.write_bytes(addr, reg, bytes).map_err(|_| ())
-    } else {
-        Err(())
-    }
-}
-
-pub fn twi_check_device_address(twi: &Twi, addr: u8) -> bool {
-    let mut buf = [0x00];
-    twi.read_bytes(addr, 0x00, &mut buf).is_ok()
-}
-
 #[no_mangle]
 unsafe extern "C" fn pioa_irq_handler() {
     let ctp_irq_pin = Pio::pa12();
     if ctp_irq_pin.get_interrupt_status() {
-        let mut uart = UartType::new();
-        let callbacks = ft3269::Callbacks {
-            read_reg: read_reg_cb,
-            write_reg: write_reg_cb,
-        };
-        let mut ft3269 = Ft3269::new(callbacks);
+        let mut ft3269 = Ft3269::new(unsafe { TWI0.as_ref().expect("twi0").clone() });
         let mut touch_buf: [Touch; 5] = [Touch::default(); 5];
 
-        let res = ft3269.touches(&mut touch_buf);
-        if let Ok(num_touches) = res {
-            for (i, touch) in touch_buf.iter().enumerate() {
-                if !touch.is_reserved() {
-                    writeln!(uart, "[touch #{}/{}] {:?}", i + 1, num_touches, touch).ok();
-                }
-            }
+        if ft3269.touches(&mut touch_buf).is_ok() {
             process_touches(&touch_buf);
         }
     }
@@ -456,7 +435,9 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {
         compiler_fence(SeqCst);
         writeln!(console, "{}", _info).ok();
-        armv7::asm::nop();
+        unsafe {
+            core::arch::asm!("bkpt");
+        }
     }
 }
 
@@ -750,9 +731,7 @@ fn process_drag(x: u16, y: u16) {
     }
 }
 
-fn process_release(_x: u16, _y: u16) {
-
-}
+fn process_release(_x: u16, _y: u16) {}
 
 fn draw_canvas_pen(x: u16, y: u16) {
     if let Some(display) = unsafe { &mut DISPLAY } {
