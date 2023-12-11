@@ -117,7 +117,7 @@ dependencies = [
 [[package]]
 name = "ft3269"
 version = "0.1.0"
-source = "git+https://github.com/Foundation-Devices/ft3269.git#f9ef80ce885bce91216cc66e40bd35055dc5b495"
+source = "git+https://github.com/Foundation-Devices/ft3269.git#6f9437ad33742cc186a93d82554426cd7a434ab7"
 dependencies = [
  "bitflags",
  "embedded-hal",
