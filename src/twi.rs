@@ -81,6 +81,7 @@ const TOP_TIMEOUT_CYCLES: usize = 100_000;
 pub enum I2cError {
     Nack,
     Timeout,
+    TxFifoLocked,
 }
 
 const TWI_CLK_OFFSET: usize = 3;
@@ -156,11 +157,6 @@ impl Twi {
         csr.rmwf(CWGR_HOLD, hold);
     }
 
-    fn send_stop(&self) {
-        let mut csr = CSR::new(self.base_addr as *mut u32);
-        csr.wfo(CR_STOP, 1);
-    }
-
     fn send_start(&self) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.wfo(CR_START, 1);
@@ -226,57 +222,73 @@ impl Twi {
         csr.r(RHR)
     }
 
-    pub fn write_bytes(
-        &self,
-        address: u8,
-        reg: impl Into<Option<u8>>,
-        bytes: &[u8],
-    ) -> Result<(), I2cError> {
-        let reg_opt = reg.into();
-        let reg = reg_opt.unwrap_or(0) as u32;
-        self.init_write(address, reg, if reg_opt.is_some() { 1 } else { 0 });
-        self.send_start();
+    pub fn write_bytes(&self, address: u8, bytes: &[u8]) -> Result<(), I2cError> {
+        self.enable_fifo();
+        self.clear_rx_fifo();
+        self.clear_tx_fifo();
+        self.enable_acm();
 
-        if bytes.len() == 1 {
-            self.disable_fifo();
-            self.write_byte(bytes[0]);
-            self.send_stop();
-            self.wait_for_status(TWIStatus::TXRDY)?;
-        } else {
-            self.enable_fifo();
-            self.send_bytes(bytes)?;
-            self.send_stop();
-        }
+        self.init_write(address, 0, 0);
 
+        self.acm_set_datal(bytes.len() as u32);
+        self.acm_set_ndatal(0);
+        self.acm_set_direction(false);
+
+        self.send_bytes(bytes)?;
         self.wait_for_status(TWIStatus::TXCOMP)?;
+
+        self.disable_fifo();
+        self.disable_acm();
 
         Ok(())
     }
 
-    pub fn read_bytes(
+    pub fn read_bytes(&self, address: u8, buffer: &mut [u8]) -> Result<(), I2cError> {
+        self.enable_fifo();
+        self.clear_rx_fifo();
+        self.clear_tx_fifo();
+        self.enable_acm();
+
+        self.init_read(address, 0, 0);
+
+        self.acm_set_datal(buffer.len() as u32);
+        self.acm_set_ndatal(0);
+        self.acm_set_direction(true);
+
+        self.send_start();
+        self.receive_bytes(buffer)?;
+
+        self.disable_fifo();
+        self.disable_acm();
+
+        Ok(())
+    }
+
+    pub fn write_read_bytes(
         &self,
         address: u8,
-        reg: impl Into<Option<u8>>,
-        bytes: &mut [u8],
+        bytes: &[u8],
+        buffer: &mut [u8],
     ) -> Result<(), I2cError> {
-        let reg_opt = reg.into();
-        let reg = reg_opt.unwrap_or(0) as u32;
-        self.init_read(address, reg, if reg_opt.is_some() { 1 } else { 0 });
+        self.enable_fifo();
+        self.clear_rx_fifo();
+        self.clear_tx_fifo();
+        self.enable_acm();
+
+        self.init_write(address, 0, 0);
+
+        self.acm_set_datal(bytes.len() as u32);
+        self.acm_set_ndatal(buffer.len() as u32);
+        self.acm_set_direction(false);
+        self.acm_set_next_direction(true);
+
+        self.send_bytes(bytes)?;
         self.send_start();
-
-        // Initiate STOP at the same time as START if we're only reading a single byte
-        if bytes.len() == 1 {
-            self.disable_fifo();
-            self.send_stop();
-            self.wait_for_status(TWIStatus::RXRDY)?;
-            bytes[0] = self.read_byte();
-        } else {
-            self.enable_fifo();
-            self.receive_bytes(bytes)?;
-            self.send_stop();
-        }
-
         self.wait_for_status(TWIStatus::TXCOMP)?;
+        self.receive_bytes(buffer)?;
+
+        self.disable_fifo();
+        self.disable_acm();
 
         Ok(())
     }
@@ -315,8 +327,9 @@ impl Twi {
     fn receive_bytes(&self, bytes: &mut [u8]) -> Result<(), I2cError> {
         let mut num_bytes_received = 0;
         while num_bytes_received < bytes.len() {
-            self.wait_for_status(TWIStatus::RXRDY)?;
-            let rx_level = self.rx_fifo_level();
+            // RX level is clipped by the buffer size to avoid overflowing if FIFO suddenly reports
+            // receiving more bytes than expected
+            let rx_level = usize::min(self.rx_fifo_level(), bytes.len() - num_bytes_received);
 
             // TWI controller allows us to use faster 32-bit access to pop 4 bytes from FIFO in a
             // single access So we split the byte array into 4 byte chunks and use
@@ -342,15 +355,18 @@ impl Twi {
         let mut counter = TOP_TIMEOUT_CYCLES;
         while counter > 0 {
             let curr_status = self.status();
+
             if curr_status.contains(TWIStatus::NACK) {
                 return Err(I2cError::Nack);
             }
-
+            if curr_status.contains(TWIStatus::TXFLOCK) {
+                self.unlock_tx_fifo();
+                return Err(I2cError::TxFifoLocked);
+            }
             if curr_status.contains(status) {
                 return Ok(());
             }
 
-            armv7::asm::nop();
             counter -= 1;
         }
 
@@ -398,14 +414,45 @@ impl Twi {
     fn tx_fifo_available(&self) -> usize {
         FIFO_SIZE - self.tx_fifo_level()
     }
+
     fn set_tx_data_length(&self, len: u32) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
-        csr.wfo(FMR_TXRDYM, len)
+        csr.rmwf(FMR_TXRDYM, len)
     }
 
     fn set_rx_data_length(&self, len: u32) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
-        csr.wfo(FMR_RXRDYM, len)
+        csr.rmwf(FMR_RXRDYM, len)
+    }
+
+    fn acm_set_datal(&self, datal: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(ACR_DATAL, datal)
+    }
+
+    fn acm_set_ndatal(&self, ndatal: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(ACR_NDATAL, ndatal)
+    }
+
+    fn acm_set_direction(&self, is_read: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(ACR_DIR, is_read as u32)
+    }
+
+    fn acm_set_next_direction(&self, is_read: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(ACR_NDIR, is_read as u32)
+    }
+
+    fn enable_acm(&self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CR_ACMEN, 1)
+    }
+
+    fn disable_acm(&self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CR_ACMDIS, 1)
     }
 
     /// Clones the TWI instance for the use with `embedded-hal` drivers that want to own
@@ -428,7 +475,7 @@ impl embedded_hal::blocking::i2c::Write for Twi {
     type Error = I2cError;
 
     fn write(&mut self, address: SevenBitAddress, bytes: &[u8]) -> Result<(), Self::Error> {
-        self.write_bytes(address, None, bytes)
+        self.write_bytes(address, bytes)
     }
 }
 
@@ -437,7 +484,7 @@ impl embedded_hal::blocking::i2c::Read for Twi {
     type Error = I2cError;
 
     fn read(&mut self, address: SevenBitAddress, buffer: &mut [u8]) -> Result<(), Self::Error> {
-        self.read_bytes(address, None, buffer)
+        self.read_bytes(address, buffer)
     }
 }
 
@@ -451,10 +498,6 @@ impl embedded_hal::blocking::i2c::WriteRead for Twi {
         bytes: &[u8],
         buffer: &mut [u8],
     ) -> Result<(), Self::Error> {
-        if bytes.len() == 1 {
-            self.read_bytes(address, Some(bytes[0]), buffer)
-        } else {
-            unimplemented!("can't write-read more than 1 byte yet");
-        }
+        self.write_read_bytes(address, bytes, buffer)
     }
 }
