@@ -2,19 +2,7 @@
 
 use {
     core::{fmt::Write, marker::PhantomData},
-    utralib::{
-        utra::uart0::{
-            CR_RXDIS,
-            CR_RXEN,
-            IER_RXRDY,
-            IMR_RXRDY,
-            RHR_RXCHR,
-            SR_RXRDY,
-            SR_TXRDY,
-            THR_TXCHR,
-        },
-        *,
-    },
+    utralib::{utra::uart0::*, *},
 };
 
 pub struct Uart0 {}
@@ -58,6 +46,15 @@ impl UartPeriph for Uart4 {
     const ID: usize = 4;
 }
 
+#[derive(Debug)]
+pub enum Parity {
+    Even = 0,
+    Odd = 1,
+    Space = 2,
+    Mark = 3,
+    No = 4,
+}
+
 #[derive(Default)]
 pub struct Uart<U: UartPeriph> {
     base_addr: u32,
@@ -82,6 +79,22 @@ impl<U: UartPeriph> Uart<U> {
         }
     }
 
+    pub fn set_baud(&mut self, clock_speed: u32, baud_rate: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+
+        csr.wfo(CR_RSTTX, 1);
+        csr.wfo(CR_RSTRX, 1);
+        self.set_tx(false);
+        self.set_rx(false);
+
+        csr.wo(BRGR, clock_speed / (16 * baud_rate));
+    }
+
+    pub fn set_parity(&mut self, parity: Parity) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(MR_PAR, parity as u32);
+    }
+
     pub fn write_byte(&mut self, byte: u8) {
         let mut uart_csr = CSR::new(self.base_addr as *mut u32);
 
@@ -92,6 +105,11 @@ impl<U: UartPeriph> Uart<U> {
 
         // Send the byte
         uart_csr.wfo(THR_TXCHR, byte as u32);
+
+        // Wait for the current transfer to complete
+        while uart_csr.rf(SR_TXEMPTY) == 0 {
+            armv7::asm::nop();
+        }
     }
 
     pub fn write_str(&mut self, s: &str) {
@@ -106,6 +124,15 @@ impl<U: UartPeriph> Uart<U> {
             uart_csr.wfo(CR_RXEN, 1);
         } else {
             uart_csr.wfo(CR_RXDIS, 1);
+        }
+    }
+
+    pub fn set_tx(&mut self, enabled: bool) {
+        let mut uart_csr = CSR::new(self.base_addr as *mut u32);
+        if enabled {
+            uart_csr.wfo(CR_TXEN, 1);
+        } else {
+            uart_csr.wfo(CR_TXDIS, 1);
         }
     }
 
