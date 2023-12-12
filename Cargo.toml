@@ -9,6 +9,9 @@ edition = "2021"
 [[bin]]
 name = "fitment"
 
+[[bin]]
+name = "se"
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
