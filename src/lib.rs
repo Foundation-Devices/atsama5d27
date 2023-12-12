@@ -4,6 +4,7 @@ pub mod aes;
 pub mod aic;
 pub mod cache;
 pub mod dma;
+pub mod flexcom;
 pub mod l1cache;
 pub mod l2cc;
 pub mod lcdc;
