@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Configure these if needed
-export JLINK_RTT_LOGGER_PATH=/Applications/SEGGER/JLink_V782c/JLinkRTTLoggerExe
+export JLINK_RTT_LOGGER_PATH=JLinkRTTLoggerExe
 
 export DEVICE=ATSAMA5D27C-CU
 export BINARY=../target/armv7a-none-eabi/debug/atsama5d27

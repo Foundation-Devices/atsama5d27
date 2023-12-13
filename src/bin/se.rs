@@ -147,6 +147,7 @@ fn _entry() -> ! {
     lcdc.set_pwm_compare_value(0xff / 2);
 
     let mut console = uart;
+    writeln!(console, "running");
     let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER_ONE.0 }, WIDTH, HEIGHT);
     unsafe {
         DISPLAY = Some(display);
@@ -172,22 +173,34 @@ fn _entry() -> ! {
 
     const SE_BAUD: u32 = 230400;
 
+    writeln!(console, "here");
+
     let mut swi_uart = Uart::<Uart4>::new();
     swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
     swi_uart.set_parity(Parity::No);
 
+    /*
+    swi_uart.set_rx(true);
+    swi_uart.set_tx(true);
+    swi_uart.write_byte(0x42);
+    writeln!(console, "rx: 0x42 = 0x{:02x}", swi_uart.getc()).ok();
+    */
+
     swi_uart.set_tx(true);
     swi_uart.set_rx(false);
     swi_uart.write_byte(0x00); // Wake-up call
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 3); // Closest to 2.5 ms
+    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10); // Closest to 2.5 ms
 
     // Restore original baud rate and send calibration command
     swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
+    //writeln!(console, "sending");
     swi_send(&mut swi_uart, &[0x88]);
+    //writeln!(console, "sent");
 
     let mut response = [0u8; 4];
-    swi_receive(&mut swi_uart, &mut response);
-    writeln!(console, "Received the response from SE: {response:02x?}").ok();
+    //writeln!(console, "receiving");
+    swi_receive(&mut swi_uart, &mut response, &mut console);
+    //writeln!(console, "Received the response from SE: {response:02x?}").ok();
 
     match response {
         [0x04, 0x11, 0x33, 0x43] => writeln!(console, "[+] Communication successful!").ok(),
@@ -201,7 +214,7 @@ fn _entry() -> ! {
     }
 }
 
-fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
+fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8], console: &mut Uart<Uart1>) {
     uart.set_rx(true);
     uart.set_tx(false);
 
@@ -211,6 +224,7 @@ fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
             if swi_receive_bit(uart) {
                 *byte |= bit_mask;
             }
+            //writeln!(console, "Received bit: {i}").ok();
         }
     }
 }
