@@ -6,5 +6,5 @@ C_DEFINES = -DATCA_USE_SHARED_MUTEX
 
 C_INCLUDES = -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/cryptoauth -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/PUBLIC -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/downloaded -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/../app/tng -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/../third_party -I/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/../third_party/hidapi/hidapi
 
-C_FLAGS =  -ffunction-sections -fdata-sections -march=armv7-a -g -std=gnu99 -ffile-prefix-map=/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib=. -fmacro-prefix-map=/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib=. -Wall -Wextra
+C_FLAGS =  -ffunction-sections -fdata-sections -march=armv7-a -O2 -g -DNDEBUG -std=gnu99 -ffile-prefix-map=/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib=. -fmacro-prefix-map=/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib=. -Wall -Wextra
 

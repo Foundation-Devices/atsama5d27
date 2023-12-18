@@ -42,6 +42,8 @@
 #error "Info command packet cannot be accommodated inside the maximum packet size provided"
 #endif
 
+extern void se_debug(const char*);
+
 /** \brief Issues an Info command, which return internal device information and
  *          can control GPIO and the persistent latch.
  *
@@ -54,6 +56,8 @@
  */
 ATCA_STATUS calib_info_base(ATCADevice device, uint8_t mode, uint16_t param2, uint8_t* out_data)
 {
+    //se_debug("calib_info_base");
+
     ATCAPacket packet;
     ATCA_STATUS status = ATCA_GEN_FAIL;
 
@@ -68,11 +72,14 @@ ATCA_STATUS calib_info_base(ATCADevice device, uint8_t mode, uint16_t param2, ui
 
     do
     {
+        se_debug("calib_info_base atInfo");
         if ((status = atInfo(atcab_get_device_type_ext(device), &packet)) != ATCA_SUCCESS)
         {
+            se_debug("calib_info_base atInfo not success");
             (void)ATCA_TRACE(status, "atInfo - failed");
             break;
         }
+        se_debug("calib_info_base atInfo success");
 
         if ((status = atca_execute_command(&packet, device)) != ATCA_SUCCESS)
         {
@@ -94,6 +101,8 @@ ATCA_STATUS calib_info_base(ATCADevice device, uint8_t mode, uint16_t param2, ui
         }
 
         uint8_t response = packet.data[ATCA_COUNT_IDX];
+
+        se_debug("atca_execute_command response");
 
         if ((response != 0u) && (NULL != out_data))
         {

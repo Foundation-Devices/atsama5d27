@@ -69,21 +69,21 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zKJHFS"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zKJHFS"
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PXXWjm"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PXXWjm"
     cmakeVariables:
       CMAKE_C_FLAGS: ""
     buildResult:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zKJHFS'
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PXXWjm'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_3f195/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_3f195.dir/build.make CMakeFiles/cmTC_3f195.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zKJHFS'
-        Building C object CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -v -o CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_2ae9b/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_2ae9b.dir/build.make CMakeFiles/cmTC_2ae9b.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PXXWjm'
+        Building C object CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o
+        /usr/bin/arm-none-eabi-gcc   -v -o CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
         Target: arm-none-eabi
@@ -91,8 +91,8 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_3f195.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_3f195.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=arm7tdmi -mfloat-abi=soft -marm -mlibarch=armv4t -march=armv4t -version -o /tmp/ccq0lDoC.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_2ae9b.dir/'
+         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_2ae9b.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=arm7tdmi -mfloat-abi=soft -marm -mlibarch=armv4t -march=armv4t -version -o /tmp/nvim.ennm/vnZbte/cce9djS4.s
         GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
         	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
         
@@ -109,15 +109,15 @@ events:
          /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
         End of search list.
         Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_3f195.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv4t -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o /tmp/ccq0lDoC.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_2ae9b.dir/'
+         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv4t -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o /tmp/nvim.ennm/vnZbte/cce9djS4.s
         GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
         COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_3f195
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3f195.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -v -rdynamic CMakeFiles/cmTC_3f195.dir/CMakeCCompilerABI.c.o -o cmTC_3f195 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o' '-c' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-mlibarch=armv4t' '-march=armv4t' '-dumpdir' 'CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_2ae9b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2ae9b.dir/link.txt --verbose=1
+        /usr/bin/arm-none-eabi-gcc  -v -rdynamic CMakeFiles/cmTC_2ae9b.dir/CMakeCCompilerABI.c.o -o cmTC_2ae9b 
         Using built-in specs.
         COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
         COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
@@ -127,9 +127,9 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_3f195.dir/build.make:99: cmTC_3f195] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zKJHFS'
-        make: *** [Makefile:127: cmTC_3f195/fast] Error 2
+        make[1]: *** [CMakeFiles/cmTC_2ae9b.dir/build.make:99: cmTC_2ae9b] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PXXWjm'
+        make: *** [Makefile:127: cmTC_2ae9b/fast] Error 2
         
       exitCode: 2
   -
@@ -140,28 +140,28 @@ events:
     checks:
       - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
     directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ"
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM"
     cmakeVariables:
       CMAKE_C_FLAGS: ""
     buildResult:
       variable: "CMAKE_C_COMPILER_WORKS"
       cached: true
       stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ'
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_78dcb/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_78dcb.dir/build.make CMakeFiles/cmTC_78dcb.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ'
-        Building C object CMakeFiles/cmTC_78dcb.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc    -o CMakeFiles/cmTC_78dcb.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ/testCCompiler.c
-        Linking C executable cmTC_78dcb
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_78dcb.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc -rdynamic CMakeFiles/cmTC_78dcb.dir/testCCompiler.c.o -o cmTC_78dcb 
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_706e6/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_706e6.dir/build.make CMakeFiles/cmTC_706e6.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM'
+        Building C object CMakeFiles/cmTC_706e6.dir/testCCompiler.c.o
+        /usr/bin/arm-none-eabi-gcc    -o CMakeFiles/cmTC_706e6.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM/testCCompiler.c
+        Linking C executable cmTC_706e6
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_706e6.dir/link.txt --verbose=1
+        /usr/bin/arm-none-eabi-gcc -rdynamic CMakeFiles/cmTC_706e6.dir/testCCompiler.c.o -o cmTC_706e6 
         arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_78dcb.dir/build.make:99: cmTC_78dcb] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NCUQEZ'
-        make: *** [Makefile:127: cmTC_78dcb/fast] Error 2
+        make[1]: *** [CMakeFiles/cmTC_706e6.dir/build.make:99: cmTC_706e6] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-riLcaM'
+        make: *** [Makefile:127: cmTC_706e6/fast] Error 2
         
       exitCode: 2
 ...
@@ -229,21 +229,21 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-plxj22"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-plxj22"
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KZl2Kp"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KZl2Kp"
     cmakeVariables:
       CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
     buildResult:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-plxj22'
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KZl2Kp'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e6ab4/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_e6ab4.dir/build.make CMakeFiles/cmTC_e6ab4.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-plxj22'
-        Building C object CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d2f14/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_d2f14.dir/build.make CMakeFiles/cmTC_d2f14.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KZl2Kp'
+        Building C object CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
         Target: arm-none-eabi
@@ -251,8 +251,8 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_e6ab4.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_e6ab4.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/cc4FrfDs.s
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_d2f14.dir/'
+         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_d2f14.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/nvim.ennm/vnZbte/ccrv8jjR.s
         GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
         	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
         
@@ -269,15 +269,15 @@ events:
          /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
         End of search list.
         Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_e6ab4.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o /tmp/cc4FrfDs.s
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_d2f14.dir/'
+         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o /tmp/nvim.ennm/vnZbte/ccrv8jjR.s
         GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
         COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_e6ab4
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e6ab4.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_e6ab4.dir/CMakeCCompilerABI.c.o -o cmTC_e6ab4 
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_d2f14
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d2f14.dir/link.txt --verbose=1
+        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_d2f14.dir/CMakeCCompilerABI.c.o -o cmTC_d2f14 
         Using built-in specs.
         COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
         COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
@@ -287,809 +287,9 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_e6ab4.dir/build.make:99: cmTC_e6ab4] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-plxj22'
-        make: *** [Makefile:127: cmTC_e6ab4/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_COMPILER_WORKS"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e617a/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_e617a.dir/build.make CMakeFiles/cmTC_e617a.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON'
-        Building C object CMakeFiles/cmTC_e617a.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_e617a.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON/testCCompiler.c
-        Linking C executable cmTC_e617a
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e617a.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_e617a.dir/testCCompiler.c.o -o cmTC_e617a 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_e617a.dir/build.make:99: cmTC_e617a] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-qWfxON'
-        make: *** [Makefile:127: cmTC_e617a/fast] Error 2
-        
-      exitCode: 2
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags:  
-      
-      The output was:
-      1
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-exit.o): in function `exit':
-      exit.c:(.text.exit+0x1a): undefined reference to `_exit'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-writer.o): in function `_write_r':
-      writer.c:(.text._write_r+0x1a): undefined reference to `_write'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-closer.o): in function `_close_r':
-      closer.c:(.text._close_r+0x12): undefined reference to `_close'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-lseekr.o): in function `_lseek_r':
-      lseekr.c:(.text._lseek_r+0x1a): undefined reference to `_lseek'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-readr.o): in function `_read_r':
-      readr.c:(.text._read_r+0x1a): undefined reference to `_read'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-sbrkr.o): in function `_sbrk_r':
-      sbrkr.c:(.text._sbrk_r+0x12): undefined reference to `_sbrk'
-      collect2: error: ld returned 1 exit status
-      
-      
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags: -c 
-      
-      The output was:
-      0
-      
-      
-      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
-      
-      The C compiler identification is GNU, found in:
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/3.28.0/CompilerIdC/CMakeCCompilerId.o
-      
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Detecting C compiler ABI info"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-4s7mGg"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-4s7mGg"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_ABI_COMPILED"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-4s7mGg'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ccffb/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_ccffb.dir/build.make CMakeFiles/cmTC_ccffb.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-4s7mGg'
-        Building C object CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_ccffb.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_ccffb.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/ccfhvIR2.s
-        GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
-        	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
-        
-        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include"
-        ignoring nonexistent directory "/usr/bin/../arm-none-eabi/usr/local/include"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include-fixed"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include"
-        ignoring duplicate directory "/usr/bin/../arm-none-eabi/include"
-        #include "..." search starts here:
-        #include <...> search starts here:
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include-fixed
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
-        End of search list.
-        Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_ccffb.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o /tmp/ccfhvIR2.s
-        GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
-        COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
-        LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_ccffb
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ccffb.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_ccffb.dir/CMakeCCompilerABI.c.o -o cmTC_ccffb 
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_ccffb.dir/build.make:99: cmTC_ccffb] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-4s7mGg'
-        make: *** [Makefile:127: cmTC_ccffb/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_COMPILER_WORKS"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_bc77c/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_bc77c.dir/build.make CMakeFiles/cmTC_bc77c.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y'
-        Building C object CMakeFiles/cmTC_bc77c.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_bc77c.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y/testCCompiler.c
-        Linking C executable cmTC_bc77c
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bc77c.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_bc77c.dir/testCCompiler.c.o -o cmTC_bc77c 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_bc77c.dir/build.make:99: cmTC_bc77c] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-uOkT3y'
-        make: *** [Makefile:127: cmTC_bc77c/fast] Error 2
-        
-      exitCode: 2
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags:  
-      
-      The output was:
-      1
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-exit.o): in function `exit':
-      exit.c:(.text.exit+0x1a): undefined reference to `_exit'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-writer.o): in function `_write_r':
-      writer.c:(.text._write_r+0x1a): undefined reference to `_write'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-closer.o): in function `_close_r':
-      closer.c:(.text._close_r+0x12): undefined reference to `_close'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-lseekr.o): in function `_lseek_r':
-      lseekr.c:(.text._lseek_r+0x1a): undefined reference to `_lseek'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-readr.o): in function `_read_r':
-      readr.c:(.text._read_r+0x1a): undefined reference to `_read'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-sbrkr.o): in function `_sbrk_r':
-      sbrkr.c:(.text._sbrk_r+0x12): undefined reference to `_sbrk'
-      collect2: error: ld returned 1 exit status
-      
-      
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags: -c 
-      
-      The output was:
-      0
-      
-      
-      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
-      
-      The C compiler identification is GNU, found in:
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/3.28.0/CompilerIdC/CMakeCCompilerId.o
-      
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Detecting C compiler ABI info"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-0Pk2rH"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-0Pk2rH"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_ABI_COMPILED"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-0Pk2rH'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_dca89/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_dca89.dir/build.make CMakeFiles/cmTC_dca89.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-0Pk2rH'
-        Building C object CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_dca89.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_dca89.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/cchwgZ5N.s
-        GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
-        	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
-        
-        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include"
-        ignoring nonexistent directory "/usr/bin/../arm-none-eabi/usr/local/include"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include-fixed"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include"
-        ignoring duplicate directory "/usr/bin/../arm-none-eabi/include"
-        #include "..." search starts here:
-        #include <...> search starts here:
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include-fixed
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
-        End of search list.
-        Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_dca89.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o /tmp/cchwgZ5N.s
-        GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
-        COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
-        LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_dca89
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dca89.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_dca89.dir/CMakeCCompilerABI.c.o -o cmTC_dca89 
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_dca89.dir/build.make:99: cmTC_dca89] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-0Pk2rH'
-        make: *** [Makefile:127: cmTC_dca89/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_COMPILER_WORKS"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_3c02e/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_3c02e.dir/build.make CMakeFiles/cmTC_3c02e.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd'
-        Building C object CMakeFiles/cmTC_3c02e.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_3c02e.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd/testCCompiler.c
-        Linking C executable cmTC_3c02e
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3c02e.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_3c02e.dir/testCCompiler.c.o -o cmTC_3c02e 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_3c02e.dir/build.make:99: cmTC_3c02e] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-b9T8jd'
-        make: *** [Makefile:127: cmTC_3c02e/fast] Error 2
-        
-      exitCode: 2
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags:  
-      
-      The output was:
-      1
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-exit.o): in function `exit':
-      exit.c:(.text.exit+0x1a): undefined reference to `_exit'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-writer.o): in function `_write_r':
-      writer.c:(.text._write_r+0x1a): undefined reference to `_write'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-closer.o): in function `_close_r':
-      closer.c:(.text._close_r+0x12): undefined reference to `_close'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-lseekr.o): in function `_lseek_r':
-      lseekr.c:(.text._lseek_r+0x1a): undefined reference to `_lseek'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-readr.o): in function `_read_r':
-      readr.c:(.text._read_r+0x1a): undefined reference to `_read'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-sbrkr.o): in function `_sbrk_r':
-      sbrkr.c:(.text._sbrk_r+0x12): undefined reference to `_sbrk'
-      collect2: error: ld returned 1 exit status
-      
-      
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags: -c 
-      
-      The output was:
-      0
-      
-      
-      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
-      
-      The C compiler identification is GNU, found in:
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/3.28.0/CompilerIdC/CMakeCCompilerId.o
-      
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Detecting C compiler ABI info"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9nkQuZ"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9nkQuZ"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_ABI_COMPILED"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9nkQuZ'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_98b7c/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_98b7c.dir/build.make CMakeFiles/cmTC_98b7c.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9nkQuZ'
-        Building C object CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_98b7c.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_98b7c.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/cczAdV1Z.s
-        GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
-        	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
-        
-        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include"
-        ignoring nonexistent directory "/usr/bin/../arm-none-eabi/usr/local/include"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include-fixed"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include"
-        ignoring duplicate directory "/usr/bin/../arm-none-eabi/include"
-        #include "..." search starts here:
-        #include <...> search starts here:
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include-fixed
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
-        End of search list.
-        Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_98b7c.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o /tmp/cczAdV1Z.s
-        GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
-        COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
-        LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_98b7c
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98b7c.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_98b7c.dir/CMakeCCompilerABI.c.o -o cmTC_98b7c 
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_98b7c.dir/build.make:99: cmTC_98b7c] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9nkQuZ'
-        make: *** [Makefile:127: cmTC_98b7c/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_COMPILER_WORKS"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_91bce/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_91bce.dir/build.make CMakeFiles/cmTC_91bce.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc'
-        Building C object CMakeFiles/cmTC_91bce.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_91bce.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc/testCCompiler.c
-        Linking C executable cmTC_91bce
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_91bce.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_91bce.dir/testCCompiler.c.o -o cmTC_91bce 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_91bce.dir/build.make:99: cmTC_91bce] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-9oBFvc'
-        make: *** [Makefile:127: cmTC_91bce/fast] Error 2
-        
-      exitCode: 2
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags:  
-      
-      The output was:
-      1
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-exit.o): in function `exit':
-      exit.c:(.text.exit+0x1a): undefined reference to `_exit'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-writer.o): in function `_write_r':
-      writer.c:(.text._write_r+0x1a): undefined reference to `_write'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-closer.o): in function `_close_r':
-      closer.c:(.text._close_r+0x12): undefined reference to `_close'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-lseekr.o): in function `_lseek_r':
-      lseekr.c:(.text._lseek_r+0x1a): undefined reference to `_lseek'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-readr.o): in function `_read_r':
-      readr.c:(.text._read_r+0x1a): undefined reference to `_read'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-sbrkr.o): in function `_sbrk_r':
-      sbrkr.c:(.text._sbrk_r+0x12): undefined reference to `_sbrk'
-      collect2: error: ld returned 1 exit status
-      
-      
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags: -c 
-      
-      The output was:
-      0
-      
-      
-      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
-      
-      The C compiler identification is GNU, found in:
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/3.28.0/CompilerIdC/CMakeCCompilerId.o
-      
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Detecting C compiler ABI info"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-Tyzehh"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-Tyzehh"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_ABI_COMPILED"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-Tyzehh'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6e683/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_6e683.dir/build.make CMakeFiles/cmTC_6e683.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-Tyzehh'
-        Building C object CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_6e683.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_6e683.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/cc2yDTyo.s
-        GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
-        	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
-        
-        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include"
-        ignoring nonexistent directory "/usr/bin/../arm-none-eabi/usr/local/include"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include-fixed"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include"
-        ignoring duplicate directory "/usr/bin/../arm-none-eabi/include"
-        #include "..." search starts here:
-        #include <...> search starts here:
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include-fixed
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
-        End of search list.
-        Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_6e683.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o /tmp/cc2yDTyo.s
-        GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
-        COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
-        LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_6e683
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6e683.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_6e683.dir/CMakeCCompilerABI.c.o -o cmTC_6e683 
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_6e683.dir/build.make:99: cmTC_6e683] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-Tyzehh'
-        make: *** [Makefile:127: cmTC_6e683/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Check for working C compiler: /usr/bin/arm-none-eabi-gcc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_COMPILER_WORKS"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_0d9ee/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_0d9ee.dir/build.make CMakeFiles/cmTC_0d9ee.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt'
-        Building C object CMakeFiles/cmTC_0d9ee.dir/testCCompiler.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_0d9ee.dir/testCCompiler.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt/testCCompiler.c
-        Linking C executable cmTC_0d9ee
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0d9ee.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_0d9ee.dir/testCCompiler.c.o -o cmTC_0d9ee 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_0d9ee.dir/build.make:99: cmTC_0d9ee] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-rwycKt'
-        make: *** [Makefile:127: cmTC_0d9ee/fast] Error 2
-        
-      exitCode: 2
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags:  
-      
-      The output was:
-      1
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-exit.o): in function `exit':
-      exit.c:(.text.exit+0x1a): undefined reference to `_exit'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-writer.o): in function `_write_r':
-      writer.c:(.text._write_r+0x1a): undefined reference to `_write'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-closer.o): in function `_close_r':
-      closer.c:(.text._close_r+0x12): undefined reference to `_close'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-lseekr.o): in function `_lseek_r':
-      lseekr.c:(.text._lseek_r+0x1a): undefined reference to `_lseek'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-readr.o): in function `_read_r':
-      readr.c:(.text._read_r+0x1a): undefined reference to `_read'
-      /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/ld: /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/libc.a(libc_a-sbrkr.o): in function `_sbrk_r':
-      sbrkr.c:(.text._sbrk_r+0x12): undefined reference to `_sbrk'
-      collect2: error: ld returned 1 exit status
-      
-      
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: /usr/bin/arm-none-eabi-gcc 
-      Build flags: -ffunction-sections;-fdata-sections;-march=armv7-a
-      Id flags: -c 
-      
-      The output was:
-      0
-      
-      
-      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
-      
-      The C compiler identification is GNU, found in:
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/3.28.0/CompilerIdC/CMakeCCompilerId.o
-      
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
-      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    checks:
-      - "Detecting C compiler ABI info"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-W1Yx3z"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-W1Yx3z"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "CMAKE_C_ABI_COMPILED"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-W1Yx3z'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c1df6/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_c1df6.dir/build.make CMakeFiles/cmTC_c1df6.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-W1Yx3z'
-        Building C object CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a    -v -o CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_c1df6.dir/'
-         /usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/cc1 -quiet -v -imultilib thumb/v7-a/nofp -iprefix /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/ -isysroot /usr/bin/../arm-none-eabi -D__USES_INITFINI__ /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_c1df6.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mfloat-abi=soft -marm -mlibarch=armv7-a -march=armv7-a -version -ffunction-sections -fdata-sections -o /tmp/ccL159ec.s
-        GNU C17 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) version 13.2.1 20231009 (arm-none-eabi)
-        	compiled by GNU C version 4.8.5 20150623 (Red Hat 4.8.5-44), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
-        
-        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include"
-        ignoring nonexistent directory "/usr/bin/../arm-none-eabi/usr/local/include"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/include-fixed"
-        ignoring duplicate directory "/usr/bin/../lib/gcc/../../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include"
-        ignoring duplicate directory "/usr/bin/../arm-none-eabi/include"
-        #include "..." search starts here:
-        #include <...> search starts here:
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/include-fixed
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/include
-        End of search list.
-        Compiler executable checksum: 3af492648c23d64f81488ff0afc525a8
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_c1df6.dir/'
-         /usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/as -v -march=armv7-a -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o /tmp/ccL159ec.s
-        GNU assembler version 2.41.0 (arm-none-eabi) using BFD version (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 2.41.0.20231009
-        COMPILER_PATH=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/:/usr/bin/../libexec/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/bin/
-        LIBRARY_PATH=/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../arm-none-eabi/lib/thumb/v7-a/nofp/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/:/usr/bin/../lib/gcc/:/usr/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/:/usr/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections'  '-v' '-o' 'CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-marm' '-mlibarch=armv7-a' '-march=armv7-a' '-dumpdir' 'CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_c1df6
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c1df6.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a   -v -rdynamic CMakeFiles/cmTC_c1df6.dir/CMakeCCompilerABI.c.o -o cmTC_c1df6 
-        Using built-in specs.
-        COLLECT_GCC=/usr/bin/arm-none-eabi-gcc
-        COLLECT_LTO_WRAPPER=/usr/bin/../libexec/gcc/arm-none-eabi/13.2.1/lto-wrapper
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        Target: arm-none-eabi
-        Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure --target=arm-none-eabi --prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install --with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools --disable-shared --disable-nls --disable-threads --disable-tls --enable-checking=release --enable-languages=c,c++,fortran --with-newlib --with-gnu-as --with-headers=yes --with-gnu-ld --with-native-system-header-dir=/include --with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi --with-multilib-list=aprofile,rmprofile --with-pkgversion='Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)' --with-bugurl=https://bugs.linaro.org/
-        Thread model: single
-        Supported LTO compression algorithms: zlib
-        gcc version 13.2.1 20231009 (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 
-        make[1]: *** [CMakeFiles/cmTC_c1df6.dir/build.make:99: cmTC_c1df6] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-W1Yx3z'
-        make: *** [Makefile:127: cmTC_c1df6/fast] Error 2
+        make[1]: *** [CMakeFiles/cmTC_d2f14.dir/build.make:99: cmTC_d2f14] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KZl2Kp'
+        make: *** [Makefile:127: cmTC_d2f14/fast] Error 2
         
       exitCode: 2
   -
@@ -1098,32 +298,133 @@ events:
       - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
       - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
       - "cmake/check_environment.cmake:14 (check_symbol_exists)"
-      - "CMakeLists.txt:28 (include)"
+      - "CMakeLists.txt:25 (include)"
     checks:
       - "Looking for __GNU_LIBRARY__"
     directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej"
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw"
     cmakeVariables:
       CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
     buildResult:
       variable: "_GNU_SOURCE"
       cached: true
       stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej'
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a0d3a/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_a0d3a.dir/build.make CMakeFiles/cmTC_a0d3a.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej'
-        Building C object CMakeFiles/cmTC_a0d3a.dir/CheckSymbolExists.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_a0d3a.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej/CheckSymbolExists.c
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej/CheckSymbolExists.c:2:10: fatal error: features.h: No such file or directory
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_57462/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_57462.dir/build.make CMakeFiles/cmTC_57462.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw'
+        Building C object CMakeFiles/cmTC_57462.dir/CheckSymbolExists.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_57462.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw/CheckSymbolExists.c
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw/CheckSymbolExists.c:2:10: fatal error: features.h: No such file or directory
             2 | #include <features.h>
               |          ^~~~~~~~~~~~
         compilation terminated.
-        make[1]: *** [CMakeFiles/cmTC_a0d3a.dir/build.make:78: CMakeFiles/cmTC_a0d3a.dir/CheckSymbolExists.c.o] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-sKGBej'
-        make: *** [Makefile:127: cmTC_a0d3a/fast] Error 2
+        make[1]: *** [CMakeFiles/cmTC_57462.dir/build.make:78: CMakeFiles/cmTC_57462.dir/CheckSymbolExists.c.o] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-KM26Hw'
+        make: *** [Makefile:127: cmTC_57462/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "lib/CMakeLists.txt:77 (check_symbol_exists)"
+    checks:
+      - "Looking for malloc"
+    directories:
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
+    buildResult:
+      variable: "HAS_MALLOC"
+      cached: true
+      stdout: |
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e2799/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_e2799.dir/build.make CMakeFiles/cmTC_e2799.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA'
+        Building C object CMakeFiles/cmTC_e2799.dir/CheckSymbolExists.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_e2799.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA/CheckSymbolExists.c
+        Linking C executable cmTC_e2799
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e2799.dir/link.txt --verbose=1
+        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_e2799.dir/CheckSymbolExists.c.o -o cmTC_e2799 
+        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
+        make[1]: *** [CMakeFiles/cmTC_e2799.dir/build.make:99: cmTC_e2799] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-PH0oBA'
+        make: *** [Makefile:127: cmTC_e2799/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "lib/CMakeLists.txt:78 (check_symbol_exists)"
+    checks:
+      - "Looking for free"
+    directories:
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
+    buildResult:
+      variable: "HAS_FREE"
+      cached: true
+      stdout: |
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_181e2/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_181e2.dir/build.make CMakeFiles/cmTC_181e2.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX'
+        Building C object CMakeFiles/cmTC_181e2.dir/CheckSymbolExists.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_181e2.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX/CheckSymbolExists.c
+        Linking C executable cmTC_181e2
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_181e2.dir/link.txt --verbose=1
+        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_181e2.dir/CheckSymbolExists.c.o -o cmTC_181e2 
+        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
+        make[1]: *** [CMakeFiles/cmTC_181e2.dir/build.make:99: cmTC_181e2] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-hvXpcX'
+        make: *** [Makefile:127: cmTC_181e2/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "lib/CMakeLists.txt:79 (check_symbol_exists)"
+    checks:
+      - "Looking for strcasestr"
+    directories:
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
+    buildResult:
+      variable: "HAS_STRCASESTR"
+      cached: true
+      stdout: |
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_f3939/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_f3939.dir/build.make CMakeFiles/cmTC_f3939.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4'
+        Building C object CMakeFiles/cmTC_f3939.dir/CheckSymbolExists.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_f3939.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4/CheckSymbolExists.c
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4/CheckSymbolExists.c: In function 'main':
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4/CheckSymbolExists.c:8:19: error: 'strcasestr' undeclared (first use in this function); did you mean 'strcasecmp'?
+            8 |   return ((int*)(&strcasestr))[argc];
+              |                   ^~~~~~~~~~
+              |                   strcasecmp
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+        make[1]: *** [CMakeFiles/cmTC_f3939.dir/build.make:78: CMakeFiles/cmTC_f3939.dir/CheckSymbolExists.c.o] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-i8Sud4'
+        make: *** [Makefile:127: cmTC_f3939/fast] Error 2
         
       exitCode: 2
   -
@@ -1133,133 +434,32 @@ events:
       - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
       - "lib/CMakeLists.txt:80 (check_symbol_exists)"
     checks:
-      - "Looking for malloc"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "HAS_MALLOC"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a7463/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_a7463.dir/build.make CMakeFiles/cmTC_a7463.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln'
-        Building C object CMakeFiles/cmTC_a7463.dir/CheckSymbolExists.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_a7463.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln/CheckSymbolExists.c
-        Linking C executable cmTC_a7463
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a7463.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_a7463.dir/CheckSymbolExists.c.o -o cmTC_a7463 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_a7463.dir/build.make:99: cmTC_a7463] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-NMTkln'
-        make: *** [Makefile:127: cmTC_a7463/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
-      - "lib/CMakeLists.txt:81 (check_symbol_exists)"
-    checks:
-      - "Looking for free"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "HAS_FREE"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7d7b1/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_7d7b1.dir/build.make CMakeFiles/cmTC_7d7b1.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF'
-        Building C object CMakeFiles/cmTC_7d7b1.dir/CheckSymbolExists.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_7d7b1.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF/CheckSymbolExists.c
-        Linking C executable cmTC_7d7b1
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7d7b1.dir/link.txt --verbose=1
-        /usr/bin/arm-none-eabi-gcc  -ffunction-sections -fdata-sections -march=armv7-a  -rdynamic CMakeFiles/cmTC_7d7b1.dir/CheckSymbolExists.c.o -o cmTC_7d7b1 
-        arm-none-eabi-gcc: error: unrecognized command-line option '-rdynamic'
-        make[1]: *** [CMakeFiles/cmTC_7d7b1.dir/build.make:99: cmTC_7d7b1] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-w6inmF'
-        make: *** [Makefile:127: cmTC_7d7b1/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
-      - "lib/CMakeLists.txt:82 (check_symbol_exists)"
-    checks:
-      - "Looking for strcasestr"
-    directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f"
-    cmakeVariables:
-      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
-    buildResult:
-      variable: "HAS_STRCASESTR"
-      cached: true
-      stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f'
-        
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_857c7/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_857c7.dir/build.make CMakeFiles/cmTC_857c7.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f'
-        Building C object CMakeFiles/cmTC_857c7.dir/CheckSymbolExists.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_857c7.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f/CheckSymbolExists.c
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f/CheckSymbolExists.c: In function 'main':
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f/CheckSymbolExists.c:8:19: error: 'strcasestr' undeclared (first use in this function); did you mean 'strcasecmp'?
-            8 |   return ((int*)(&strcasestr))[argc];
-              |                   ^~~~~~~~~~
-              |                   strcasecmp
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
-        make[1]: *** [CMakeFiles/cmTC_857c7.dir/build.make:78: CMakeFiles/cmTC_857c7.dir/CheckSymbolExists.c.o] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-yQxS5f'
-        make: *** [Makefile:127: cmTC_857c7/fast] Error 2
-        
-      exitCode: 2
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:140 (try_compile)"
-      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:66 (__CHECK_SYMBOL_EXISTS_IMPL)"
-      - "lib/CMakeLists.txt:83 (check_symbol_exists)"
-    checks:
       - "Looking for memset_s"
     directories:
-      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9"
-      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9"
+      source: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG"
+      binary: "/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG"
     cmakeVariables:
       CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -march=armv7-a"
     buildResult:
       variable: "HAS_MEMSET_S"
       cached: true
       stdout: |
-        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9'
+        Change Dir: '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6d0ae/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_6d0ae.dir/build.make CMakeFiles/cmTC_6d0ae.dir/build
-        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9'
-        Building C object CMakeFiles/cmTC_6d0ae.dir/CheckSymbolExists.c.o
-        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_6d0ae.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9/CheckSymbolExists.c
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9/CheckSymbolExists.c: In function 'main':
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9/CheckSymbolExists.c:8:19: error: 'memset_s' undeclared (first use in this function); did you mean 'memset'?
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c5c82/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_c5c82.dir/build.make CMakeFiles/cmTC_c5c82.dir/build
+        make[1]: Entering directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG'
+        Building C object CMakeFiles/cmTC_c5c82.dir/CheckSymbolExists.c.o
+        /usr/bin/arm-none-eabi-gcc   -ffunction-sections -fdata-sections -march=armv7-a  -o CMakeFiles/cmTC_c5c82.dir/CheckSymbolExists.c.o -c /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG/CheckSymbolExists.c
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG/CheckSymbolExists.c: In function 'main':
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG/CheckSymbolExists.c:8:19: error: 'memset_s' undeclared (first use in this function); did you mean 'memset'?
             8 |   return ((int*)(&memset_s))[argc];
               |                   ^~~~~~~~
               |                   memset
-        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
-        make[1]: *** [CMakeFiles/cmTC_6d0ae.dir/build.make:78: CMakeFiles/cmTC_6d0ae.dir/CheckSymbolExists.c.o] Error 1
-        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-zjtFR9'
-        make: *** [Makefile:127: cmTC_6d0ae/fast] Error 2
+        /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+        make[1]: *** [CMakeFiles/cmTC_c5c82.dir/build.make:78: CMakeFiles/cmTC_c5c82.dir/CheckSymbolExists.c.o] Error 1
+        make[1]: Leaving directory '/home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/CMakeFiles/CMakeScratch/TryCompile-TYTrEG'
+        make: *** [Makefile:127: cmTC_c5c82/fast] Error 2
         
       exitCode: 2
 ...

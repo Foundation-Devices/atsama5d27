@@ -69,9 +69,14 @@ impl Pit {
     }
 
     pub fn busy_wait_ms(&mut self, curr_clock_speed: u32, ms: u32) {
+        self.busy_wait_us(curr_clock_speed, ms * 1000);
+    }
+
+    pub fn busy_wait_us(&mut self, curr_clock_speed: u32, us: u32) {
         self.reset();
         let base = self.read();
-        let delay = ((curr_clock_speed / 1000) * ms) / 16;
+        // TODO Swap this so the multiplication is done first
+        let delay = ((curr_clock_speed / 1000000) * us) / 16;
         let mut current;
 
         loop {

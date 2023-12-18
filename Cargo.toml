@@ -38,12 +38,17 @@ fitment = ["hal", "ft3269", "drv2605", "is31fl32xx"]
 default = ["lcd-console", "hal"]
 
 [profile.dev]
-#codegen-units = 1
-#debug = 2
-#debug-assertions = true # <-
-#incremental = false
-#opt-level = 3 # <-
-#overflow-checks = true # <-
+codegen-units = 1
+debug = 2
+debug-assertions = true # <-
+incremental = false
+opt-level = 3 # <-
+overflow-checks = true # <-
 
 [profile.release]
-debug = 1
+codegen-units = 1
+debug = 2
+debug-assertions = true # <-
+incremental = false
+opt-level = 3 # <-
+overflow-checks = true # <-

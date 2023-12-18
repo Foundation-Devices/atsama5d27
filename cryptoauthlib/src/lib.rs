@@ -8,5 +8,3 @@
 #![allow(clippy::upper_case_acronyms)]
 
 core::include!("./bindings.rs");
-
-mod link;

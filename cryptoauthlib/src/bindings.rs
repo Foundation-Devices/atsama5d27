@@ -210,9 +210,8 @@ pub const ATCA_PREPROCESSOR_WARNING: u32 = 0;
 pub const CALIB_DELETE_EN: u32 = 0;
 pub const MAX_PACKET_SIZE: u32 = 1072;
 pub const MULTIPART_BUF_EN: u32 = 0;
-pub const ATCA_SHA_SUPPORT: u32 = 1;
 pub const ATCA_ECC_SUPPORT: u32 = 1;
-pub const ATCA_CA2_SUPPORT: u32 = 1;
+pub const ATCA_CA2_SUPPORT: u32 = 0;
 pub const ATCA_CA_SUPPORT: u32 = 1;
 pub const ATCA_HOSTLIB_EN: u32 = 0;
 pub const ATCA_CHECK_PARAMS_EN: u32 = 1;
@@ -1178,15 +1177,15 @@ pub const ATCA_AES256_KEY_SIZE: u32 = 32;
 pub const ATCA_ECCP256_KEY_SIZE: u32 = 32;
 pub const ATCA_ECCP256_PUBKEY_SIZE: u32 = 64;
 pub const ATCA_ECCP256_SIG_SIZE: u32 = 64;
-pub const CALIB_SHA204_EN: u32 = 1;
-pub const CALIB_SHA206_EN: u32 = 1;
-pub const CALIB_ECC108_EN: u32 = 1;
-pub const CALIB_ECC508_EN: u32 = 1;
+pub const CALIB_SHA204_EN: u32 = 0;
+pub const CALIB_SHA206_EN: u32 = 0;
+pub const CALIB_ECC108_EN: u32 = 0;
+pub const CALIB_ECC508_EN: u32 = 0;
 pub const CALIB_ECC608_EN: u32 = 1;
-pub const CALIB_ECC204_EN: u32 = 1;
-pub const CALIB_TA010_EN: u32 = 1;
-pub const CALIB_SHA104_EN: u32 = 1;
-pub const CALIB_SHA105_EN: u32 = 1;
+pub const CALIB_ECC204_EN: u32 = 0;
+pub const CALIB_TA010_EN: u32 = 0;
+pub const CALIB_SHA104_EN: u32 = 0;
+pub const CALIB_SHA105_EN: u32 = 0;
 pub const DEFAULT_CA_MAX_PACKET_SIZE: u32 = 198;
 pub const CA_MAX_PACKET_SIZE: u32 = 198;
 pub const CALIB_INFO_LATCH_EN: u32 = 1;
@@ -1461,11 +1460,11 @@ pub const CALIB_SWI_FLAG_CMD: u32 = 119;
 pub const CALIB_SWI_FLAG_TX: u32 = 136;
 pub const CALIB_SWI_FLAG_IDLE: u32 = 187;
 pub const CALIB_SWI_FLAG_SLEEP: u32 = 204;
-pub const SHA_CONTEXT_MAX_SIZE: u32 = 99;
 pub const ATCA_AES_GCM_IV_STD_LENGTH: u32 = 12;
 pub const ATCA_SHA1_DIGEST_SIZE: u32 = 20;
 pub const ATCA_SHA2_256_DIGEST_SIZE: u32 = 32;
 pub const ATCA_SHA2_256_BLOCK_SIZE: u32 = 64;
+pub const SHA_CONTEXT_MAX_SIZE: u32 = 109;
 pub type __gnuc_va_list = __builtin_va_list;
 pub type __u_char = ::core::ffi::c_uchar;
 pub type __u_short = ::core::ffi::c_ushort;
@@ -5074,6 +5073,18 @@ extern "C" {
         __n: ::core::ffi::c_ulong,
     ) -> ::core::ffi::c_ulong;
 }
+extern "C" {
+    pub fn hal_malloc(size: usize) -> *mut ::core::ffi::c_void;
+}
+extern "C" {
+    pub fn hal_free(ptr: *mut ::core::ffi::c_void);
+}
+extern "C" {
+    pub fn lib_strcasestr(
+        haystack: *const ::core::ffi::c_char,
+        needle: *const ::core::ffi::c_char,
+    ) -> *const ::core::ffi::c_char;
+}
 pub type ATCA_STATUS = ::core::ffi::c_int;
 extern "C" {
     pub fn atca_trace(status: ATCA_STATUS) -> ATCA_STATUS;
@@ -6624,6 +6635,72 @@ extern "C" {
     pub fn hal_check_wake(response: *const u8, response_size: ::core::ffi::c_int) -> ATCA_STATUS;
 }
 extern "C" {
+    pub fn hal_swi_init(iface: ATCAIface, cfg: *mut ATCAIfaceCfg) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_swi_post_init(iface: ATCAIface) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_swi_send(
+        iface: ATCAIface,
+        word_address: u8,
+        txdata: *mut u8,
+        txlength: ::core::ffi::c_int,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_swi_receive(
+        iface: ATCAIface,
+        word_address: u8,
+        rxdata: *mut u8,
+        rxlength: *mut u16,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_swi_control(
+        iface: ATCAIface,
+        option: u8,
+        param: *mut ::core::ffi::c_void,
+        paramlen: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_swi_release(hal_data: *mut ::core::ffi::c_void) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_init(iface: ATCAIface, cfg: *mut ATCAIfaceCfg) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_post_init(iface: ATCAIface) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_send(
+        iface: ATCAIface,
+        word_address: u8,
+        txdata: *mut u8,
+        txlength: ::core::ffi::c_int,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_receive(
+        iface: ATCAIface,
+        word_address: u8,
+        rxdata: *mut u8,
+        rxlength: *mut u16,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_control(
+        iface: ATCAIface,
+        option: u8,
+        param: *mut ::core::ffi::c_void,
+        paramlen: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn hal_uart_release(hal_data: *mut ::core::ffi::c_void) -> ATCA_STATUS;
+}
+extern "C" {
     #[doc = " \\brief Timer API implemented at the HAL level"]
     pub fn hal_delay_ms(delay: u32);
 }
@@ -7534,10 +7611,6 @@ extern "C" {
 extern "C" {
     #[doc = " \\brief default configuration for an ECCx08A device on the logical SWI bus over UART"]
     pub static mut cfg_ateccx08a_swi_default: ATCAIfaceCfg;
-}
-extern "C" {
-    #[doc = " \\brief default configuration for an SHA20xA device on the logical SWI bus over UART"]
-    pub static mut cfg_atsha20xa_swi_default: ATCAIfaceCfg;
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -8481,9 +8554,6 @@ extern "C" {
     pub fn atGenKey(device_type: ATCADeviceType, packet: *mut ATCAPacket) -> ATCA_STATUS;
 }
 extern "C" {
-    pub fn atHMAC(device_type: ATCADeviceType, packet: *mut ATCAPacket) -> ATCA_STATUS;
-}
-extern "C" {
     pub fn atInfo(device_type: ATCADeviceType, packet: *mut ATCAPacket) -> ATCA_STATUS;
 }
 extern "C" {
@@ -8692,12 +8762,6 @@ extern "C" {
     pub fn calib_is_private(device: ATCADevice, slot: u16, is_private: *mut bool) -> ATCA_STATUS;
 }
 extern "C" {
-    pub fn calib_get_devicetype_with_device_id(
-        device_id: u8,
-        device_revision: u8,
-    ) -> ATCADeviceType;
-}
-extern "C" {
     pub fn calib_aes(
         device: ATCADevice,
         mode: u8,
@@ -8856,9 +8920,6 @@ extern "C" {
     ) -> ATCA_STATUS;
 }
 extern "C" {
-    pub fn calib_sha105_gendivkey(device: ATCADevice, other_data: *const u8) -> ATCA_STATUS;
-}
-extern "C" {
     pub fn calib_genkey_base(
         device: ATCADevice,
         mode: u8,
@@ -8877,9 +8938,6 @@ extern "C" {
     pub fn calib_genkey_mac(device: ATCADevice, public_key: *mut u8, mac: *mut u8) -> ATCA_STATUS;
 }
 extern "C" {
-    pub fn calib_hmac(device: ATCADevice, mode: u8, key_id: u16, digest: *mut u8) -> ATCA_STATUS;
-}
-extern "C" {
     pub fn calib_info_base(
         device: ATCADevice,
         mode: u8,
@@ -8896,16 +8954,6 @@ extern "C" {
         key_id: u16,
         is_valid: *mut u8,
     ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_info_lock_status(
-        device: ATCADevice,
-        param2: u16,
-        is_locked: *mut u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_info_chip_status(device: ATCADevice, chip_status: *mut u8) -> ATCA_STATUS;
 }
 extern "C" {
     pub fn calib_info_set_latch(device: ATCADevice, state: bool) -> ATCA_STATUS;
@@ -8941,22 +8989,6 @@ extern "C" {
 }
 extern "C" {
     pub fn calib_lock_data_slot(device: ATCADevice, slot: u16) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_lock_config_slot(
-        device: ATCADevice,
-        slot: u16,
-        summary_crc: u16,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_lock_config_zone(device: ATCADevice) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_lock_data_slot(device: ATCADevice, slot: u16) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_lock_data_zone(device: ATCADevice) -> ATCA_STATUS;
 }
 extern "C" {
     pub fn calib_mac(
@@ -9063,36 +9095,6 @@ extern "C" {
 }
 extern "C" {
     pub fn calib_read_sig(device: ATCADevice, slot: u16, sig: *mut u8) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_read_zone(
-        device: ATCADevice,
-        zone: u8,
-        slot: u16,
-        block: u8,
-        offset: usize,
-        data: *mut u8,
-        len: u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_read_bytes_zone(
-        device: ATCADevice,
-        zone: u8,
-        slot: u16,
-        offset: usize,
-        data: *mut u8,
-        length: usize,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_read_serial_number(device: ATCADevice, serial_number: *mut u8) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_read_config_zone(device: ATCADevice, config_data: *mut u8) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_compare_config(expected: *mut u8, other: *mut u8) -> bool;
 }
 extern "C" {
     pub fn calib_read_config_zone(device: ATCADevice, config_data: *mut u8) -> ATCA_STATUS;
@@ -9367,14 +9369,6 @@ extern "C" {
     ) -> ATCA_STATUS;
 }
 extern "C" {
-    pub fn calib_ca2_sign(
-        device: ATCADevice,
-        key_id: u16,
-        msg: *const u8,
-        signature: *mut u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
     pub fn calib_updateextra(device: ATCADevice, mode: u8, new_value: u16) -> ATCA_STATUS;
 }
 extern "C" {
@@ -9546,56 +9540,6 @@ extern "C" {
         enc_key: *const u8,
         enc_key_id: u16,
         num_in: *const u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write(
-        device: ATCADevice,
-        zone: u8,
-        address: u16,
-        value: *const u8,
-        mac: *const u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write_zone(
-        device: ATCADevice,
-        zone: u8,
-        slot: u16,
-        block: u8,
-        offset: u8,
-        data: *const u8,
-        len: u8,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write_config_zone(device: ATCADevice, config_data: *const u8) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write_config_counter(
-        device: ATCADevice,
-        counter_id: u8,
-        counter_value: u16,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write_bytes_zone(
-        device: ATCADevice,
-        zone: u8,
-        slot: u16,
-        block: usize,
-        data: *const u8,
-        length: usize,
-    ) -> ATCA_STATUS;
-}
-extern "C" {
-    pub fn calib_ca2_write_enc(
-        device: ATCADevice,
-        slot: u16,
-        data: *mut u8,
-        transport_key: *mut u8,
-        transport_key_id: u16,
-        num_in: *mut u8,
     ) -> ATCA_STATUS;
 }
 extern "C" {
@@ -10829,6 +10773,783 @@ extern "C" {
         result: *mut u8,
         result_len: usize,
     ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_wakeup() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_idle() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sleep() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_get_zone_size(zone: u8, slot: u16, size: *mut usize) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_get_zone_size_ext(
+        device: ATCADevice,
+        zone: u8,
+        slot: u16,
+        size: *mut usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes(mode: u8, key_id: u16, aes_in: *const u8, aes_out: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_encrypt(
+        key_id: u16,
+        key_block: u8,
+        plaintext: *const u8,
+        ciphertext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_encrypt_ext(
+        device: ATCADevice,
+        key_id: u16,
+        key_block: u8,
+        plaintext: *const u8,
+        ciphertext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_decrypt(
+        key_id: u16,
+        key_block: u8,
+        ciphertext: *const u8,
+        plaintext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_decrypt_ext(
+        device: ATCADevice,
+        key_id: u16,
+        key_block: u8,
+        ciphertext: *const u8,
+        plaintext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gfm(h: *const u8, input: *const u8, output: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_init(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        key_id: u16,
+        key_block: u8,
+        iv: *const u8,
+        iv_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_init_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        key_id: u16,
+        key_block: u8,
+        iv: *const u8,
+        iv_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_init_rand(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        key_id: u16,
+        key_block: u8,
+        rand_size: usize,
+        free_field: *const u8,
+        free_field_size: usize,
+        iv: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_aad_update(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        aad: *const u8,
+        aad_size: u32,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_aad_update_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        aad: *const u8,
+        aad_size: u32,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_encrypt_update(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        plaintext: *const u8,
+        plaintext_size: u32,
+        ciphertext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_encrypt_update_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        plaintext: *const u8,
+        plaintext_size: u32,
+        ciphertext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_encrypt_finish(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        tag: *mut u8,
+        tag_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_encrypt_finish_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        tag: *mut u8,
+        tag_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_decrypt_update(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        ciphertext: *const u8,
+        ciphertext_size: u32,
+        plaintext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_decrypt_update_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        ciphertext: *const u8,
+        ciphertext_size: u32,
+        plaintext: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_decrypt_finish(
+        ctx: *mut atca_aes_gcm_ctx_t,
+        tag: *const u8,
+        tag_size: usize,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_aes_gcm_decrypt_finish_ext(
+        device: ATCADevice,
+        ctx: *mut atca_aes_gcm_ctx_t,
+        tag: *const u8,
+        tag_size: usize,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_checkmac(
+        mode: u8,
+        key_id: u16,
+        challenge: *const u8,
+        response: *const u8,
+        other_data: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_checkmac_with_response_mac(
+        mode: u8,
+        challenge: *const u8,
+        response: *const u8,
+        other_data: *const u8,
+        mac: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_counter(mode: u8, counter_id: u16, counter_value: *mut u32) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_counter_increment(counter_id: u16, counter_value: *mut u32) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_counter_read(counter_id: u16, counter_value: *mut u32) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_derivekey(mode: u8, key_id: u16, mac: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_derivekey_ext(
+        device: ATCADevice,
+        mode: u8,
+        key_id: u16,
+        mac: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh_base(
+        mode: u8,
+        key_id: u16,
+        public_key: *const u8,
+        pms: *mut u8,
+        out_nonce: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh(key_id: u16, public_key: *const u8, pms: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh_enc(
+        key_id: u16,
+        public_key: *const u8,
+        pms: *mut u8,
+        read_key: *const u8,
+        read_key_id: u16,
+        num_in: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh_ioenc(
+        key_id: u16,
+        public_key: *const u8,
+        pms: *mut u8,
+        io_key: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh_tempkey(public_key: *const u8, pms: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_ecdh_tempkey_ioenc(
+        public_key: *const u8,
+        pms: *mut u8,
+        io_key: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_gendig(
+        zone: u8,
+        key_id: u16,
+        other_data: *const u8,
+        other_data_size: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_gendivkey(other_data: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_genkey_base(
+        mode: u8,
+        key_id: u16,
+        other_data: *const u8,
+        public_key: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_genkey(key_id: u16, public_key: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_genkey_ext(device: ATCADevice, key_id: u16, public_key: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_get_pubkey(key_id: u16, public_key: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_get_pubkey_ext(
+        device: ATCADevice,
+        key_id: u16,
+        public_key: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_hmac(mode: u8, key_id: u16, digest: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_base(mode: u8, param2: u16, out_data: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info(revision: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_ext(device: ATCADevice, revision: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_lock_status(param2: u16, is_locked: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_chip_status(chip_status: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_set_latch(state: bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_info_get_latch(state: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_kdf(
+        mode: u8,
+        key_id: u16,
+        details: u32,
+        message: *const u8,
+        out_data: *mut u8,
+        out_nonce: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock(mode: u8, summary_crc: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_config_zone() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_config_zone_ext(device: ATCADevice) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_config_zone_crc(summary_crc: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_data_zone() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_data_zone_ext(device: ATCADevice) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_data_zone_crc(summary_crc: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_data_slot(slot: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_lock_data_slot_ext(device: ATCADevice, slot: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_mac(mode: u8, key_id: u16, challenge: *const u8, digest: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_nonce_base(
+        mode: u8,
+        zero: u16,
+        num_in: *const u8,
+        rand_out: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_nonce(num_in: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_nonce_load(target: u8, num_in: *const u8, num_in_size: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_nonce_rand(num_in: *const u8, rand_out: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_nonce_rand_ext(
+        device: ATCADevice,
+        num_in: *const u8,
+        rand_out: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_challenge(num_in: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_challenge_seed_update(num_in: *const u8, rand_out: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_priv_write(
+        key_id: u16,
+        priv_key: *const u8,
+        write_key_id: u16,
+        write_key: *const u8,
+        num_in: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_random(rand_out: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_random_ext(device: ATCADevice, rand_out: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_zone(
+        zone: u8,
+        slot: u16,
+        block: u8,
+        offset: u8,
+        data: *mut u8,
+        len: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_locked(zone: u8, is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_config_locked(is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_config_locked_ext(device: ATCADevice, is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_data_locked(is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_data_locked_ext(device: ATCADevice, is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_slot_locked(slot: u16, is_locked: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_slot_locked_ext(
+        device: ATCADevice,
+        slot: u16,
+        is_locked: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_private_ext(
+        device: ATCADevice,
+        slot: u16,
+        is_private: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_is_private(slot: u16, is_private: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_bytes_zone_ext(
+        device: ATCADevice,
+        zone: u8,
+        slot: u16,
+        offset: usize,
+        data: *mut u8,
+        length: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_bytes_zone(
+        zone: u8,
+        slot: u16,
+        offset: usize,
+        data: *mut u8,
+        length: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_serial_number(serial_number: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_serial_number_ext(device: ATCADevice, serial_number: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_pubkey(slot: u16, public_key: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_pubkey_ext(device: ATCADevice, slot: u16, public_key: *mut u8)
+        -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_sig(slot: u16, sig: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_config_zone(config_data: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_config_zone_ext(device: ATCADevice, config_data: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_cmp_config_zone(config_data: *mut u8, same_config: *mut bool) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_read_enc(
+        key_id: u16,
+        block: u8,
+        data: *mut u8,
+        enc_key: *const u8,
+        enc_key_id: u16,
+        num_in: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_secureboot(
+        mode: u8,
+        param2: u16,
+        digest: *const u8,
+        signature: *const u8,
+        mac: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_secureboot_mac(
+        mode: u8,
+        digest: *const u8,
+        signature: *const u8,
+        num_in: *const u8,
+        io_key: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_selftest(mode: u8, param2: u16, result: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_base(
+        mode: u8,
+        length: u16,
+        data_in: *const u8,
+        data_out: *mut u8,
+        data_out_size: *mut u16,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_start() -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_update(message: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_end(digest: *mut u8, length: u16, message: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_read_context(context: *mut u8, context_size: *mut u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_write_context(context: *const u8, context_size: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha(length: u16, message: *const u8, digest: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_hw_sha2_256(data: *const u8, data_size: usize, digest: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_hw_sha2_256_init(ctx: *mut atca_sha256_ctx_t) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_hw_sha2_256_update(
+        ctx: *mut atca_sha256_ctx_t,
+        data: *const u8,
+        data_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_hw_sha2_256_finish(ctx: *mut atca_sha256_ctx_t, digest: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_hmac_init(ctx: *mut atca_hmac_sha256_ctx_t, key_slot: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_hmac_update(
+        ctx: *mut atca_hmac_sha256_ctx_t,
+        data: *const u8,
+        data_size: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_hmac_finish(
+        ctx: *mut atca_hmac_sha256_ctx_t,
+        digest: *mut u8,
+        target: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_hmac(
+        data: *const u8,
+        data_size: usize,
+        key_slot: u16,
+        digest: *mut u8,
+        target: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sha_hmac_ext(
+        device: ATCADevice,
+        data: *const u8,
+        data_size: usize,
+        key_slot: u16,
+        digest: *mut u8,
+        target: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sign_base(mode: u8, key_id: u16, signature: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sign(key_id: u16, msg: *const u8, signature: *mut u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sign_ext(
+        device: ATCADevice,
+        key_id: u16,
+        msg: *const u8,
+        signature: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_sign_internal(
+        key_id: u16,
+        is_invalidate: bool,
+        is_full_sn: bool,
+        signature: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_updateextra(mode: u8, new_value: u16) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify(
+        mode: u8,
+        key_id: u16,
+        signature: *const u8,
+        public_key: *const u8,
+        other_data: *const u8,
+        mac: *mut u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_extern(
+        message: *const u8,
+        signature: *const u8,
+        public_key: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_extern_ext(
+        device: ATCADevice,
+        message: *const u8,
+        signature: *const u8,
+        public_key: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_extern_mac(
+        message: *const u8,
+        signature: *const u8,
+        public_key: *const u8,
+        num_in: *const u8,
+        io_key: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_stored(
+        message: *const u8,
+        signature: *const u8,
+        key_id: u16,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_stored_ext(
+        device: ATCADevice,
+        message: *const u8,
+        signature: *const u8,
+        key_id: u16,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_stored_with_tempkey(
+        signature: *const u8,
+        key_id: u16,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_stored_mac(
+        message: *const u8,
+        signature: *const u8,
+        key_id: u16,
+        num_in: *const u8,
+        io_key: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_validate(
+        key_id: u16,
+        signature: *const u8,
+        other_data: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_verify_invalidate(
+        key_id: u16,
+        signature: *const u8,
+        other_data: *const u8,
+        is_verified: *mut bool,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write(zone: u8, address: u16, value: *const u8, mac: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_zone(
+        zone: u8,
+        slot: u16,
+        block: u8,
+        offset: u8,
+        data: *const u8,
+        len: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_zone_ext(
+        device: ATCADevice,
+        zone: u8,
+        slot: u16,
+        block: u8,
+        offset: u8,
+        data: *const u8,
+        len: u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_bytes_zone_ext(
+        device: ATCADevice,
+        zone: u8,
+        slot: u16,
+        offset_bytes: usize,
+        data: *const u8,
+        length: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_bytes_zone(
+        zone: u8,
+        slot: u16,
+        offset_bytes: usize,
+        data: *const u8,
+        length: usize,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_pubkey(slot: u16, public_key: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_pubkey_ext(
+        device: ATCADevice,
+        slot: u16,
+        public_key: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_config_zone(config_data: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_config_zone_ext(device: ATCADevice, config_data: *const u8) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_enc(
+        key_id: u16,
+        block: u8,
+        data: *const u8,
+        enc_key: *const u8,
+        enc_key_id: u16,
+        num_in: *const u8,
+    ) -> ATCA_STATUS;
+}
+extern "C" {
+    pub fn atcab_write_config_counter(counter_id: u16, counter_value: u32) -> ATCA_STATUS;
 }
 pub type __builtin_va_list = [__va_list_tag; 1usize];
 #[repr(C)]

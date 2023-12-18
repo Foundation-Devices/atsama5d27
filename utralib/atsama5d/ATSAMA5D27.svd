@@ -23,13 +23,18 @@
     <memoryRegions>
       <memoryRegion>
         <name>DDR_RAM</name>
-        <baseAddress>0x20900000</baseAddress> <!-- DRAM base + 1M (loader mem) + 8M (image mem) -->
-        <size>0x2000000</size> <!-- 32 megs size -->
+        <baseAddress>0x21100000</baseAddress> <!-- DRAM base + 1M (loader mem) + 16M (image mem) -->
+        <size>0x4000000</size> <!-- 64 megs size -->
       </memoryRegion>
       <memoryRegion>
           <name>CSR</name>
           <baseAddress>0xF0000000</baseAddress>
           <size>0xfffffff</size>
+      </memoryRegion>
+      <memoryRegion>
+          <name>L2CC</name>
+          <baseAddress>0x00a00000</baseAddress>
+          <size>0x4000</size>
       </memoryRegion>
     </memoryRegions>
   </vendorExtensions>

@@ -449,6 +449,8 @@ ATCA_STATUS calib_execute_receive(ATCADevice device, uint8_t device_address, uin
     return status;
 }
 
+extern void se_dedug(const char *);
+
 /** \brief Wakes up device, sends the packet, waits for command completion,
  *         receives response, and puts the device into the idle state.
  *
@@ -467,6 +469,8 @@ ATCA_STATUS calib_execute_command(ATCAPacket* packet, ATCADevice device)
     uint16_t rxsize;
     uint8_t device_address = atcab_get_device_address(device);
     int32_t retries = 1;
+
+    se_debug("calib_execute_command");
 
     do
     {
@@ -498,9 +502,13 @@ ATCA_STATUS calib_execute_command(ATCAPacket* packet, ATCADevice device)
         {
             if ((uint8_t)ATCA_DEVICE_STATE_ACTIVE != device->device_state)
             {
+                se_debug("about to wakeup");
                 if (ATCA_SUCCESS == (status = calib_wakeup(device)))
                 {
+                    se_debug("wakeup success");
                     device->device_state = (uint8_t)ATCA_DEVICE_STATE_ACTIVE;
+                } else {
+                    se_debug("wakeup failed");
                 }
             }
 

@@ -1,5 +1,5 @@
 lib/CMakeFiles/cryptoauth.dir/__/app/api_206a/api_206a.c.o: \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/app/api_206a/api_206a.c \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/app/api_206a/api_206a.c \
  /usr/include/stdc-predef.h /usr/include/stdlib.h \
  /usr/include/bits/libc-header-start.h /usr/include/features.h \
  /usr/include/features-time64.h /usr/include/bits/wordsize.h \
@@ -33,29 +33,29 @@ lib/CMakeFiles/cryptoauth.dir/__/app/api_206a/api_206a.c.o: \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/types/cookie_io_functions_t.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/stdio.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/cryptoauthlib.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/cryptoauthlib.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-uintn.h /usr/include/string.h \
  /usr/include/strings.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_config.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_compiler.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_config.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_compiler.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdbool.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_version.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_platform.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_status.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_debug.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/cal_buffer.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_iface.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_devtypes.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_device.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_helpers.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/cryptoauthlib.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/hal/atca_hal.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_config.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_status.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_iface.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_version.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_platform.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_status.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_debug.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/cal_buffer.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_iface.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_devtypes.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_device.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_helpers.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/cryptoauthlib.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/hal/atca_hal.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_config.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_status.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_iface.h \
  /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h \
  /usr/include/bits/types/struct_sched_param.h /usr/include/bits/cpu-set.h \
  /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
@@ -69,22 +69,22 @@ lib/CMakeFiles/cryptoauth.dir/__/app/api_206a/api_206a.c.o: \
  /usr/include/linux/close_range.h /usr/include/sys/syscall.h \
  /usr/include/asm/unistd.h /usr/include/asm/unistd_64.h \
  /usr/include/bits/syscall.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_cfgs.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_basic.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/crypto/crypto_sw_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_device.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_compiler.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_command.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_execution.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_device.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_command.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_aes_gcm.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/atca_basic.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/crypto/atca_crypto_sw_sha2.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/crypto/atca_crypto_sw.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/crypto/atca_crypto_hw_aes.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/crypto/crypto_hw_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/lib/calib/calib_config_check.h \
- /home/ennm/work/rust-cryptoauthlib/cryptoauthlib-sys/cryptoauthlib/app/api_206a/api_206a.h
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_cfgs.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_basic.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/crypto/crypto_sw_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_device.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_compiler.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_command.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_execution.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_device.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_command.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_aes_gcm.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/atca_basic.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/crypto/atca_crypto_sw_sha2.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/crypto/atca_crypto_sw.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/crypto/atca_crypto_hw_aes.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/crypto/crypto_hw_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/lib/calib/calib_config_check.h \
+ /home/ennm/work/atsama5d27/cryptoauthlib/cryptoauthlib/app/api_206a/api_206a.h

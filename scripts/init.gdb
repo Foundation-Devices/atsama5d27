@@ -11,4 +11,5 @@ set pagination off
 target remote :3334
 
 load
+# b hal_uart_control
 c

@@ -91,7 +91,7 @@ selected plus however additional slots one would like */
 /* #undef ATCA_LIBRARY_CONF */
 
 /** Define to build atcab_ functions rather that defining them as macros */
-/* #undef ATCA_USE_ATCAB_FUNCTIONS */
+#define ATCA_USE_ATCAB_FUNCTIONS
 
 /** Define to enable older API forms that have been replaced */
 /* #undef ATCA_ENABLE_DEPRECATED */

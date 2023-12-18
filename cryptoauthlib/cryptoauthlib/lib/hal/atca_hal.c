@@ -458,12 +458,16 @@ ATCA_STATUS hal_i2c_control(ATCAIface iface, uint8_t option, void* param, size_t
 }
 #endif
 
+extern void se_debug(const char*);
+
 #if defined(ATCA_HAL_LEGACY_API) && defined(ATCA_HAL_SWI)
 ATCA_STATUS hal_swi_control(ATCAIface iface, uint8_t option, void* param, size_t paramlen)
 {
     (void)param;
     (void)paramlen;
     ATCA_STATUS status = ATCA_BAD_PARAM;
+
+    se_debug("hal_swi_control");
 
     switch (option)
     {

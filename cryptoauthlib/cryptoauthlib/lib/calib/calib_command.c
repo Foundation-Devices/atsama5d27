@@ -210,6 +210,8 @@ ATCA_STATUS atHMAC(ATCADeviceType device_type, ATCAPacket *packet)
 }
 #endif
 
+extern void se_debug(const char*);
+
 /** \brief ATCACommand Info method
  * \param[in] ca_cmd   instance
  * \param[in] packet  pointer to the packet containing the command being built
@@ -219,9 +221,14 @@ ATCA_STATUS atInfo(ATCADeviceType device_type, ATCAPacket *packet)
 {
     ((void)device_type);
 
+    se_debug("inside atInfo");
+
     // Set the opcode & parameters
+    se_debug("assigning fields");
     packet->opcode = ATCA_INFO;
+    se_debug("assigned first field");
     packet->txsize = INFO_COUNT;
+    se_debug("assigned fields");
     atCalcCrc(packet);
     return ATCA_SUCCESS;
 }

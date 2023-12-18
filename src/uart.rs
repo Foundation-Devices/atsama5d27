@@ -161,6 +161,21 @@ impl<U: UartPeriph> Uart<U> {
 
         uart_csr.rf(RHR_RXCHR) as u8
     }
+
+    pub fn overrun(&mut self) -> bool {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+        uart_csr.rf(SR_OVRE) != 0
+    }
+
+    pub fn parity_error(&mut self) -> bool {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+        uart_csr.rf(SR_PARE) != 0
+    }
+
+    pub fn framing_error(&mut self) -> bool {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+        uart_csr.rf(SR_FRAME) != 0
+    }
 }
 
 impl<U: UartPeriph> Write for Uart<U> {

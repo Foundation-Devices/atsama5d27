@@ -173,6 +173,8 @@ ATCA_STATUS hal_swi_receive(ATCAIface iface, uint8_t word_address, uint8_t *rxda
     return status;
 }
 
+extern void se_debug(const char *str);
+
 /**
  * \brief Send Wake flag via SWI.
  *
@@ -182,6 +184,8 @@ ATCA_STATUS hal_swi_receive(ATCAIface iface, uint8_t word_address, uint8_t *rxda
  */
 ATCA_STATUS hal_swi_wake(ATCAIface iface)
 {
+    se_debug("hal_swi_wake");
+
     ATCAIfaceCfg *cfg = atgetifacecfg(iface);
     ATCA_STATUS status = ATCA_COMM_FAIL;
     uint32_t temp;
@@ -221,6 +225,8 @@ ATCA_STATUS hal_swi_wake(ATCAIface iface)
         }
     }
     while (0);
+
+    se_debug("hal_swi_wake return");
 
     return status;
 }
@@ -265,6 +271,8 @@ ATCA_STATUS hal_swi_control(ATCAIface iface, uint8_t option, void* param, size_t
 {
     (void)param;
     (void)paramlen;
+
+    se_debug("hal_swi_control");
 
     if (iface && iface->mIfaceCFG)
     {

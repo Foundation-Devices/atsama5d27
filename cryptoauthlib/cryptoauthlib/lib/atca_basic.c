@@ -61,6 +61,7 @@ ATCA_STATUS atcab_version(char *ver_str)
     return ATCA_SUCCESS;
 }
 
+extern void se_debug(const char*);
 
 /** \brief Creates and initializes a ATCADevice context
  *  \param[out] device Pointer to the device context pointer
@@ -77,6 +78,7 @@ ATCA_STATUS atcab_init_ext(ATCADevice* device, ATCAIfaceCfg *cfg)
         // If a device has already been initialized, release it
         if (NULL != *device)
         {
+            se_debug("already initialized");
             (void)atcab_release_ext(device);
         }
 

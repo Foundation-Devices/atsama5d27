@@ -245,6 +245,8 @@ ATCA_STATUS atcontrol(ATCAIface ca_iface, uint8_t option, void* param, size_t pa
     }
 }
 
+extern void se_debug(const char*);
+
 /** \brief Wakes up the device by calling intermediate HAL wrapper function. The
  * atcab_wakeup() function should be used instead.
  * \deprecated This function does not have defined behavior when ATCA_HAL_LEGACY_API
@@ -263,7 +265,12 @@ ATCA_STATUS atwake(ATCAIface ca_iface)
 
     if ((NULL != ca_iface->hal) && (NULL != ca_iface->hal->halcontrol))
     {
+        se_debug("calling halcontrol");
         ATCA_STATUS status = ca_iface->hal->halcontrol(ca_iface, ATCA_HAL_CONTROL_WAKE, NULL, 0);
+        se_debug("halcontrol returned");
+        if (status == ATCA_UNIMPLEMENTED) {
+            se_debug("halcontrol status is unimplemented");
+        }
 
         if (ATCA_WAKE_FAILED == status)
         {

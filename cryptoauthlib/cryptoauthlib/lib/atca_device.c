@@ -116,12 +116,16 @@ ATCAIface atGetIFace(ATCADevice dev)
     return &dev->mIface;
 }
 
+extern void se_debug(const char*);
+
 /** \brief Release any resources associated with the device.
  *  \param[in] ca_dev  Device to release
  *  \return ATCA_SUCCESS on success, otherwise an error code.
  */
 ATCA_STATUS releaseATCADevice(ATCADevice ca_dev)
 {
+    se_debug("releaseATCADevice enter");
+
     if (ca_dev == NULL)
     {
         return ATCA_BAD_PARAM;
@@ -134,6 +138,7 @@ ATCA_STATUS releaseATCADevice(ATCADevice ca_dev)
         ca_dev->session_cb = NULL;
     }
 
+    se_debug("releaseATCADevice next call");
     return releaseATCAIface(&ca_dev->mIface);
 }
 
