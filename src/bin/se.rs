@@ -298,7 +298,7 @@ fn _entry() -> ! {
             __bindgen_anon_1: ATCAIfaceCfg__bindgen_ty_1 {
                 atcaswi: ATCAIfaceCfg__bindgen_ty_1__bindgen_ty_2 { address: 0, bus: 4 },
             },
-            wake_delay: 1500,
+            wake_delay: 2500,
             rx_retries: 10,
             cfg_data: core::ptr::null_mut(),
         };
