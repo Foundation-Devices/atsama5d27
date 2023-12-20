@@ -286,13 +286,9 @@ extern "C" fn hal_uart_receive(
     uart.set_tx(true);
     uart.set_rx(true);
     let data = unsafe { core::slice::from_raw_parts_mut(rxdata, *rxlength as usize) };
-    for (i, byte) in data.iter_mut().enumerate() {
-        *byte = (uart.getc() >> 1) & 0x7F;
-        if i == 0 {
-            writeln!(Uart::<Uart1>::new(), "Received first byte: {byte:02x}").ok();
-        }
+    for byte in data.iter_mut() {
+        *byte = uart.getc() & 0x7F;
     }
-    //writeln!(Uart::<Uart1>::new(), "hal_uart_receive done").ok();
     ATCA_SUCCESS as _
 }
 
