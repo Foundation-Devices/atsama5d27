@@ -151,6 +151,19 @@ impl<U: UartPeriph> Uart<U> {
         }
     }
 
+    pub fn getc_timeout(&mut self, timeout: u32) -> Option<u8> {
+        let mut timeout = timeout;
+        while timeout > 0 {
+            if let Some(c) = self.getc_nonblocking() {
+                return Some(c);
+            }
+
+            timeout -= 1;
+        }
+
+        None
+    }
+
     pub fn getc(&mut self) -> u8 {
         let uart_csr = CSR::new(self.base_addr as *mut u32);
 
