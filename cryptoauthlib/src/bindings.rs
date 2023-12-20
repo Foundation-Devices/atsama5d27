@@ -5218,13 +5218,13 @@ pub const ATCAIfaceType_ATCA_SWI_GPIO_IFACE: ATCAIfaceType = 8;
 #[doc = "< SWI or 1-Wire using a GPIO"]
 pub const ATCAIfaceType_ATCA_SPI_GPIO_IFACE: ATCAIfaceType = 9;
 pub const ATCAIfaceType_ATCA_UNKNOWN_IFACE: ATCAIfaceType = 254;
-pub type ATCAIfaceType = ::core::ffi::c_uint;
+pub type ATCAIfaceType = ::core::ffi::c_uchar;
 pub const ATCAKitType_ATCA_KIT_AUTO_IFACE: ATCAKitType = 0;
 pub const ATCAKitType_ATCA_KIT_I2C_IFACE: ATCAKitType = 1;
 pub const ATCAKitType_ATCA_KIT_SWI_IFACE: ATCAKitType = 2;
 pub const ATCAKitType_ATCA_KIT_SPI_IFACE: ATCAKitType = 3;
 pub const ATCAKitType_ATCA_KIT_UNKNOWN_IFACE: ATCAKitType = 4;
-pub type ATCAKitType = ::core::ffi::c_uint;
+pub type ATCAKitType = ::core::ffi::c_uchar;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ATCAIfaceCfg {
