@@ -145,7 +145,7 @@ fn _entry() -> ! {
     lcdc.set_pwm_compare_value(0xff / 2);
 
     let mut console = uart;
-    writeln!(console, "running");
+    // writeln!(console, "running");
 
     // Timer for delays
     let mut pit = Pit::new();
@@ -161,134 +161,45 @@ fn _entry() -> ! {
     let uart4_rx = Pio::pb3();
     uart4_rx.set_func(Func::A);
 
-    writeln!(console, "here");
+    // writeln!(console, "here");
 
     const SE_BAUD: u32 = 230400;
 
-    /*
-    use utralib::utra::xdmac0::*;
-
-    unsafe {
-        DMA_RECV = [0; 16];
-        writeln!(console, "{DMA_RECV:?}");
-    }
-
-    let mut xdmac = utralib::CSR::new(utralib::HW_XDMAC0_BASE as *mut u32);
-    // Clear the pending Interrupt Status bit(s) by reading the selected XDMAC Channel x
-    // Interrupt Status Register (XDMAC_CISx).
-    xdmac.r(XDMAC_CIS0);
-    // Write the XDMAC Channel x Source Address Register (XDMAC_CSAx) for channel x.
-    xdmac.wo(XDMAC_CSA0, utralib::HW_UART4_BASE as u32 + 0x18);
-    // Write the XDMAC Channel x Destination Address Register (XDMAC_CDAx) for channel x.
-    xdmac.wo(XDMAC_CDA0, unsafe { DMA_RECV.as_ptr() as u32 });
-    //Program field UBLEN in the XDMAC Channel x Microblock Control Register (XDMAC_CUBCx)
-    // with the number of data.
-    xdmac.wfo(XDMAC_CUBC0_UBLEN, unsafe { DMA_RECV.len() as u32 });
-    // Clear XDMAC_CCx.TYPE for a memory-to-memory transfer, otherwise set this bit.
-    xdmac.wfo(XDMAC_CC0_TYPE, 1);
-    // Configure XDMAC_CCx.MBSIZE to the memory burst size used.
-    xdmac.wfo(XDMAC_CC0_MBSIZE, 0);
-    // Configure XDMAC_CCx.SAM and DAM to Memory Addressing mode.
-    xdmac.wfo(XDMAC_CC0_SAM, 0);
-    xdmac.wfo(XDMAC_CC0_DAM, 1);
-    // Configure XDMAC_CCx.DSYNC to select the peripheral transfer direction.
-    xdmac.wfo(XDMAC_CC0_DSYNC, 0);
-    // Configure XDMAC_CCx.CSIZE to configure the channel chunk size (only relevant for
-    // peripheral synchronized transfer).
-    xdmac.wfo(XDMAC_CC0_CSIZE, 0);
-    // Configure XDMAC_CCx.DWIDTH to configure the transfer data width.
-    xdmac.wfo(XDMAC_CC0_DWIDTH, 0);
-    // Configure XDMAC_CCx.PERID to select the active hardware request line (only relevant for
-    // a peripheral synchronized transfer).
-    xdmac.wfo(XDMAC_CC0_PERID, 44);
-    // Clear XDMAC Channel x Next Descriptor Control Register (XDMAC_CNDCx).
-    xdmac.wo(XDMAC_CNDC0, 0);
-    // Clear XDMAC Channel x Block Control Register (XDMAC_CBCx).
-    xdmac.wo(XDMAC_CBC0, 0);
-    // Clear XDMAC Channel x Data Stride Memory Set Pattern Register (XDMAC_CDS_MSPx).
-    xdmac.wo(XDMAC_CDS_MSP0, 0);
-    // Clear XDMAC Channel x Source Microblock Stride Register (XDMAC_CSUSx).
-    xdmac.wo(XDMAC_CSUS0, 0);
-    // Clear XDMAC Channel x Destination Microblock Stride Register (XDMAC_CDUSx).
-    xdmac.wo(XDMAC_CDUS0, 0);
-    // Enable channel x by writing a ‘1’ to bit ENx in the XDMAC Global Channel Enable
-    // Register (XDMAC_GE).
-    xdmac.wfo(XDMAC_GE_EN0, 1);
-
     let mut swi_uart = Uart::<Uart4>::new();
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
+    // swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
     swi_uart.set_parity(Parity::No);
 
-    unsafe {
-        writeln!(console, "1 {DMA_RECV:?}");
-    }
+    // Restore original baud rate and send calibration command
+    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
 
+
+    /*
     swi_uart.set_tx(true);
-    swi_uart.set_rx(true);
+    swi_uart.set_rx(false);
     swi_uart.write_byte(0x00); // Wake-up call
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 3); // Closest to 2.5 ms
 
-    unsafe {
-        writeln!(console, "2 {DMA_RECV:?}");
-    }
+    swi_send(&mut swi_uart, &[0x88]);
 
-    // Restore original baud rate and send calibration command
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
+    let mut response = [0u8; 4];
+    swi_receive(&mut swi_uart, &mut response);
 
-    swi_uart.write_byte(33);
-    swi_uart.write_byte(44);
+    let overrun = swi_uart.overrun();
+    let parity_error = swi_uart.parity_error();
+    let framing_error = swi_uart.framing_error();
 
-    unsafe {
-        writeln!(console, "3 {DMA_RECV:?}");
-    }
+    match response {
+        [0x04, 0x11, 0x33, 0x43] => writeln!(
+            console,
+            "[+] Communication successful! overrun={overrun:?} parity={parity_error:?} \
+             framing={framing_error:?}"
+        )
+        .ok(),
+        [0x04, 0x07, 0xC4, 0x40] => writeln!(console, "[!] Self-test failed!").ok(),
+        _ => writeln!(console, "Unexpected response").ok(),
+    };*/
+    // }
 
-    writeln!(console, "waiting");
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
-    writeln!(console, "waited");
-
-    unsafe {
-        writeln!(console, "4 {DMA_RECV:?}");
-    }
-
-    //writeln!(console, "{}", swi_uart.getc());
-    */
-
-    /*
-    let mut swi_uart = Uart::<Uart4>::new();
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
-    swi_uart.set_parity(Parity::No);
-
-    // Restore original baud rate and send calibration command
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
-    for i in 0..1000 {
-        swi_uart.set_tx(true);
-        swi_uart.set_rx(false);
-        swi_uart.write_byte(0x00); // Wake-up call
-        pit.busy_wait_ms(MASTER_CLOCK_SPEED, 3); // Closest to 2.5 ms
-
-        //writeln!(console, "sending");
-        swi_send(&mut swi_uart, &[0x88]);
-        //writeln!(console, "sent");
-
-        let mut response = [0u8; 4];
-        swi_receive(&mut swi_uart, &mut response, &mut console);
-
-        let overrun = swi_uart.overrun();
-        let parity_error = swi_uart.parity_error();
-        let framing_error = swi_uart.framing_error();
-
-        match response {
-            [0x04, 0x11, 0x33, 0x43] => writeln!(
-                console,
-                "[+] Communication successful! {i} overrun={overrun:?} parity={parity_error:?} \
-                 framing={framing_error:?}"
-            )
-            .ok(),
-            [0x04, 0x07, 0xC4, 0x40] => writeln!(console, "[!] Self-test failed! {i}").ok(),
-            _ => writeln!(console, "Unexpected response {i}").ok(),
-        };
-    }
-    */
     // /*
     unsafe {
         g_atcab_device_ptr = core::ptr::null_mut();
@@ -421,45 +332,6 @@ extern "C" fn se_debug(s: *mut core::ffi::c_char) {
     let mut console = Uart::<Uart1>::new();
     let s = unsafe { core::ffi::CStr::from_ptr(s) };
     //writeln!(console, "{}", s.to_str().unwrap()).ok();
-}
-
-fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8], console: &mut Uart<Uart1>) {
-    uart.set_rx(true);
-    uart.set_tx(false);
-
-    for byte in buf {
-        for i in 0..8 {
-            let bit_mask = 1 << i;
-            if swi_receive_bit(uart) {
-                *byte |= bit_mask;
-            }
-            //writeln!(console, "Received bit: {i}").ok();
-        }
-    }
-}
-
-fn swi_receive_bit(uart: &mut Uart<Uart4>) -> bool {
-    // Convert to 7-bit message since we're running on 8-bit UART
-    let byte = (uart.getc() >> 1) & 0x7F;
-    (byte ^ 0x7F) < 2
-}
-
-fn swi_send(uart: &mut Uart<Uart4>, data: &[u8]) {
-    uart.set_rx(false);
-    uart.set_tx(true);
-
-    for byte in data {
-        for i in 0..8 {
-            let bit_mask = 1 << i;
-            let bit = byte & bit_mask != 0;
-            swi_send_bit(uart, bit);
-        }
-    }
-}
-
-fn swi_send_bit(uart: &mut Uart<Uart4>, bit: bool) {
-    let byte = if bit { 0x7F } else { 0x7D };
-    uart.write_byte(byte | 1_u8 << 7);
 }
 
 #[no_mangle]
