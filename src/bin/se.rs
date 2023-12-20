@@ -3,10 +3,9 @@
 
 use {
     atsama5d27::{
-        aic::{Aic, InterruptEntry, SourceKind},
         display::FramebufDisplay,
         l2cc::{Counter, EventCounterKind, L2cc},
-        lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
+        lcdc::LcdDmaDesc,
         lcdspi::LcdSpi,
         pio::{Direction, Func, Pio, PioB, PioC, PioPort},
         pit::{Pit, PIV_MAX},
@@ -37,6 +36,7 @@ use {
         ATCA_HAL_CONTROL_DESELECT,
         ATCA_HAL_CONTROL_SELECT,
         ATCA_HAL_FLUSH_BUFFER,
+        ATCA_RX_TIMEOUT,
         ATCA_STATUS,
         ATCA_SUCCESS,
         ATCA_UNIMPLEMENTED,
@@ -72,6 +72,8 @@ const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
 static mut DISPLAY: Option<FramebufDisplay> = None;
 
 static mut DMA_RECV: [u8; 16] = [0; 16];
+
+const UART_RX_TIMEOUT: u32 = 100_000;
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -172,7 +174,6 @@ fn _entry() -> ! {
     // Restore original baud rate and send calibration command
     swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
 
-
     /*
     swi_uart.set_tx(true);
     swi_uart.set_rx(false);
@@ -215,18 +216,79 @@ fn _entry() -> ! {
         };
         //writeln!(console, "calling atcab_init").ok();
         let status = cryptoauthlib::atcab_init(&mut CFG as _);
-        //writeln!(console, "atcab_init: {}", status).ok();
+
         assert_eq!(status, ATCA_SUCCESS as i32);
-        let mut info = [0u8; 4];
-        //writeln!(console, "calling atcab_info").ok();
-        let status = cryptoauthlib::atcab_info(info.as_mut_ptr());
-        //writeln!(console, "atcab_info: {}, {:?}", status, info).ok();
+        let mut rev_num = [0u8; 4];
+
+        let status = cryptoauthlib::atcab_info(rev_num.as_mut_ptr());
+        writeln!(console, "atcab_info: {}, {:02x?}", status, rev_num).ok();
         assert_eq!(status, ATCA_SUCCESS as i32);
+        assert_eq!(rev_num, [0x00, 0x00, 0x60, 0x03], "Not ATECC608b revision"); // verify 608b chip
+
+        writeln!(console, "Running self-test").ok();
+        match self_test(true, true, true, true, true) {
+            Ok(res) => {
+                writeln!(
+                    console,
+                    "self-test result: {:08b} (should be all zeros)",
+                    res
+                )
+                .ok();
+            }
+            Err(e) => {
+                writeln!(console, "self-test failed: {}", e).ok();
+                armv7::asm::bkpt();
+            }
+        }
+
+        let mut is_locked = false;
+        let status = cryptoauthlib::atcab_is_config_locked(&mut is_locked as *mut bool);
+        if status != 0 {
+            writeln!(console, "ATECC is_config_locked() error: {}", status).ok();
+            armv7::asm::bkpt();
+        }
+        writeln!(console, "is_config_locked: {}", is_locked).ok();
+
+        let data = [1, 2, 3, 4, 5, 6, 7, 8];
+        let mut sha256 = [0u8; 32];
+        let status =
+            cryptoauthlib::atcab_hw_sha2_256(data.as_ptr(), data.len(), sha256.as_mut_ptr());
+        if status != 0 {
+            writeln!(console, "sha256 error: {}", status).ok();
+        }
+        writeln!(console, "sha256({:02x?}) -> {:02x?}", data, sha256).ok();
+        assert_eq!(
+            sha256,
+            [
+                0x66, 0x84, 0x0d, 0xda, 0x15, 0x4e, 0x8a, 0x11, 0x3c, 0x31, 0xdd, 0x0a, 0xd3, 0x2f,
+                0x7f, 0x3a, 0x36, 0x6a, 0x80, 0xe8, 0x13, 0x69, 0x79, 0xd8, 0xf5, 0xa1, 0x01, 0xd3,
+                0xd2, 0x9d, 0x6f, 0x72
+            ],
+            "invalid sha256 digest"
+        );
     }
     // */
     fill_display_background();
     loop {
         armv7::asm::wfi();
+    }
+}
+
+fn self_test(sha: bool, aes: bool, ecdh: bool, ecdsa: bool, rng: bool) -> Result<u8, ATCA_STATUS> {
+    let mut res = [0u8; 1];
+    let mut mode = 0u8;
+
+    mode |= (sha as u8) << 5;
+    mode |= (aes as u8) << 4;
+    mode |= (ecdh as u8) << 3;
+    mode |= (ecdsa as u8) << 2;
+    mode |= rng as u8;
+
+    let status = unsafe { cryptoauthlib::atcab_selftest(mode, 0x0000, res.as_mut_ptr()) };
+    if status == 0 {
+        Ok(res[0])
+    } else {
+        Err(status)
     }
 }
 
@@ -287,7 +349,10 @@ extern "C" fn hal_uart_receive(
     uart.set_rx(true);
     let data = unsafe { core::slice::from_raw_parts_mut(rxdata, *rxlength as usize) };
     for byte in data.iter_mut() {
-        *byte = uart.getc() & 0x7F;
+        match uart.getc_timeout(UART_RX_TIMEOUT) {
+            Some(c) => *byte = c & 0x7F,
+            None => return ATCA_RX_TIMEOUT as _,
+        }
     }
     ATCA_SUCCESS as _
 }
