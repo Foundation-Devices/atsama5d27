@@ -337,6 +337,8 @@ extern "C" fn hal_delay_us(delay: u32) {
 extern "C" fn hal_uart_init(_iface: ATCAIface, _cfg: *mut ATCAIfaceCfg) -> ATCA_STATUS {
     let mut uart = Uart::<Uart4>::new();
     uart.set_parity(Parity::No);
+    uart.set_tx(true);
+    uart.set_rx(true);
     ATCA_SUCCESS as _
 }
 
@@ -353,14 +355,12 @@ extern "C" fn hal_uart_send(
     txlength: core::ffi::c_int,
 ) -> ATCA_STATUS {
     let mut uart = Uart::<Uart4>::new();
-    uart.set_rx(false);
     uart.set_tx(true);
+    uart.set_rx(true);
     let data = unsafe { core::slice::from_raw_parts(txdata, txlength as usize) };
     for byte in data {
         uart.write_byte(*byte | (1_u8 << 7));
     }
-    uart.set_rx(true);
-    uart.set_tx(false);
     ATCA_SUCCESS as _
 }
 
@@ -372,6 +372,8 @@ extern "C" fn hal_uart_receive(
     rxlength: *mut u16,
 ) -> ATCA_STATUS {
     let mut uart = Uart::<Uart4>::new();
+    uart.set_tx(true);
+    uart.set_rx(true);
     let data = unsafe { core::slice::from_raw_parts_mut(rxdata, *rxlength as usize) };
     for (i, byte) in data.iter_mut().enumerate() {
         *byte = (uart.getc() >> 1) & 0x7F;
