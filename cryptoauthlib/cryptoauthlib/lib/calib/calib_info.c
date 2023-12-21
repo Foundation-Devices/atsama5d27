@@ -113,9 +113,7 @@ ATCA_STATUS calib_info_base(ATCADevice device, uint8_t mode, uint16_t param2, ui
             }
             else if (response >= 7u)
             {
-                for (int i = 0; i < 4; i++) {
-                    out_data[i] = packet.data[ATCA_RSP_DATA_IDX + i];
-                }
+                (void)memcpy(out_data, &packet.data[ATCA_RSP_DATA_IDX], 4);
             }
             else
             {
