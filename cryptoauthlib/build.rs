@@ -21,6 +21,8 @@ fn main() {
         .define("ATCA_NO_HEAP", "ON")
         .define("ATCA_USE_ATCAB_FUNCTIONS", "ON")
         .define("CMAKE_BUILD_TYPE", "Release")
+        .define("CMAKE_SYSTEM_NAME", "Generic")
+        .cflag("-mno-unaligned-access")
         .build();
     // Below caller LD_FLAGS are defined. First -L then -l
     println!("cargo:rustc-link-search=native={}/build/lib", dst.display());
