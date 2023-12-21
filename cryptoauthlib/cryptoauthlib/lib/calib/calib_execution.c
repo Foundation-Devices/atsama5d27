@@ -512,6 +512,9 @@ ATCA_STATUS calib_execute_command(ATCAPacket* packet, ATCADevice device)
                 }
             }
 
+            // This delay is needed to keep the SE happy
+            atca_delay_us(100);
+
             /* Send the command packet to the device */
             if ((ATCA_I2C_IFACE == device->mIface.mIfaceCFG->iface_type) || (ATCA_CUSTOM_IFACE == device->mIface.mIfaceCFG->iface_type))
             {
