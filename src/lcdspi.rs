@@ -58,7 +58,7 @@ impl<Port: PioPort, const PIN_MOSI: u32, const PIN_SCK: u32, const PIN_CS: u32>
             bits <<= 1;
         }
 
-        self.cs.set(false);
+        self.cs.set(true);
     }
 
     fn clock_cycle(&mut self) {
