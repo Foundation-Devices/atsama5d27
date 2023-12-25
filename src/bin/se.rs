@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+mod se_port;
+
 use {
     atsama5d27::{
         display::FramebufDisplay,
@@ -225,8 +227,10 @@ fn _entry() -> ! {
         assert_eq!(status, ATCA_SUCCESS as i32);
         assert_eq!(rev_num, [0x00, 0x00, 0x60, 0x03], "Not ATECC608b revision"); // verify 608b chip
 
+        hal_delay_ms(100);
+
         writeln!(console, "Running self-test").ok();
-        match self_test(true, true, true, true, true) {
+        match self_test(false, false, false, true, false) {
             Ok(res) => {
                 writeln!(
                     console,
@@ -241,6 +245,8 @@ fn _entry() -> ! {
             }
         }
 
+        hal_delay_ms(100);
+
         let mut is_locked = false;
         let status = cryptoauthlib::atcab_is_config_locked(&mut is_locked as *mut bool);
         if status != 0 {
@@ -248,6 +254,8 @@ fn _entry() -> ! {
             armv7::asm::bkpt();
         }
         writeln!(console, "is_config_locked: {}", is_locked).ok();
+
+        hal_delay_ms(100);
 
         let data = [1, 2, 3, 4, 5, 6, 7, 8];
         let mut sha256 = [0u8; 32];
@@ -266,6 +274,13 @@ fn _entry() -> ! {
             ],
             "invalid sha256 digest"
         );
+
+        hal_delay_ms(100);
+
+        if let Err(e) = se_port::setup_config() {
+            writeln!(console, "setup_config failed: {}", e.0).ok();
+            panic!();
+        }
     }
     // */
     fill_display_background();
