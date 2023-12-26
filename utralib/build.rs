@@ -1,9 +1,6 @@
-use std::env;
-use std::fs::OpenOptions;
 #[cfg(not(feature = "hosted"))]
 use std::io::Read;
-use std::io::Write;
-use std::path::PathBuf;
+use std::{env, fs::OpenOptions, io::Write, path::PathBuf};
 
 fn out_dir() -> PathBuf {
     PathBuf::from(env::var_os("OUT_DIR").unwrap())
@@ -34,8 +31,9 @@ macro_rules! count_enabled_features {
 /// ```
 ///
 /// These runs fail compilation check:
-/// $ cargo check --features a,b # error msg: 'Multiple feature-category-name specified. Only one is allowed.
-/// $ cargo check # error msg: 'None of the feature-category-name specified. Pick one.'
+/// $ cargo check --features a,b # error msg: 'Multiple feature-category-name specified.
+/// Only one is allowed. $ cargo check # error msg: 'None of the feature-category-name
+/// specified. Pick one.'
 ///
 /// This compiles:
 /// $ cargo check --feature a
@@ -79,8 +77,8 @@ fn main() {
     // packages that don't know to configure the "hosted" feature flag.
     //
     // This idiom breaks if Xous ever gets to the point of compiling and running code on
-    // its own platform; but generally, if the target binary is running on e.g. windows/linux/non-xous
-    // target triples, the user's intent was "hosted" mode.
+    // its own platform; but generally, if the target binary is running on e.g.
+    // windows/linux/non-xous target triples, the user's intent was "hosted" mode.
     //
     // This script retains the use of an explicit "hosted" flag because we want to catch
     // unintentional build system misconfigurations that meant to build for a target other
@@ -159,9 +157,9 @@ fn main() {
         // on to the image creation program. This is necessary so we can extract all the memory
         // regions and create the whitelist of memory pages allowed to the kernel; any page not
         // explicitly used by the hardware model is ineligible for mapping and allocation by any
-        // process. This helps to prevent memory aliasing attacks by hardware blocks that partially
-        // decode their addresses (this would be in anticipation of potential hardware bugs; ideally
-        // this isn't ever a problem).
+        // process. This helps to prevent memory aliasing attacks by hardware blocks that
+        // partially decode their addresses (this would be in anticipation of potential
+        // hardware bugs; ideally this isn't ever a problem).
         let svd_path = out_dir().join("../../SVD_PATH");
         let mut svd_file = OpenOptions::new()
             .create(true)
