@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-mod se_port;
+use atsama5d27::lcdc::{LcdcLayerId, Lcdc, LayerConfig};
 
 use {
     atsama5d27::{
@@ -12,6 +12,7 @@ use {
         pio::{Direction, Func, Pio, PioB, PioC, PioPort},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
+        se_port,
         sfr::Sfr,
         spi::{ChipSelect, Spi},
         tc::Tc,
@@ -277,17 +278,27 @@ fn _entry() -> ! {
 
         hal_delay_ms(100);
 
-        // TODO Some of the RomSecrets fields are unused, what's that about?
-        if let Err(e) = se_port::setup_config(se_port::RomSecrets {
+        let secrets = se_port::RomSecrets {
             pairing_secret: [0; 32],
             serial_number: [0; 9],
             otp_key: [0; 72],
             hash_cache_secret: [0; 32],
-        }) {
+        };
+
+        // TODO Some of the RomSecrets fields are unused, what's that about?
+        if let Err(e) = se_port::setup_config(&secrets) {
             writeln!(console, "setup_config failed: {}", e.0).ok();
             panic!();
         } else {
             writeln!(console, "setup_config successful").ok();
+        }
+
+        match se_port::se_stretch_iter([3; 32], 10, &secrets) {
+            Ok(v) => writeln!(console, "se_stretch_iter: {:02x?}", v).unwrap(),
+            Err(e) => {
+                writeln!(console, "se_stretch_iter failed: {}", e.0).ok();
+                panic!();
+            }
         }
     }
     // */
@@ -415,7 +426,7 @@ extern "C" fn hal_uart_release(hal_data: *mut core::ffi::c_void) -> ATCA_STATUS 
 extern "C" fn se_debug(s: *mut core::ffi::c_char) {
     let mut console = Uart::<Uart1>::new();
     let s = unsafe { core::ffi::CStr::from_ptr(s) };
-    //writeln!(console, "{}", s.to_str().unwrap()).ok();
+    writeln!(console, "{}", s.to_str().unwrap()).ok();
 }
 
 #[no_mangle]

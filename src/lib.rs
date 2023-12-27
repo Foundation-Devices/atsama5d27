@@ -17,6 +17,7 @@ pub mod pio;
 pub mod pit;
 pub mod pmc;
 pub mod sckc;
+pub mod se_port;
 pub mod sfr;
 pub mod spi;
 pub mod tc;

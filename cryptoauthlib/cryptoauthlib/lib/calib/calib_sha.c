@@ -97,12 +97,14 @@ ATCA_STATUS calib_sha_base(ATCADevice device, uint8_t mode, uint16_t length, con
 
         if ((status = atSHA(atcab_get_device_type_ext(device), &packet, length)) != ATCA_SUCCESS)
         {
+            se_debug("atSHA - failed");
             (void)ATCA_TRACE(status, "atSHA - failed");
             break;
         }
 
         if ((status = atca_execute_command(&packet, device)) != ATCA_SUCCESS)
         {
+            se_debug("atca_execute_command - execution failed");
             (void)ATCA_TRACE(status, "calib_sha_base - exection failed");
             break;
         }
@@ -511,6 +513,8 @@ ATCA_STATUS calib_sha_hmac_finish(ATCADevice device, atca_hmac_sha256_ctx_t *ctx
     return calib_sha_base(device, mode, (uint16_t)(ctx->block_size & UINT16_MAX), ctx->block, digest, &digest_size);
 }
 
+extern void se_debug(const char*);
+
 /** \brief Use the SHA command to compute an HMAC/SHA-256 operation.
  *
  * \param[in]  device     Device context pointer
@@ -528,21 +532,26 @@ ATCA_STATUS calib_sha_hmac_finish(ATCADevice device, atca_hmac_sha256_ctx_t *ctx
  */
 ATCA_STATUS calib_sha_hmac(ATCADevice device, const uint8_t * data, size_t data_size, uint16_t key_slot, uint8_t* digest, uint8_t target)
 {
+    se_debug("calib_sha_hmac");
+
     ATCA_STATUS status = ATCA_SUCCESS;
     atca_hmac_sha256_ctx_t ctx;
 
     if (ATCA_SUCCESS != (status = calib_sha_hmac_init(device, &ctx, key_slot)))
     {
+        se_debug("calib_sha_hmac_init - failed");
         return ATCA_TRACE(status, "calib_sha_hmac_init - failed");
     }
 
     if (ATCA_SUCCESS != (status = calib_sha_hmac_update(device, &ctx, data, data_size)))
     {
+        se_debug("calib_sha_hmac_update - failed");
         return ATCA_TRACE(status, "calib_sha_hmac_update - failed");
     }
 
     if (ATCA_SUCCESS != (status = calib_sha_hmac_finish(device, &ctx, digest, target)))
     {
+        se_debug("calib_sha_hmac_finish - failed");
         return ATCA_TRACE(status, "calib_sha_hmac_finish - failed");
     }
 
