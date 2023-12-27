@@ -384,6 +384,8 @@ ATCA_STATUS calib_write_config_zone(ATCADevice device, const uint8_t* config_dat
     return status;
 }
 
+extern void se_debug(const char*);
+
 /** \brief Executes the Write command, which writes data into the
  *          configuration, otp, or data zones with a given byte offset and
  *          length. Offset and length must be multiples of a word (4 bytes).
@@ -415,10 +417,12 @@ ATCA_STATUS calib_write_bytes_zone(ATCADevice device, uint8_t zone, uint16_t slo
 
     if (zone != ATCA_ZONE_CONFIG && zone != ATCA_ZONE_OTP && zone != ATCA_ZONE_DATA)
     {
+        se_debug("Invalid zone received");
         return ATCA_TRACE(ATCA_BAD_PARAM, "Invalid zone received");
     }
     if (zone == ATCA_ZONE_DATA && slot > 15u)
     {
+        se_debug("Invalid slot received");
         return ATCA_TRACE(ATCA_BAD_PARAM, "Invalid slot received");
     }
     if (length == 0u)
@@ -427,10 +431,12 @@ ATCA_STATUS calib_write_bytes_zone(ATCADevice device, uint8_t zone, uint16_t slo
     }
     if (data == NULL)
     {
+        se_debug("NULL pointer received");
         return ATCA_TRACE(ATCA_BAD_PARAM, "NULL pointer received");
     }
     if (offset_bytes % ATCA_WORD_SIZE != 0u || length % ATCA_WORD_SIZE != 0u)
     {
+        se_debug("Either Invalid length or offset received");
         return ATCA_TRACE(ATCA_BAD_PARAM, "Either Invalid length or offset received");
     }
 
@@ -443,6 +449,7 @@ ATCA_STATUS calib_write_bytes_zone(ATCADevice device, uint8_t zone, uint16_t slo
         }
         if (offset_bytes + length > zone_size)
         {
+            se_debug("offset_bytes + length > zone_size");
             return ATCA_TRACE(ATCA_BAD_PARAM, "Invalid parameter received");
         }
 
@@ -456,6 +463,7 @@ ATCA_STATUS calib_write_bytes_zone(ATCADevice device, uint8_t zone, uint16_t slo
             {
                 if (ATCA_SUCCESS != (status = calib_write_zone(device, zone, slot, (uint8_t)cur_block, 0, &data[data_idx], ATCA_BLOCK_SIZE)))
                 {
+                    se_debug("calib_write_zone - failed 1");
                     (void)ATCA_TRACE(status, "calib_write_zone - failed");
                     break;
                 }
@@ -469,6 +477,7 @@ ATCA_STATUS calib_write_bytes_zone(ATCADevice device, uint8_t zone, uint16_t slo
                 {
                     if (ATCA_SUCCESS != (status = calib_write_zone(device, zone, slot, (uint8_t)cur_block, (uint8_t)cur_word, &data[data_idx], ATCA_WORD_SIZE)))
                     {
+                        se_debug("calib_write_zone - failed 2");
                         (void)ATCA_TRACE(status, "calib_write_zone - failed");
                         break;
                     }

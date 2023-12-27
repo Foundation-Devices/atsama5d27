@@ -467,8 +467,6 @@ ATCA_STATUS hal_swi_control(ATCAIface iface, uint8_t option, void* param, size_t
     (void)paramlen;
     ATCA_STATUS status = ATCA_BAD_PARAM;
 
-    se_debug("hal_swi_control");
-
     switch (option)
     {
     case ATCA_HAL_CONTROL_WAKE:

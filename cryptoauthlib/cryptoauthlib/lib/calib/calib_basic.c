@@ -122,9 +122,7 @@ ATCA_STATUS calib_wakeup(ATCADevice device)
 #else
         if (atca_iface_is_kit(iface) || atca_iface_is_swi(&device->mIface))
         {
-            se_debug("calling atwake");
             status = atwake(iface);
-            se_debug("called atwake");
         }
         else if (ATCA_I2C_IFACE == iface->mIfaceCFG->iface_type)
         {

@@ -265,9 +265,7 @@ ATCA_STATUS atwake(ATCAIface ca_iface)
 
     if ((NULL != ca_iface->hal) && (NULL != ca_iface->hal->halcontrol))
     {
-        se_debug("calling halcontrol");
         ATCA_STATUS status = ca_iface->hal->halcontrol(ca_iface, ATCA_HAL_CONTROL_WAKE, NULL, 0);
-        se_debug("halcontrol returned");
         if (status == ATCA_UNIMPLEMENTED) {
             se_debug("halcontrol status is unimplemented");
         }

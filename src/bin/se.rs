@@ -277,9 +277,17 @@ fn _entry() -> ! {
 
         hal_delay_ms(100);
 
-        if let Err(e) = se_port::setup_config() {
+        // TODO Some of the RomSecrets fields are unused, what's that about?
+        if let Err(e) = se_port::setup_config(se_port::RomSecrets {
+            pairing_secret: [0; 32],
+            serial_number: [0; 9],
+            otp_key: [0; 72],
+            hash_cache_secret: [0; 32],
+        }) {
             writeln!(console, "setup_config failed: {}", e.0).ok();
             panic!();
+        } else {
+            writeln!(console, "setup_config successful").ok();
         }
     }
     // */
