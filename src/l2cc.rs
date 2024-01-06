@@ -159,8 +159,8 @@ impl L2cc {
     pub fn get_event_count(&self, counter: Counter) -> u32 {
         let l2cc_csr = CSR::new(self.base_addr as *mut u32);
         match counter {
-            Counter::Counter0 => l2cc_csr.rf(EVR0_VALUE),
-            Counter::Counter1 => l2cc_csr.rf(EVR1_VALUE),
+            Counter::Counter0 => l2cc_csr.r(EVR0),
+            Counter::Counter1 => l2cc_csr.r(EVR1),
         }
     }
 
@@ -256,6 +256,12 @@ impl L2cc {
         l2cc_csr.wo(CIIR, (index & 0x1ff << 5) | ((way as u32 & 0x7) << 28) | 1);
 
         while (l2cc_csr.r(CIIR) & 0x1) != 0 {}
+    }
+
+    pub fn set_exclusive(&mut self, exclusive: bool) {
+        assert!(!self.is_enabled(), "L2CC must be disabled");
+        let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
+        l2cc_csr.rmwf(ACR_EXCC, exclusive as u32);
     }
 
     pub fn cache_clean(&mut self) {
