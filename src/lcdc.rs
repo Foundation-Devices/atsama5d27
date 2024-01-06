@@ -242,20 +242,8 @@ impl Lcdc {
 
         cache_maintenance();
 
-        self.set_dma_address_register(layer.id, layer.fb_phys_addr as u32);
-        self.set_dma_descriptor_next_address(layer.id, layer.dma_desc_phys_addr as u32);
         self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
-    }
-
-    pub fn update_layer_dma(&self, layer: &LayerConfig, cache_maintenance: impl Fn()) {
-        let dma_desc = layer.dma_desc_addr as *mut LcdDmaDesc;
-        unsafe {
-            (*dma_desc).addr = layer.fb_phys_addr as u32;
-        }
-
-        cache_maintenance();
-
-        self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
+        self.add_dma_desc_to_queue(layer.id);
     }
 
     pub fn enable_layer(&self, layer: LcdcLayerId) {
@@ -274,8 +262,8 @@ impl Lcdc {
         self.update_overlay_attributes_enable(layer);
         self.update_attribute(layer);
 
-        // self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
-        // self.set_system_bus_dma_burst_enable(layer, true);
+        self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
+        self.set_system_bus_dma_burst_enable(layer, true);
 
         self.set_channel_enable(layer, true);
     }
@@ -524,10 +512,10 @@ impl Lcdc {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
-            LcdcLayerId::Base => lcdc_csr.rmwf(BASEADDR_ADDR, addr),
-            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1ADDR_ADDR, addr),
-            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2ADDR_ADDR, addr),
-            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOADDR_ADDR, addr),
+            LcdcLayerId::Base => lcdc_csr.wo(BASEADDR, addr),
+            LcdcLayerId::Ovr1 => lcdc_csr.wo(OVR1ADDR, addr),
+            LcdcLayerId::Ovr2 => lcdc_csr.wo(OVR2ADDR, addr),
+            LcdcLayerId::Heo => lcdc_csr.wo(HEOADDR, addr),
         }
     }
 
@@ -535,10 +523,10 @@ impl Lcdc {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
-            LcdcLayerId::Base => lcdc_csr.rmwf(BASEHEAD_HEAD, addr),
-            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1HEAD_HEAD, addr),
-            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2HEAD_HEAD, addr),
-            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOHEAD_HEAD, addr),
+            LcdcLayerId::Base => lcdc_csr.wo(BASEHEAD, addr),
+            LcdcLayerId::Ovr1 => lcdc_csr.wo(OVR1HEAD, addr),
+            LcdcLayerId::Ovr2 => lcdc_csr.wo(OVR2HEAD, addr),
+            LcdcLayerId::Heo => lcdc_csr.wo(HEOHEAD, addr),
         }
     }
 
@@ -707,7 +695,7 @@ impl Lcdc {
         }
     }
 
-    fn add_dma_desc_to_queue(&self, layer: LcdcLayerId) {
+    pub fn add_dma_desc_to_queue(&self, layer: LcdcLayerId) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
@@ -718,7 +706,18 @@ impl Lcdc {
         }
     }
 
-    pub fn wait_for_dma_transfer_complete(&self, layer: LcdcLayerId) {
+    pub fn is_dma_enabled(&self, layer: LcdcLayerId) -> bool {
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => lcdc_csr.rf(BASECFG4_DMA) != 0,
+            LcdcLayerId::Ovr1 => lcdc_csr.rf(OVR1CFG9_DMA) != 0,
+            LcdcLayerId::Ovr2 => lcdc_csr.rf(OVR2CFG9_DMA) != 0,
+            LcdcLayerId::Heo => lcdc_csr.rf(HEOCFG12_DMA) != 0,
+        }
+    }
+
+    pub fn is_dma_pending(&self, layer: LcdcLayerId) -> bool {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         let field = match layer {
@@ -728,7 +727,24 @@ impl Lcdc {
             LcdcLayerId::Heo => HEOISR_DMA,
         };
 
-        while lcdc_csr.rf(field) == 0 {
+        lcdc_csr.rf(field) != 0
+    }
+
+    pub fn is_add_to_queue_pending(&self, layer: LcdcLayerId) -> bool {
+        let lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        let field = match layer {
+            LcdcLayerId::Base => BASECHSR_A2QSR,
+            LcdcLayerId::Ovr1 => OVR1CHSR_A2QSR,
+            LcdcLayerId::Ovr2 => OVR2CHSR_A2QSR,
+            LcdcLayerId::Heo => HEOCHSR_A2QSR,
+        };
+
+        lcdc_csr.rf(field) != 0
+    }
+
+    pub fn wait_for_dma_transfer_complete(&self, layer: LcdcLayerId) {
+        while self.is_dma_pending(layer) {
             armv7::asm::nop();
         }
     }
