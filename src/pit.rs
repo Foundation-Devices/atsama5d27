@@ -1,5 +1,5 @@
 use utralib::{
-    utra::pit::{MR_PITEN, MR_PITIEN, MR_PIV, PIIR, PIVR},
+    utra::pit::{MR_PITEN, MR_PITIEN, MR_PIV, PIIR, PIVR, SR},
     *,
 };
 
@@ -61,6 +61,11 @@ impl Pit {
     pub fn read(&self) -> u32 {
         let pit_csr = CSR::new(self.base_addr as *mut u32);
         pit_csr.r(PIIR)
+    }
+
+    pub fn status(&self) -> bool {
+        let pit_csr = CSR::new(self.base_addr as *mut u32);
+        pit_csr.r(SR) != 0
     }
 
     pub fn busy_wait_ms(&mut self, curr_clock_speed: u32, ms: u32) {
