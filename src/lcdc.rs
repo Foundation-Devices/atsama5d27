@@ -157,7 +157,7 @@ impl Lcdc {
         Lcdc { base_addr, w, h }
     }
 
-    pub fn init(&mut self, layers: &[LayerConfig]) {
+    pub fn init(&mut self, layers: &[LayerConfig], cache_maintenance: impl Fn()) {
         // Configure the LCD timing parameters
         self.wait_for_sync_in_progress();
         self.select_pwm_clock_source(PWM_CLOCK_SOURCE);
@@ -227,12 +227,12 @@ impl Lcdc {
         );
 
         for layer in layers {
-            self.update_layer(layer);
+            self.update_layer(layer, &cache_maintenance);
             self.enable_layer(layer.id);
         }
     }
 
-    pub fn update_layer(&self, layer: &LayerConfig) {
+    pub fn update_layer(&self, layer: &LayerConfig, cache_maintenance: impl Fn()) {
         let dma_desc = layer.dma_desc_addr as *mut LcdDmaDesc;
         unsafe {
             (*dma_desc).addr = layer.fb_phys_addr as u32;
@@ -240,16 +240,20 @@ impl Lcdc {
             (*dma_desc).next = layer.dma_desc_phys_addr as u32;
         }
 
+        cache_maintenance();
+
         self.set_dma_address_register(layer.id, layer.fb_phys_addr as u32);
         self.set_dma_descriptor_next_address(layer.id, layer.dma_desc_phys_addr as u32);
         self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
     }
 
-    pub fn update_layer_dma(&self, layer: &LayerConfig) {
+    pub fn update_layer_dma(&self, layer: &LayerConfig, cache_maintenance: impl Fn()) {
         let dma_desc = layer.dma_desc_addr as *mut LcdDmaDesc;
         unsafe {
             (*dma_desc).addr = layer.fb_phys_addr as u32;
         }
+
+        cache_maintenance();
 
         self.set_dma_head_pointer(layer.id, layer.dma_desc_phys_addr as u32);
     }

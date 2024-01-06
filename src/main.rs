@@ -149,7 +149,7 @@ fn _entry() -> ! {
         fb1,
         dma_desc_addr_one,
         dma_desc_addr_one,
-    )]);
+    )], ||());
     lcdc.wait_for_sync_in_progress();
     lcdc.set_pwm_compare_value(0xff / 2);
 
