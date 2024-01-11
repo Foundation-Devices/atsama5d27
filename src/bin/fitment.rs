@@ -12,6 +12,7 @@ use {
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         sfr::Sfr,
+        spi::{ChipSelect, Spi},
         tc::Tc,
         twi::Twi,
         uart::{Uart, Uart1},
@@ -128,6 +129,7 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
     pmc.enable_peripheral_clock(PeripheralId::Piod);
     pmc.enable_peripheral_clock(PeripheralId::Twi0);
+    pmc.enable_peripheral_clock(PeripheralId::Spi0);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -457,15 +459,13 @@ fn configure_lcdc_pins() {
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
 
     let mosi = Pio::pa15();
-    mosi.set_func(Func::Gpio);
-    mosi.set_direction(Direction::Output);
+    mosi.set_func(Func::A); // SPI0_MOSI
     let sck = Pio::pa14();
-    sck.set_func(Func::Gpio);
-    sck.set_direction(Direction::Output);
+    sck.set_func(Func::A); // SPI0_SPCK
     let cs = Pio::pa19();
-    cs.set_func(Func::Gpio);
-    cs.set_direction(Direction::Output);
-    let mut lcdspi = LcdSpi::new(mosi, sck, cs, MASTER_CLOCK_SPEED, pit);
+    cs.set_func(Func::A); // SPI0_NPCS0
+
+    let mut lcdspi = LcdSpi::new(Spi::spi0(), ChipSelect::Cs2, MASTER_CLOCK_SPEED, pit);
     lcdspi.run_init_sequence();
 
     // PB11 - PB31
