@@ -48,6 +48,7 @@ use atsama5d27::{
     lcdspi::LcdSpi,
     pit::{Pit, PIV_MAX},
     sfr::Sfr,
+    spi::{ChipSelect, Spi},
 };
 #[cfg(feature = "rtt")]
 use rtt_target::{rprintln, rtt_init_print, ChannelMode, UpChannel};
@@ -111,6 +112,7 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Piod);
     pmc.enable_peripheral_clock(PeripheralId::Aes);
     pmc.enable_peripheral_clock(PeripheralId::Xdmac0);
+    pmc.enable_peripheral_clock(PeripheralId::Spi0);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -144,12 +146,15 @@ fn _entry() -> ! {
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
     let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
-    lcdc.init(&[LayerConfig::new(
-        LcdcLayerId::Base,
-        fb1,
-        dma_desc_addr_one,
-        dma_desc_addr_one,
-    )], ||());
+    lcdc.init(
+        &[LayerConfig::new(
+            LcdcLayerId::Base,
+            fb1,
+            dma_desc_addr_one,
+            dma_desc_addr_one,
+        )],
+        || (),
+    );
     lcdc.wait_for_sync_in_progress();
     lcdc.set_pwm_compare_value(0xff / 2);
 
@@ -310,15 +315,13 @@ fn configure_lcdc_pins() {
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
 
     let mosi = Pio::pa15();
-    mosi.set_func(Func::Gpio);
-    mosi.set_direction(Direction::Output);
+    mosi.set_func(Func::A); // SPI0_MOSI
     let sck = Pio::pa14();
-    sck.set_func(Func::Gpio);
-    sck.set_direction(Direction::Output);
+    sck.set_func(Func::A); // SPI0_SPCK
     let cs = Pio::pa19();
-    cs.set_func(Func::Gpio);
-    cs.set_direction(Direction::Output);
-    let mut lcdspi = LcdSpi::new(mosi, sck, cs, MASTER_CLOCK_SPEED, pit);
+    cs.set_func(Func::A); // SPI0_NPCS0
+
+    let mut lcdspi = LcdSpi::new(Spi::spi0(), ChipSelect::Cs2, MASTER_CLOCK_SPEED, pit);
     lcdspi.run_init_sequence();
 
     // PB11 - PB31
