@@ -1,36 +1,32 @@
 //! 9-bit LCD-specific bit-banged SPI
 
 use crate::{
-    pio::{Pio, PioPort},
     pit::Pit,
+    spi::{BitsPerTransfer, ChipSelect, Spi, SpiMode},
 };
 
-const DELAY_CYCLES: u32 = 5;
+const SPI_FREQ_HZ: u32 = 10_000_000;
 
-/// A Full-Duplex SPI implementation, takes 3 pins, and a timer running at 2x
-/// the desired SPI frequency.
-pub struct LcdSpi<Port: PioPort, const PIN_MOSI: u32, const PIN_SCK: u32, const PIN_CS: u32> {
-    mosi: Pio<Port, { PIN_MOSI }>,
-    sck: Pio<Port, { PIN_SCK }>,
-    cs: Pio<Port, { PIN_CS }>,
+/// LCD configuration implementation. Uses SPI for communication and PIT for generating
+/// delays.
+pub struct LcdSpi {
+    spi: Spi,
+    cs: ChipSelect,
     pit: Pit,
     curr_clock_freq: u32,
 }
 
-impl<Port: PioPort, const PIN_MOSI: u32, const PIN_SCK: u32, const PIN_CS: u32>
-    LcdSpi<Port, PIN_MOSI, PIN_SCK, PIN_CS>
-{
+impl LcdSpi {
     /// Create instance
-    pub fn new(
-        mosi: Pio<Port, PIN_MOSI>,
-        sck: Pio<Port, PIN_SCK>,
-        cs: Pio<Port, PIN_CS>,
-        curr_clock_freq: u32,
-        pit: Pit,
-    ) -> Self {
+    pub fn new(mut spi: Spi, cs: ChipSelect, curr_clock_freq: u32, pit: Pit) -> Self {
+        spi.init();
+        spi.init_cs(cs, BitsPerTransfer::Bits9, SpiMode::Mode0, true);
+        spi.set_bitrate(curr_clock_freq, cs, SPI_FREQ_HZ);
+        spi.master_enable(true);
+        spi.set_enabled(true);
+
         LcdSpi {
-            mosi,
-            sck,
+            spi,
             cs,
             curr_clock_freq,
             pit,
@@ -45,26 +41,12 @@ impl<Port: PioPort, const PIN_MOSI: u32, const PIN_SCK: u32, const PIN_CS: u32>
         self.send_bits(false, dat);
     }
 
-    fn send_bits(&mut self, is_cmd: bool, mut bits: u8) {
-        self.cs.set(false);
-        self.mosi.set(!is_cmd);
-
-        self.clock_cycle();
-
-        for _ in 0..8 {
-            self.mosi.set(bits & 0x80 != 0);
-            self.clock_cycle();
-
-            bits <<= 1;
-        }
-
-        self.cs.set(true);
-    }
-
-    fn clock_cycle(&mut self) {
-        self.sck.set(false);
-        self.pit.busy_wait_ms(self.curr_clock_freq, DELAY_CYCLES);
-        self.sck.set(true);
+    fn send_bits(&mut self, is_cmd: bool, bits: u8) {
+        let data = (!is_cmd as u16) << 8 | bits as u16;
+        self.spi.select_cs(self.cs);
+        self.spi.write_hw(data).expect("send 9-bit word");
+        let _ = self.spi.read_hw().expect("dummy read");
+        self.spi.release_cs();
     }
 
     pub fn run_init_sequence(&mut self) {
