@@ -261,9 +261,6 @@ impl Spi {
         for (byte_out, byte_in) in write.iter().zip(read.iter_mut()) {
             self.write_hw(*byte_out as u16)?;
             let hw = self.read_hw()?;
-            // use core::fmt::Write;
-            // let mut uart = crate::uart::Uart::<crate::uart::Uart1>::new();
-            // writeln!(uart, "read hw: {:02x} | {:08b}", hw, hw).ok();
             *byte_in = hw as u8;
         }
 
@@ -323,12 +320,6 @@ impl Spi {
         let mut timeout = DEFAULT_SPI_TIMEOUT_CYCLES;
         while timeout > 0 {
             let curr_status = self.status();
-
-            if timeout - 1 == 0 {
-                use core::fmt::Write;
-                let mut uart = crate::uart::Uart::<crate::uart::Uart1>::new();
-                writeln!(uart, "About to timeout, status: {:?}", curr_status).ok();
-            }
 
             if curr_status.contains(status) {
                 return Ok(());
