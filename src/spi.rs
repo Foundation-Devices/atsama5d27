@@ -116,6 +116,12 @@ impl Spi {
         }
     }
 
+    pub fn with_alt_base_addr(base_addr: u32) -> Self {
+        Self {
+            base_addr
+        }
+    }
+
     pub fn set_enabled(&mut self, enabled: bool) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         if enabled {
