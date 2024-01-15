@@ -1,8 +1,16 @@
+// TODO Leave a comment explaining where all this code came from (pins.c).
+
+use zeroize::ZeroizeOnDrop;
+
 use {
     crate::uart::{Uart, Uart1},
     core::fmt::Write,
     sha2::{Digest, Sha256},
 };
+
+// Number of iterations for KDF
+const KDF_ITER_WORDS: usize = 2;
+const KDF_ITER_PIN: usize = 8;  // about ? seconds (measured in-system)
 
 /// Bytes [16..84) of chip config area.
 const SE_CONFIG_1: [u8; 68] = [
@@ -20,10 +28,15 @@ const SE_CONFIG_2: [u8; 38] = [
     0x3c, 0x00, 0xdc, 0x01, 0x3c, 0x00,
 ];
 
+// TODO There are probably other places in this module that could benefit from zeroize
+#[derive(ZeroizeOnDrop)]
+pub struct Pin([u8; 32]);
+
 /// Slot numbers for the SE.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 enum Slot {
+    None = 0,
     PairingSecret = 1,
     PinStretch = 2,
     PinHash = 3,
@@ -35,6 +48,15 @@ enum Slot {
     UserFirmwarePubkey = 10,
     FirmwareTimestamp = 11,
     FirmwareHash = 14,
+}
+
+/// Pretty sure it doesn't matter, but adding some salt into our PIN->bytes[32] code
+/// based on the purpose of the PIN code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+enum PinPurpose {
+    Normal = 0x334d1858,
+    AntiPhishWords = 0x2e6d6773,
 }
 
 #[derive(Debug, Clone)]
@@ -243,35 +265,73 @@ pub fn se_stretch_iter(
     iterations: usize,
     secrets: &RomSecrets,
 ) -> Result<[u8; 32], Error> {
-    let mut digest = [0; 32];
     for _ in 0..iterations {
         unsafe {
             // Must unlock again, because pin_stretch is an auth'd key.
             se_pair_unlock(secrets)?;
-
-            // Start SHA w/ HMAC setup
-            let status = cryptoauthlib::atcab_sha_base(
-                4,
-                Slot::PinStretch as u16,
-                core::ptr::null(),
-                core::ptr::null_mut(),
-                core::ptr::null_mut(),
-            )
-            .into_result()?;
-            let mut digest_len = digest.len() as u16;
-            // Send the contents to be hashed. Place the result in the output buffer.
-            let status = cryptoauthlib::atcab_sha_base(
-                (3 << 6) | 2,
-                msg.len() as u16,
-                msg.as_ptr(),
-                digest.as_mut_ptr(),
-                (&mut digest_len) as *mut u16,
-            )
-            .into_result()?;
-            msg = digest;
+            msg = se_hmac32(Slot::PinStretch, msg)?;
         }
     }
+    Ok(msg)
+}
+
+fn se_hmac32(slot: Slot, msg: [u8; 32]) -> Result<[u8; 32], Error> {
+    let mut digest = [0; 32];
+    unsafe {
+    // Start SHA w/ HMAC setup
+        let status = cryptoauthlib::atcab_sha_base(
+            4,
+            slot as u16,
+            core::ptr::null(),
+            core::ptr::null_mut(),
+            core::ptr::null_mut(),
+        )
+        .into_result()?;
+        let mut digest_len = digest.len() as u16;
+        // Send the contents to be hashed. Place the result in the output buffer.
+        let status = cryptoauthlib::atcab_sha_base(
+            (3 << 6) | 2,
+            msg.len() as u16,
+            msg.as_ptr(),
+            digest.as_mut_ptr(),
+            (&mut digest_len) as *mut u16,
+        )
+        .into_result()?;
+    }
     Ok(digest)
+}
+
+/// Apply HMAC using secret in chip as a HMAC key, then encrypt
+/// the result a little because read in clear over bus.
+fn se_mixin_key(slot: Slot, msg: [u8; 32], secrets: &RomSecrets) -> Result<[u8; 32], Error> {
+    if data.len() == 0 {
+        return Err(Error(-1));
+    }
+
+    se_pair_unlock(secrets)?;
+
+    let result = if slot != Slot::None {
+        se_hmac32(slot, data)?
+    } else {
+        [0; 32]
+    };
+
+    // Final value was just read over bus w/o any protection, but
+    // we won't be using that, instead, mix in the pairing secret.
+    //
+    // Concern: what if mitm gave us some zeros or other known pattern here. We will
+    // use the value provided in cleartext[sic--it's not] write back shortly (to test it).
+    // Solution: one more SHA256, and to be safe, mixin lots of values!
+
+    let mut hasher = Sha256::new();
+    hasher.update(secrets.pairing_secret);
+    hasher.update(data);
+    hasher.update(&[slot as u8]);
+    hasher.update(result);
+
+    let mut result = [0; 32];
+    result.copy_from_slice(hasher.finalize().as_slice());
+    Ok(result)
 }
 
 fn se_pair_unlock(secrets: &RomSecrets) -> Result<(), Error> {
@@ -282,6 +342,59 @@ fn se_pair_unlock(secrets: &RomSecrets) -> Result<(), Error> {
         }
     }
     se_checkmac(Slot::PairingSecret, &secrets.pairing_secret)
+}
+
+// TODO Next do pin_login_attempt
+
+fn pin_hash_attempt(slot: Slot, pin: &Pin, secrets: &RomSecrets) -> Result<[u8; 32], Error> {
+    if pin.0.len() == 0 {
+        // zero len PIN is the "blank" value: all zeros, no hashing
+        return Ok([0; 32]);
+    }
+
+    // quick local hashing
+    let tmp = pin_hash(pin, PinPurpose::Normal, secrets);
+
+    // main pin needs mega hashing
+    let result = se_stretch_iter(tmp, KDF_ITER_PIN, secrets)?;
+
+    // CAUTION: at this point, we just read the value off the bus
+    // in clear text. Don't use that value directly.
+
+    if slot == Slot::None {
+        // let the caller do either/both of the below mixins
+        return Ok(result);
+    }
+
+    if slot == Slot::PinHash {
+        se_mixin_key(Slot::PinAttempt, result, secrets)
+    } else {
+        se_mixin_key(Slot::None, result, secrets)
+    }
+}
+
+fn pin_hash(pin: &Pin, purpose: PinPurpose, secrets: &RomSecrets) -> [u8; 32] {
+    // Used for supply chain validation too...not sure if that is less than MAX_PIN_LEN yet.
+    // debug_assert!(pin.len() <= MAX_PIN_LEN);
+
+    if pin.0.len() == 0 {
+        // zero-length PIN is considered the "blank" one: all zero
+        return [0; 32];
+    }
+
+    let mut hasher = Sha256::new();
+    hasher.update(secrets.pairing_secret);
+    hasher.update((purpose as u32).to_le_bytes());
+    hasher.update(&pin.0);
+    hasher.update(secrets.otp_key);
+    let result = hasher.finalize();
+
+    // and a second-sha256 on that, just in case.
+    let mut hasher = Sha256::new();
+    hasher.update(result);
+    let mut result = [0; 32];
+    result.copy_from_slice(hasher.finalize().as_slice());
+    result
 }
 
 fn crc16(data: &[u8]) -> u16 {
