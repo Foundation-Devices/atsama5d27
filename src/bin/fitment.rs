@@ -22,8 +22,7 @@ use {
         fmt::Write,
         panic::PanicInfo,
         sync::atomic::{
-            compiler_fence,
-            AtomicBool,
+            compiler_fence, AtomicBool,
             Ordering::{Relaxed, SeqCst},
         },
     },

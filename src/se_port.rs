@@ -3,14 +3,18 @@
 use zeroize::ZeroizeOnDrop;
 
 use {
-    crate::uart::{Uart, Uart1},
     core::fmt::Write,
     sha2::{Digest, Sha256},
 };
 
+// TODO Move the hardcoded error constants (Error(-1), etc) into const members of Error
+
 // Number of iterations for KDF
 const KDF_ITER_WORDS: usize = 2;
 const KDF_ITER_PIN: usize = 8;  // about ? seconds (measured in-system)
+const SE_SECRET_LEN: usize = 72;
+
+const OP_GENDIG: u8 = 0x15;
 
 /// Bytes [16..84) of chip config area.
 const SE_CONFIG_1: [u8; 68] = [
@@ -30,7 +34,7 @@ const SE_CONFIG_2: [u8; 38] = [
 
 // TODO There are probably other places in this module that could benefit from zeroize
 #[derive(ZeroizeOnDrop)]
-pub struct Pin([u8; 32]);
+pub struct Pin(pub [u8; 32]);
 
 /// Slot numbers for the SE.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -194,7 +198,7 @@ struct TempKey([u8; 32]);
 
 /// Load Tempkey with a nonce value that we both know, but
 /// is random and we both know is random! Tricky!
-fn se_pick_nonce(num_in: &[u8; 20]) -> Result<TempKey, Error> {
+fn se_pick_nonce(num_in: [u8; 20]) -> Result<TempKey, Error> {
     let mut rand_out = [0; 32];
     unsafe {
         // Nonce command returns the RNG result, but not contents of TempKey
@@ -224,7 +228,7 @@ fn se_checkmac(slot: Slot, secret: &[u8; 32]) -> Result<(), Error> {
     // TODO These two should be random in KeyOS
     let od = [1; 32];
     let num_in = [2; 20];
-    let tempkey = se_pick_nonce(&num_in).unwrap();
+    let tempkey = se_pick_nonce(num_in).unwrap();
     // Hash nonce and lots of other bits together
     let mut hasher = Sha256::new();
     hasher.update(secret);
@@ -253,6 +257,116 @@ fn se_checkmac(slot: Slot, secret: &[u8; 32]) -> Result<(), Error> {
     Ok(())
 }
 
+/// Check the chip produces a hash over various things the same way we would
+/// meaning that we both know the shared secret and the state of stuff in
+/// the 508a is what we expect.
+fn se_checkmac_hard(slot: Slot, secret: [u8; 32], secrets: &RomSecrets) -> Result<(), Error> {
+    let digest = se_gendig_slot(slot, secret)?;
+    // NOTE: we use this sometimes when we know the value is wrong, like
+    // checking for blank pin codes... so not a huge error/security issue
+    // if wrong here.
+    if !se_is_correct_tempkey(digest, secrets)? {
+        Err(Error(-2))
+    } else {
+        Ok(())
+    }
+}
+
+fn se_gendig_slot(slot: Slot, slot_contents: [u8; 32]) -> Result<[u8; 32], Error> {
+    // TODO In KeyOS, this should actually be random
+    let num_in = [0x00; 20];
+    let tempkey = se_pick_nonce(num_in)?;
+
+    unsafe {
+        // Using Zone=2="Data" => "KeyID specifies a slot in the Data zone".
+        cryptoauthlib::atcab_gendig(0x2, slot as u16, core::ptr::null(), 0).into_result()?;
+    }
+
+    // We now have to match the digesting (hashing) that has happened on
+    // the chip. No feedback at this point if it's right tho.
+    //
+    //   msg = hkey + b'\x15\x02' + ustruct.pack("<H", slot_num)
+    //   msg += b'\xee\x01\x23' + (b'\0'*25) + challenge
+    //   assert len(msg) == 32+1+1+2+1+2+25+32
+    let mut hasher = Sha256::new();
+    let args = [OP_GENDIG, 2, slot as u8, 0, 0xEE, 0x01, 0x23];
+    hasher.update(slot_contents);
+    hasher.update(args);
+    hasher.update([0u8; 25]);
+    hasher.update(tempkey.0);
+    let mut digest = [0; 32];
+    digest.copy_from_slice(hasher.finalize().as_slice());
+    Ok(digest)
+}
+
+/// Construct a digest over one of the two counters. Track what we think
+/// the digest should be, and ask the chip to do the same. Verify we match
+/// using MAC command (done elsewhere).
+fn se_gendig_counter(counter_num: u16, expected_value: u32) -> Result<[u8; 32], Error> {
+    // TODO In KeyOS, this should actually be random
+    let num_in = [0; 20];
+    let tempkey = se_pick_nonce(num_in)?;
+
+    unsafe {
+        // Using Zone=4="Counter" => "KeyID specifies the monotonic counter ID".
+        cryptoauthlib::atcab_gendig(0x4, counter_num, core::ptr::null(), 0).into_result()?;
+    }
+
+    // we now have to match the digesting (hashing) that has happened on
+    // the chip. No feedback at this point if it's right tho.
+    //
+    //   msg = hkey + b'\x15\x02' + ustruct.pack("<H", slot_num)
+    //   msg += b'\xee\x01\x23' + (b'\0'*25) + challenge
+    //   assert len(msg) == 32+1+1+2+1+2+25+32
+    //
+    let args = [OP_GENDIG, 0x4, counter_num as u8, 0, 0xEE, 0x01, 0x23, 0x0];
+    let mut hasher = Sha256::new();
+    hasher.update([0; 32]);
+    hasher.update(args);
+    hasher.update(expected_value.to_le_bytes());
+    hasher.update([0; 20]);
+    hasher.update(tempkey.0);
+    let mut digest = [0; 32];
+    digest.copy_from_slice(hasher.finalize().as_slice());
+    Ok(digest)
+}
+
+/// Check that TempKey is holding what we think it does. Uses the MAC
+/// command over contents of Tempkey and our shared secret.
+fn se_is_correct_tempkey(expected_tempkey: [u8; 32], secrets: &RomSecrets) -> Result<bool, Error> {
+    let mode: u8 = (1 << 6)   // include full serial number
+                 | (0 << 2)   // TempKey.SourceFlag == 0 == 'rand'
+                 | (0 << 1)   // first 32 bytes are the shared secret
+                 | (1 << 0);  // second 32 bytes are tempkey
+
+    let mut resp = [0; 32];
+    unsafe {
+        cryptoauthlib::atcab_mac(mode, Slot::PairingSecret as u16, core::ptr::null(), (&mut resp).as_mut_ptr()).into_result()?;
+    }
+
+    // Duplicate the hash process, and then compare.
+    let mut hasher = Sha256::new();
+    hasher.update(&secrets.pairing_secret);
+    hasher.update(&expected_tempkey);
+
+    let fixed = [
+        0x08, mode, Slot::PairingSecret as u8,
+        0x0,    0,    0,
+        0,      0,    0,
+        0,      0,    0,  // eight zeros
+        0,      0,    0,  // three zeros
+        0xEE
+    ];
+    hasher.update(fixed);
+    hasher.update(&secrets.serial_number[4..8]);
+    hasher.update(&secrets.serial_number[..4]);
+
+    let mut actual = [0; 32];
+    actual.copy_from_slice(hasher.finalize().as_slice());
+
+    Ok(constant_time_eq::constant_time_eq_32(&actual, &resp))
+}
+
 /// Do on-chip hashing, with lots of iterations.
 ///
 /// - using HMAC-SHA256 with keys that are known only to the 608a.
@@ -273,6 +387,277 @@ pub fn se_stretch_iter(
         }
     }
     Ok(msg)
+}
+
+pub enum LoginAttempt {
+    Success(CachedMainPin),
+    Failure {
+        num_fails: u32,
+        attempts_left: u32,
+        reason: LoginFailureReason,
+    }
+}
+
+pub enum LoginFailureReason {
+    IncorrectPin,
+    SeFailure,
+}
+
+struct LastSuccess {
+    num_fails: u32,
+    attempts_left: u32,
+}
+
+/// Do the PIN check.
+pub fn pin_login_attempt(pin: &Pin, secrets: &RomSecrets) -> Result<LoginAttempt, Error> {
+    // Hash up the pin now, assuming we'll use it on main PIN.
+    let mid_digest = pin_hash_attempt(Slot::None, pin, secrets)?;
+    // Register an attempt on the pin.
+    let mut digest = se_mixin_key(Slot::PinAttempt, mid_digest, secrets)?;
+
+    let pin_kn = Slot::PinHash;
+    let secret_kn = Slot::Seed;
+
+    if !is_main_pin(digest, secrets)? {
+        let LastSuccess { num_fails, attempts_left } = get_last_success(secrets)?;
+        // PIN code is just wrong.
+        // - nothing to update, since the chip's done it already
+        //printf("BAD PIN: attempts_left: %lu  num_fails: %lu\n", args->attempts_left, args->num_fails);
+        return Ok(LoginAttempt::Failure { num_fails, attempts_left, reason: LoginFailureReason::IncorrectPin });
+    }
+
+    // change the various counters, since this worked
+    if updates_for_good_login(digest, secrets).is_err() {
+        // Update args with latest attempts remaining
+        // TODO Same as above
+        let LastSuccess { num_fails, attempts_left } = get_last_success(secrets)?;
+        //printf("GOOD PIN: attempts_left: %lu  num_fails: %lu\n", args->attempts_left, args->num_fails);
+        return Ok(LoginAttempt::Failure { num_fails, attempts_left, reason: LoginFailureReason::SeFailure });
+    }
+
+    // SUCCESS! "digest" holds a working value. Save it.
+    let cached_pin = pin_cache_save(digest, secrets)?;
+
+    let mut ts = [0u8; SE_SECRET_LEN];
+
+    // TODO SE_SECRET_LEN is 72 bytes, to read this I probably need a few atcab_read_enc calls
+    unsafe {
+        // TODO This is intentionally all zeros
+        let num_in = [0; 20];
+        cryptoauthlib::atcab_read_enc(secret_kn as u16, 0, ts[0..32].as_mut_ptr(), digest.as_mut_ptr(), pin_kn as u16, num_in.as_ptr()).into_result()?;
+        cryptoauthlib::atcab_read_enc(secret_kn as u16, 1, ts[32..64].as_mut_ptr(), digest.as_mut_ptr(), pin_kn as u16, num_in.as_ptr()).into_result()?;
+        cryptoauthlib::atcab_read_enc(secret_kn as u16, 2, ts[64..].as_mut_ptr(), digest.as_mut_ptr(), pin_kn as u16, num_in.as_ptr()).into_result()?;
+    }
+
+    // TODO The original code calculates some SHA hash here and returns it. Not sure we need that
+    //_sign_attempt(args);
+
+    Ok(LoginAttempt::Success(cached_pin))
+}
+
+/// Read state about previous attempt(s) from AE. Calculate number of failures,
+/// and how many attempts are left. The need for verifing the values from AE is
+/// not really so strong with the 608a, since it's all enforced on that side, but
+/// we'll do it anyway.
+fn get_last_success(secrets: &RomSecrets) -> Result<LastSuccess, Error> {
+    let slot = Slot::LastGood;
+
+    se_pair_unlock(secrets)?;
+
+    // Read counter value of last-good login. Important that this be authenticated.
+    // - using first 32-bits only, others will be zero
+    let mut padded = [0; 32];
+    unsafe {
+        cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32).into_result()?;
+    }
+
+    se_pair_unlock(secrets)?;
+    let tempkey = se_gendig_slot(slot, padded)?;
+
+    if !se_is_correct_tempkey(tempkey, secrets)? {
+        return Err(Error(-3));
+    }
+
+    // Read two values from data slots
+    let lastgood = read_slot_as_counter(Slot::LastGood, secrets)?;
+    let mut match_count = read_slot_as_counter(Slot::MatchCount, secrets)?;
+
+    // Read the monotonically-increasing counter
+    let counter = se_get_counter(0, secrets)?;
+
+    let num_fails = if lastgood > counter {
+        // monkey business, but impossible, right?!
+        99
+    } else {
+        counter - lastgood
+    };
+
+    // NOTE: 5LSB of match_count should be stored as zero.
+    match_count &= !31;
+    let attempts_left = if counter < match_count {
+        // typical case: some number of attempts left before death
+        match_count - counter
+    } else {
+        // we're a brick now, but maybe say that nicer to customer
+        0
+    };
+
+    Ok(LastSuccess {
+        num_fails,
+        attempts_left,
+    })
+}
+
+/// Read (typically a) counter value held in a dataslot.
+/// Important that this be authenticated.
+///
+/// - using first 32-bits only, others will be zero/ignored
+/// - but need to read whole thing for the digest check
+fn read_slot_as_counter(slot: Slot, secrets: &RomSecrets) -> Result<u32, Error> {
+    se_pair_unlock(secrets)?;
+    let mut padded = [0; 32];
+    unsafe {
+        cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32).into_result()?;
+    }
+
+    se_pair_unlock(secrets)?;
+    let tempkey = se_gendig_slot(slot, padded)?;
+
+    if !se_is_correct_tempkey(tempkey, secrets)? {
+        return Err(Error(-1));
+    }
+
+    Ok(u32::from_le_bytes(padded[..4].try_into().unwrap()))
+}
+
+fn is_main_pin(digest: [u8; 32], secrets: &RomSecrets) -> Result<bool, Error> {
+    se_pair_unlock(secrets)?;
+    Ok(se_checkmac_hard(Slot::PinHash, digest, secrets).is_ok())
+}
+
+const MAX_TARGET_ATTEMPTS: u32 = 21;
+
+/// User got the main PIN right: update the attempt counters,
+/// to document this (lastgood) and also bump the match counter if needed
+fn updates_for_good_login(digest: [u8; 32], secrets: &RomSecrets) -> Result<(), Error> {
+    let count = se_get_counter(0, secrets)?;
+
+    // The weird math here is because the match count slot in the SE ignores the least
+    // significant 5 bits, so the match count must be a multiple of 32. When a good
+    // login occurs, we need to update both the match count and the monotonic counter.
+    //
+    // For example, if the monotonic counter was 19 and the match count was 32, and the
+    // user just provided the correct PIN, you would normally just bump the match count
+    // to 33, but since that is not a multiple of 32, we have to bump it to 64. That
+    // would then give 64-19 = 45 login attempts remaining though, so further down,
+    // in se_add_counter(), we bump the monotonic counter in a loop until there are
+    // MAX_TARGET_ATTEMPTS left (match count - counter0 = MAX_TARGET_ATTEMPTS_LEFT).
+    let mc = (count + MAX_TARGET_ATTEMPTS + 32) & !31;
+
+    let bump = (mc - MAX_TARGET_ATTEMPTS) - count;
+
+    // The SE won't let the counter go past the match count, so we have to update the
+    // match count first.
+
+    // Set the new "match count"
+    // TODO This is intentionally all zeros
+    let num_in = [0; 20];
+    let mut tmp = [0; 32];
+    tmp[0..4].copy_from_slice(&mc.to_le_bytes());
+    tmp[4..8].copy_from_slice(&mc.to_le_bytes());
+    unsafe {
+        cryptoauthlib::atcab_write_enc(Slot::MatchCount as u16, 0, tmp.as_ptr(), digest.as_ptr(), Slot::PinHash as u16, num_in.as_ptr()).into_result()?;
+    }
+
+    // Increment the counter a bunch to get to that-13
+    let new_count = se_add_counter(0, bump, secrets)?;
+
+    // Update the "last good" counter
+    let num_in = [0; 20];
+    let mut tmp = [0; 32];
+    tmp[0..4].copy_from_slice(&new_count.to_le_bytes());
+    unsafe {
+        cryptoauthlib::atcab_write_enc(Slot::LastGood as u16, 0, tmp.as_ptr(), digest.as_ptr(), Slot::PinHash as u16, num_in.as_ptr()).into_result()?;
+    }
+
+    // NOTE: Some or all of the above writes could be blocked (trashed) by an
+    // active MitM attacker, but that would be pointless since these are authenticated
+    // writes, which have a MAC. They can't change the written value, due to the MAC, so
+    // all they can do is block the write, and not control it's value. Therefore, they will
+    // just be reducing attempt. Also, rate limiting not affected by anything here.
+
+    Ok(())
+}
+
+/// Add-to and return a one-way counter's value. Have to go up in
+/// single-unit steps, but we can loop.
+fn se_add_counter(counter_number: u16, incr: u32, secrets: &RomSecrets) -> Result<u32, Error> {
+    let mut result = 0;
+    for _ in 0..incr {
+        unsafe {
+            cryptoauthlib::atcab_counter_increment(counter_number, (&mut result) as *mut u32).into_result()?;
+        }
+    }
+
+    // IMPORTANT: Always verify the counter's value because otherwise
+    // nothing prevents an active MitM changing the value that we think
+    // we just read. They could also stop us from incrementing the counter.
+    let digest = se_gendig_counter(counter_number, result)?;
+
+    if !se_is_correct_tempkey(digest, secrets)? {
+        return Err(Error(-1));
+    }
+
+    Ok(result)
+}
+
+/// Read a one-way counter.
+fn se_get_counter(counter_number: u16, secrets: &RomSecrets) -> Result<u32, Error> {
+    let mut result = 0; 
+    unsafe {
+        cryptoauthlib::atcab_counter_read(counter_number, (&mut result) as *mut u32).into_result()?;
+    };
+
+    // IMPORTANT: Always verify the counter's value because otherwise
+    // nothing prevents an active MitM changing the value that we think
+    // we just read.
+    let digest = se_gendig_counter(counter_number, result)?;
+
+    if !se_is_correct_tempkey(digest, secrets)? {
+        return Err(Error(-1));
+    }
+
+    Ok(result)
+}
+
+struct CachedMainPin([u8; 32]);
+
+fn pin_cache_save(digest: [u8; 32], secrets: &RomSecrets) -> Result<CachedMainPin, Error> {
+    // encrypt w/ rom secret + SRAM seed value
+    let mut value = [0; 32];
+    if !constant_time_eq::constant_time_eq_32(&digest, &[0; 32]) {
+        value = pin_cache_get_key(secrets);
+        value.iter_mut().zip(digest.into_iter()).for_each(|(a, b)| *a ^= b);
+    }
+
+    /*
+     * TODO I need to understand what really is the purpose of this
+    if (args->magic_value != PA_MAGIC_V1) {
+        return EPIN_BAD_MAGIC;
+    }
+    */
+
+    // TODO I don't think this is needed anymore? This used to store the cached main PIN in a
+    // global variable
+    // Keep a copy around so we can do other auth'd actions later like set a user firmware pubkey
+    // memcpy(g_cached_main_pin, value, 32);
+
+    Ok(CachedMainPin(value))
+}
+
+/// Per-boot unique key.
+fn pin_cache_get_key(secrets: &RomSecrets) -> [u8; 32] {
+    Sha256::digest(&secrets.hash_cache_secret).into()
 }
 
 fn se_hmac32(slot: Slot, msg: [u8; 32]) -> Result<[u8; 32], Error> {
@@ -304,14 +689,14 @@ fn se_hmac32(slot: Slot, msg: [u8; 32]) -> Result<[u8; 32], Error> {
 /// Apply HMAC using secret in chip as a HMAC key, then encrypt
 /// the result a little because read in clear over bus.
 fn se_mixin_key(slot: Slot, msg: [u8; 32], secrets: &RomSecrets) -> Result<[u8; 32], Error> {
-    if data.len() == 0 {
+    if msg.len() == 0 {
         return Err(Error(-1));
     }
 
     se_pair_unlock(secrets)?;
 
     let result = if slot != Slot::None {
-        se_hmac32(slot, data)?
+        se_hmac32(slot, msg)?
     } else {
         [0; 32]
     };
@@ -325,7 +710,7 @@ fn se_mixin_key(slot: Slot, msg: [u8; 32], secrets: &RomSecrets) -> Result<[u8; 
 
     let mut hasher = Sha256::new();
     hasher.update(secrets.pairing_secret);
-    hasher.update(data);
+    hasher.update(msg);
     hasher.update(&[slot as u8]);
     hasher.update(result);
 

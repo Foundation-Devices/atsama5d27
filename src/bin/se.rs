@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use atsama5d27::lcdc::{LcdcLayerId, Lcdc, LayerConfig};
+use atsama5d27::lcdc::{LayerConfig, Lcdc, LcdcLayerId};
 
 use {
     atsama5d27::{
@@ -23,26 +23,15 @@ use {
         fmt::Write,
         panic::PanicInfo,
         sync::atomic::{
-            compiler_fence,
-            AtomicBool,
+            compiler_fence, AtomicBool,
             Ordering::{Relaxed, SeqCst},
         },
     },
     cryptoauthlib::{
-        g_atcab_device_ptr,
-        ATCAIface,
-        ATCAIfaceCfg,
-        ATCAIfaceCfg__bindgen_ty_1,
-        ATCAIfaceCfg__bindgen_ty_1__bindgen_ty_2,
-        ATCAIfaceType_ATCA_SWI_IFACE,
-        ATCA_HAL_CHANGE_BAUD,
-        ATCA_HAL_CONTROL_DESELECT,
-        ATCA_HAL_CONTROL_SELECT,
-        ATCA_HAL_FLUSH_BUFFER,
-        ATCA_RX_TIMEOUT,
-        ATCA_STATUS,
-        ATCA_SUCCESS,
-        ATCA_UNIMPLEMENTED,
+        g_atcab_device_ptr, ATCAIface, ATCAIfaceCfg, ATCAIfaceCfg__bindgen_ty_1,
+        ATCAIfaceCfg__bindgen_ty_1__bindgen_ty_2, ATCAIfaceType_ATCA_SWI_IFACE,
+        ATCA_HAL_CHANGE_BAUD, ATCA_HAL_CONTROL_DESELECT, ATCA_HAL_CONTROL_SELECT,
+        ATCA_HAL_FLUSH_BUFFER, ATCA_RX_TIMEOUT, ATCA_STATUS, ATCA_SUCCESS, ATCA_UNIMPLEMENTED,
         ATECC608B,
     },
     embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle},
@@ -300,6 +289,8 @@ fn _entry() -> ! {
                 panic!();
             }
         }
+
+        se_port::pin_login_attempt(&se_port::Pin([42; 32]), &secrets).unwrap();
     }
     // */
     fill_display_background();
@@ -325,10 +316,6 @@ fn self_test(sha: bool, aes: bool, ecdh: bool, ecdsa: bool, rng: bool) -> Result
         Err(status)
     }
 }
-
-static mut SWI_UART: Option<Uart<Uart4>> = None;
-
-// TODO Test the delay functions
 
 #[no_mangle]
 extern "C" fn hal_delay_ms(delay: u32) {
