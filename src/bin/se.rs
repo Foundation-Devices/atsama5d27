@@ -247,6 +247,7 @@ fn _entry() -> ! {
 
         hal_delay_ms(100);
 
+        /*
         let data = [1, 2, 3, 4, 5, 6, 7, 8];
         let mut sha256 = [0u8; 32];
         let status =
@@ -264,10 +265,11 @@ fn _entry() -> ! {
             ],
             "invalid sha256 digest"
         );
+        */
 
         hal_delay_ms(100);
 
-        let secrets = se_port::RomSecrets {
+        let mut secrets = se_port::RomSecrets {
             pairing_secret: [0; 32],
             serial_number: [0; 9],
             otp_key: [0; 72],
@@ -275,13 +277,14 @@ fn _entry() -> ! {
         };
 
         // TODO Some of the RomSecrets fields are unused, what's that about?
-        if let Err(e) = se_port::setup_config(&secrets) {
+        if let Err(e) = se_port::setup_config(&mut secrets) {
             writeln!(console, "setup_config failed: {}", e.0).ok();
             panic!();
         } else {
             writeln!(console, "setup_config successful").ok();
         }
 
+        /*
         match se_port::se_stretch_iter([3; 32], 10, &secrets) {
             Ok(v) => writeln!(console, "se_stretch_iter: {:02x?}", v).unwrap(),
             Err(e) => {
@@ -289,8 +292,19 @@ fn _entry() -> ! {
                 panic!();
             }
         }
+        */
 
-        se_port::pin_login_attempt(&se_port::Pin([42; 32]), &secrets).unwrap();
+        //se_port::change_pin(None, &se_port::Pin([42; 32]), &secrets).unwrap();
+        se_port::change_pin(
+            Some(&se_port::Pin([43; 32])),
+            &se_port::Pin([42; 32]),
+            &secrets,
+        )
+        .unwrap();
+        writeln!(console, "pin changed").ok();
+
+        //let result = se_port::pin_login_attempt(&se_port::Pin([42; 32]), &secrets).unwrap();
+        //writeln!(console, "pin_login_attempt: {:?}", result).ok();
     }
     // */
     fill_display_background();

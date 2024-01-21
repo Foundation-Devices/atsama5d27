@@ -231,6 +231,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         // Read the device SN
         if ((status = calib_read_zone(device, ATCA_ZONE_CONFIG, 0, 0, 0, serial_num, 32)) != ATCA_SUCCESS)
         {
+            se_debug("calib_read_zone - failed");
             (void)ATCA_TRACE(status, "calib_read_zone - failed");
             break;
         }
@@ -250,6 +251,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         // Send the random Nonce command
         if ((status = calib_nonce_rand(device, num_in, rand_out)) != ATCA_SUCCESS)
         {
+            se_debug("Nonce failed");
             (void)ATCA_TRACE(status, "Nonce failed");
             break;
         }
@@ -257,6 +259,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         // Calculate Tempkey
         if ((status = atcah_nonce(&nonce_params)) != ATCA_SUCCESS)
         {
+            se_debug("Calc TempKey failed");
             (void)ATCA_TRACE(status, "Calc TempKey failed");
             break;
         }
@@ -270,6 +273,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         // Send the GenDig command
         if ((status = calib_gendig(device, GENDIG_ZONE_DATA, enc_key_id, other_data, (uint8_t)sizeof(other_data))) != ATCA_SUCCESS)
         {
+            se_debug("GenDig failed");
             (void)ATCA_TRACE(status, "GenDig failed");
             break;
         }
@@ -287,6 +291,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         gen_dig_param.temp_key = &temp_key;
         if ((status = atcah_gen_dig(&gen_dig_param)) != ATCA_SUCCESS)
         {
+            se_debug("atcah_gen_dig() failed");
             (void)ATCA_TRACE(status, "atcah_gen_dig() failed");
             break;
         }
@@ -294,6 +299,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
         // The get address function checks the remaining variables
         if ((status = calib_get_addr(ATCA_ZONE_DATA, key_id, block, 0, &addr)) != ATCA_SUCCESS)
         {
+            se_debug("Get address failed");
             (void)ATCA_TRACE(status, "Get address failed");
             break;
         }
@@ -309,6 +315,7 @@ ATCA_STATUS calib_write_enc(ATCADevice device, uint16_t key_id, uint8_t block, c
 
         if ((status = atcah_write_auth_mac(&write_mac_param)) != ATCA_SUCCESS)
         {
+            se_debug("Calculate Auth MAC failed");
             (void)ATCA_TRACE(status, "Calculate Auth MAC failed");
             break;
         }
