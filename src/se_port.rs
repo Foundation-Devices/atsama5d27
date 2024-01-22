@@ -98,12 +98,16 @@ const BLOCK_SIZE: usize = 32;
 ///                SE would not trigger us to write the pairing secret in the clear.
 pub fn setup_config(secrets: &mut RomSecrets) -> Result<(), Error> {
     unsafe {
-        let mut config = [0; 128];
-        cryptoauthlib::atcab_read_config_zone(config.as_mut_ptr()).into_result()?;
-        cryptoauthlib::hal_delay_ms(100);
+        let mut config = with_retries(|| {
+            let mut config = [0; 128];
+            cryptoauthlib::atcab_read_config_zone(config.as_mut_ptr()).into_result()?;
+            Ok(config)
+        })?;
 
-        cryptoauthlib::atcab_read_serial_number(secrets.serial_number.as_mut_ptr())
-            .into_result()?;
+        with_retries(|| {
+            cryptoauthlib::atcab_read_serial_number(secrets.serial_number.as_mut_ptr())
+                .into_result()
+        })?;
 
         // Setup steps:
         // - write config zone data
@@ -118,11 +122,11 @@ pub fn setup_config(secrets: &mut RomSecrets) -> Result<(), Error> {
             config[16..16 + SE_CONFIG_1.len()].copy_from_slice(&SE_CONFIG_1);
             config[90..90 + SE_CONFIG_2.len()].copy_from_slice(&SE_CONFIG_2);
 
-            cryptoauthlib::atcab_write_config_zone(config.as_ptr()).into_result()?;
-            cryptoauthlib::hal_delay_ms(100);
+            with_retries(|| cryptoauthlib::atcab_write_config_zone(config.as_ptr()).into_result())?;
 
-            cryptoauthlib::atcab_lock_config_zone_crc(crc16(&config)).into_result()?;
-            cryptoauthlib::hal_delay_ms(100);
+            with_retries(|| {
+                cryptoauthlib::atcab_lock_config_zone_crc(crc16(&config)).into_result()
+            })?;
         }
 
         if config[86] == 0x55 {
@@ -139,16 +143,15 @@ pub fn setup_config(secrets: &mut RomSecrets) -> Result<(), Error> {
                 for (i, c) in data.chunks(BLOCK_SIZE).enumerate() {
                     let i = i as u16;
                     let slot = slot as u16;
-                    unsafe {
+                    with_retries(|| {
                         cryptoauthlib::atcab_write(
                             0x80 | 2,
                             (i << 8) | (slot << 3),
                             c.as_ptr(),
                             core::ptr::null(),
                         )
-                        .into_result()?;
-                    }
-                    cryptoauthlib::hal_delay_ms(100);
+                        .into_result()
+                    })?;
                 }
                 Ok(())
             };
@@ -157,8 +160,7 @@ pub fn setup_config(secrets: &mut RomSecrets) -> Result<(), Error> {
                 if unlocked & (1 << (slot as u8)) == 0 {
                     return Ok(());
                 }
-                cryptoauthlib::atcab_lock_data_slot(slot as u16).into_result()?;
-                cryptoauthlib::hal_delay_ms(100);
+                with_retries(|| cryptoauthlib::atcab_lock_data_slot(slot as u16).into_result())?;
                 Ok(())
             };
 
@@ -192,8 +194,7 @@ pub fn setup_config(secrets: &mut RomSecrets) -> Result<(), Error> {
             match_count[4..8].copy_from_slice(1024u32.to_le_bytes().as_ref());
             write_slot(Slot::MatchCount, &match_count)?;
 
-            cryptoauthlib::atcab_lock_data_zone().into_result()?;
-            cryptoauthlib::hal_delay_ms(100);
+            with_retries(|| cryptoauthlib::atcab_lock_data_zone().into_result())?;
         }
 
         Ok(())
@@ -207,11 +208,14 @@ struct TempKey([u8; 32]);
 /// Load Tempkey with a nonce value that we both know, but
 /// is random and we both know is random! Tricky!
 fn se_pick_nonce(num_in: [u8; 20]) -> Result<TempKey, Error> {
-    let mut rand_out = [0; 32];
-    unsafe {
+    let rand_out = unsafe {
         // Nonce command returns the RNG result, but not contents of TempKey
-        cryptoauthlib::atcab_nonce_rand(num_in.as_ptr(), rand_out.as_mut_ptr()).into_result()?;
-    }
+        with_retries(|| {
+            let mut rand_out = [0; 32];
+            cryptoauthlib::atcab_random(rand_out.as_mut_ptr()).into_result()?;
+            Ok(rand_out)
+        })?
+    };
     // Hash stuff appropriately to get same number as chip did.
     // TempKey on the chip will be set to the output of SHA256 over
     // a message composed of my challenge, the RNG and 3 bytes of constants:
@@ -238,7 +242,7 @@ fn se_checkmac(slot: Slot, secret: [u8; 32]) -> Result<(), Error> {
     let od = [0; 32];
     // TODO This should be random in KeyOS
     let num_in = [2; 20];
-    let tempkey = se_pick_nonce(num_in).unwrap();
+    let tempkey = se_pick_nonce(num_in)?;
     // Hash nonce and lots of other bits together
     let mut hasher = Sha256::new();
     hasher.update(secret);
@@ -253,16 +257,18 @@ fn se_checkmac(slot: Slot, secret: [u8; 32]) -> Result<(), Error> {
     let mut resp = [0; 32];
     resp.copy_from_slice(hasher.finalize().as_slice());
     unsafe {
-        // Content doesn't matter, but nice and visible:
-        let challenge = b"(C) 2020 Foundation Devices Inc.";
-        cryptoauthlib::atcab_checkmac(
-            0x01,
-            slot as u16,
-            challenge.as_ptr(),
-            resp.as_ptr(),
-            od.as_ptr(),
-        )
-        .into_result()?;
+        with_retries(|| {
+            // Content doesn't matter, but nice and visible:
+            let challenge = b"(C) 2020 Foundation Devices Inc.";
+            cryptoauthlib::atcab_checkmac(
+                0x01,
+                slot as u16,
+                challenge.as_ptr(),
+                resp.as_ptr(),
+                od.as_ptr(),
+            )
+            .into_result()
+        })?;
     };
     Ok(())
 }
@@ -288,8 +294,10 @@ fn se_gendig_slot(slot: Slot, slot_contents: [u8; 32]) -> Result<[u8; 32], Error
     let tempkey = se_pick_nonce(num_in)?;
 
     unsafe {
-        // Using Zone=2="Data" => "KeyID specifies a slot in the Data zone".
-        cryptoauthlib::atcab_gendig(0x2, slot as u16, core::ptr::null(), 0).into_result()?;
+        with_retries(|| {
+            // Using Zone=2="Data" => "KeyID specifies a slot in the Data zone".
+            cryptoauthlib::atcab_gendig(0x2, slot as u16, core::ptr::null(), 0).into_result()
+        })?;
     }
 
     // We now have to match the digesting (hashing) that has happened on
@@ -318,9 +326,10 @@ fn se_gendig_counter(counter_num: u16, expected_value: u32) -> Result<[u8; 32], 
     let tempkey = se_pick_nonce(num_in)?;
 
     unsafe {
-        cryptoauthlib::hal_delay_ms(100);
-        // Using Zone=4="Counter" => "KeyID specifies the monotonic counter ID".
-        cryptoauthlib::atcab_gendig(0x4, counter_num, core::ptr::null(), 0).into_result()?;
+        with_retries(|| {
+            // Using Zone=4="Counter" => "KeyID specifies the monotonic counter ID".
+            cryptoauthlib::atcab_gendig(0x4, counter_num, core::ptr::null(), 0).into_result()
+        })?;
     }
 
     // we now have to match the digesting (hashing) that has happened on
@@ -345,24 +354,24 @@ fn se_gendig_counter(counter_num: u16, expected_value: u32) -> Result<[u8; 32], 
 /// Check that TempKey is holding what we think it does. Uses the MAC
 /// command over contents of Tempkey and our shared secret.
 fn se_is_correct_tempkey(expected_tempkey: [u8; 32], secrets: &RomSecrets) -> Result<bool, Error> {
-    // TODO This function might be wrong, or there might be a discrepancy between the old
-    // and new device
-
     let mode: u8 = (1 << 6)   // include full serial number
                  | (0 << 2)   // TempKey.SourceFlag == 0 == 'rand'
                  | (0 << 1)   // first 32 bytes are the shared secret
                  | (1 << 0); // second 32 bytes are tempkey
 
-    let mut resp = [0; 32];
-    unsafe {
-        cryptoauthlib::atcab_mac(
-            mode,
-            Slot::PairingSecret as u16,
-            core::ptr::null(),
-            (&mut resp).as_mut_ptr(),
-        )
-        .into_result()?;
-    }
+    let resp = unsafe {
+        with_retries(|| {
+            let mut resp = [0; 32];
+            cryptoauthlib::atcab_mac(
+                mode,
+                Slot::PairingSecret as u16,
+                core::ptr::null(),
+                (&mut resp).as_mut_ptr(),
+            )
+            .into_result()?;
+            Ok(resp)
+        })?
+    };
 
     // Duplicate the hash process, and then compare.
     let mut hasher = Sha256::new();
@@ -388,7 +397,6 @@ fn se_is_correct_tempkey(expected_tempkey: [u8; 32], secrets: &RomSecrets) -> Re
         0xEE,
     ];
     hasher.update(fixed);
-    // TODO This is the problem - my serial number is not correct. How do I fix this?
     hasher.update(&secrets.serial_number[4..8]);
     hasher.update(&secrets.serial_number[..4]);
 
@@ -411,11 +419,9 @@ pub fn se_stretch_iter(
     secrets: &RomSecrets,
 ) -> Result<[u8; 32], Error> {
     for _ in 0..iterations {
-        unsafe {
-            // Must unlock again, because pin_stretch is an auth'd key.
-            se_pair_unlock(secrets)?;
-            msg = se_hmac32(Slot::PinStretch, msg)?;
-        }
+        // Must unlock again, because pin_stretch is an auth'd key.
+        se_pair_unlock(secrets)?;
+        msg = se_hmac32(Slot::PinStretch, msg)?;
     }
     Ok(msg)
 }
@@ -458,7 +464,7 @@ pub fn pin_login_attempt(pin: &Pin, secrets: &RomSecrets) -> Result<LoginAttempt
             crate::uart::Uart::<crate::uart::Uart1>::new(),
             "!is_main_pin"
         )
-        .unwrap();
+        .ok();
         // PIN code is just wrong.
         // - nothing to update, since the chip's done it already
         return Ok(match get_last_success(secrets) {
@@ -486,7 +492,7 @@ pub fn pin_login_attempt(pin: &Pin, secrets: &RomSecrets) -> Result<LoginAttempt
             crate::uart::Uart::<crate::uart::Uart1>::new(),
             "updates_for_good_login"
         )
-        .unwrap();
+        .ok();
         let LastSuccess {
             num_fails,
             attempts_left,
@@ -503,47 +509,47 @@ pub fn pin_login_attempt(pin: &Pin, secrets: &RomSecrets) -> Result<LoginAttempt
     let cached_pin = pin_cache_save(digest, secrets)?;
 
     let mut ts = [0u8; SE_SECRET_LEN];
+    // TODO This is intentionally all zeros
+    let num_in = [0; 20];
 
-    // TODO SE_SECRET_LEN is 72 bytes, to read this I probably need a few atcab_read_enc calls
     unsafe {
-        // TODO This is intentionally all zeros
-        let num_in = [0; 20];
-        cryptoauthlib::atcab_read_enc(
-            secret_kn as u16,
-            0,
-            ts[0..32].as_mut_ptr(),
-            digest.as_mut_ptr(),
-            pin_kn as u16,
-            num_in.as_ptr(),
-        )
-        .into_result()?;
-        cryptoauthlib::atcab_read_enc(
-            secret_kn as u16,
-            1,
-            ts[32..64].as_mut_ptr(),
-            digest.as_mut_ptr(),
-            pin_kn as u16,
-            num_in.as_ptr(),
-        )
-        .into_result()?;
-        cryptoauthlib::atcab_read_enc(
-            secret_kn as u16,
-            2,
-            ts[64..].as_mut_ptr(),
-            digest.as_mut_ptr(),
-            pin_kn as u16,
-            num_in.as_ptr(),
-        )
-        .into_result()?;
+        with_retries(|| {
+            cryptoauthlib::atcab_read_enc(
+                secret_kn as u16,
+                0,
+                ts[0..32].as_mut_ptr(),
+                digest.as_mut_ptr(),
+                pin_kn as u16,
+                num_in.as_ptr(),
+            )
+            .into_result()
+        })?;
+        with_retries(|| {
+            cryptoauthlib::atcab_read_enc(
+                secret_kn as u16,
+                1,
+                ts[32..64].as_mut_ptr(),
+                digest.as_mut_ptr(),
+                pin_kn as u16,
+                num_in.as_ptr(),
+            )
+            .into_result()
+        })?;
+        with_retries(|| {
+            cryptoauthlib::atcab_read_enc(
+                secret_kn as u16,
+                2,
+                ts[64..].as_mut_ptr(),
+                digest.as_mut_ptr(),
+                pin_kn as u16,
+                num_in.as_ptr(),
+            )
+            .into_result()
+        })?;
     }
-
-    // TODO The original code calculates some SHA hash here and returns it. Not sure we need that
-    //_sign_attempt(args);
 
     Ok(LoginAttempt::Success(cached_pin))
 }
-
-// TODO Also have a change_secret function
 
 pub fn change_pin(old_pin: Option<&Pin>, new_pin: &Pin, secrets: &RomSecrets) -> Result<(), Error> {
     // What pin do they need to know to make their change?
@@ -603,22 +609,14 @@ pub fn change_pin(old_pin: Option<&Pin>, new_pin: &Pin, secrets: &RomSecrets) ->
         "got new_digest"
     )
     .ok();
-    // TODO This is intentionally all zeros
     let num_in = [0; 20];
-    unsafe {
-        // TODO Error comes from here
-        // TODO Check if it does the right thing
-        // C func: se_encrypted_write32
-        // TODO Just port the original function, this is not worth it
-        // TODO It's used in a few places, replace all of them
-        se_encrypted_write(
-            target_slot,
-            required_kn,
-            required_digest,
-            &new_digest,
-            secrets,
-        )?;
-    }
+    se_encrypted_write(
+        target_slot,
+        required_kn,
+        required_digest,
+        &new_digest,
+        secrets,
+    )?;
     writeln!(
         crate::uart::Uart::<crate::uart::Uart1>::new(),
         "called se_encrypted_write"
@@ -706,20 +704,13 @@ pub fn change_secret(
     .ok();
     // TODO This is intentionally all zeros
     let num_in = [0; 20];
-    unsafe {
-        // TODO Error comes from here
-        // TODO Check if it does the right thing
-        // C func: se_encrypted_write32
-        // TODO Just port the original function, this is not worth it
-        // TODO It's used in a few places, replace all of them
-        se_encrypted_write(
-            target_slot,
-            required_kn,
-            required_digest,
-            &new_digest,
-            secrets,
-        )?;
-    }
+    se_encrypted_write(
+        target_slot,
+        required_kn,
+        required_digest,
+        &new_digest,
+        secrets,
+    )?;
     writeln!(
         crate::uart::Uart::<crate::uart::Uart1>::new(),
         "called se_encrypted_write"
@@ -807,16 +798,16 @@ fn se_encrypted_write32(
     mac.copy_from_slice(hasher.finalize().as_slice());
 
     unsafe {
-        cryptoauthlib::atcab_write(
-            p1,
-            ((p2_msb as u16) << 8) | p2_lsb as u16,
-            body.as_ptr(),
-            mac.as_ptr(),
-        )
-        .into_result()?;
+        with_retries(|| {
+            cryptoauthlib::atcab_write(
+                p1,
+                ((p2_msb as u16) << 8) | p2_lsb as u16,
+                body.as_ptr(),
+                mac.as_ptr(),
+            )
+            .into_result()
+        })
     }
-
-    Ok(())
 }
 
 /// Read state about previous attempt(s) from AE. Calculate number of failures,
@@ -826,25 +817,56 @@ fn se_encrypted_write32(
 fn get_last_success(secrets: &RomSecrets) -> Result<LastSuccess, Error> {
     let slot = Slot::LastGood;
 
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "inside get_last_success!"
+    )
+    .ok();
+
     se_pair_unlock(secrets)?;
+
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "called se_pair_unlock"
+    )
+    .ok();
 
     // Read counter value of last-good login. Important that this be authenticated.
     // - using first 32-bits only, others will be zero
-    let mut padded = [0; 32];
-    unsafe {
-        cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32)
-            .into_result()?;
-    }
+    let padded = unsafe {
+        with_retries(|| {
+            let mut padded = [0; 32];
+            cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32)
+                .into_result()?;
+            Ok(padded)
+        })?
+    };
+
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "called atcab_read_zone"
+    )
+    .ok();
 
     se_pair_unlock(secrets)?;
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "called second se_pair_unlock"
+    )
+    .ok();
     let tempkey = se_gendig_slot(slot, padded)?;
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "called se_gendig_slot"
+    )
+    .ok();
 
     if !se_is_correct_tempkey(tempkey, secrets)? {
         writeln!(
             crate::uart::Uart::<crate::uart::Uart1>::new(),
             "!se_is_correct_tempkey"
         )
-        .unwrap();
+        .ok();
         return Err(Error(-3));
     }
 
@@ -885,11 +907,14 @@ fn get_last_success(secrets: &RomSecrets) -> Result<LastSuccess, Error> {
 /// - but need to read whole thing for the digest check
 fn read_slot_as_counter(slot: Slot, secrets: &RomSecrets) -> Result<u32, Error> {
     se_pair_unlock(secrets)?;
-    let mut padded = [0; 32];
-    unsafe {
-        cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32)
-            .into_result()?;
-    }
+    let padded = unsafe {
+        with_retries(|| {
+            let mut padded = [0; 32];
+            cryptoauthlib::atcab_read_zone(2, slot as u16, 0, 0, padded.as_mut_ptr(), 32)
+                .into_result()?;
+            Ok(padded)
+        })?
+    };
 
     se_pair_unlock(secrets)?;
     let tempkey = se_gendig_slot(slot, padded)?;
@@ -996,9 +1021,10 @@ fn se_add_counter(counter_number: u16, incr: u32, secrets: &RomSecrets) -> Resul
     let mut result = 0;
     for _ in 0..incr {
         unsafe {
-            cryptoauthlib::hal_delay_ms(100);
-            cryptoauthlib::atcab_counter_increment(counter_number, (&mut result) as *mut u32)
-                .into_result()?;
+            with_retries(|| {
+                cryptoauthlib::atcab_counter_increment(counter_number, (&mut result) as *mut u32)
+                    .into_result()
+            })?;
         }
     }
 
@@ -1039,21 +1065,13 @@ fn se_get_counter(counter_number: u16, secrets: &RomSecrets) -> Result<u32, Erro
     )
     .ok();
 
-    let mut result = 0;
-    unsafe {
-        match cryptoauthlib::atcab_counter_read(counter_number, (&mut result) as *mut u32)
-            .into_result()
-        {
-            Ok(()) => {}
-            Err(e) => {
-                writeln!(
-                    crate::uart::Uart::<crate::uart::Uart1>::new(),
-                    "cryptoauthlib::atcab_counter_read error {e:?}"
-                )
-                .ok();
-                return Err(e);
-            }
-        }
+    let result = unsafe {
+        with_retries(|| {
+            let mut result = 0;
+            cryptoauthlib::atcab_counter_read(counter_number, (&mut result) as *mut u32)
+                .into_result()?;
+            Ok(result)
+        })?
     };
 
     writeln!(
@@ -1061,10 +1079,6 @@ fn se_get_counter(counter_number: u16, secrets: &RomSecrets) -> Result<u32, Erro
         "called cryptoauthlib::atcab_counter_read"
     )
     .ok();
-
-    unsafe {
-        cryptoauthlib::hal_delay_ms(200);
-    }
 
     // IMPORTANT: Always verify the counter's value because otherwise
     // nothing prevents an active MitM changing the value that we think
@@ -1103,13 +1117,6 @@ fn pin_cache_save(digest: [u8; 32], secrets: &RomSecrets) -> Result<CachedMainPi
             .for_each(|(a, b)| *a ^= b);
     }
 
-    /*
-     * TODO I need to understand what really is the purpose of this
-    if (args->magic_value != PA_MAGIC_V1) {
-        return EPIN_BAD_MAGIC;
-    }
-    */
-
     // TODO I don't think this is needed anymore? This used to store the cached main PIN in a
     // global variable
     // Keep a copy around so we can do other auth'd actions later like set a user firmware pubkey
@@ -1126,25 +1133,29 @@ fn pin_cache_get_key(secrets: &RomSecrets) -> [u8; 32] {
 fn se_hmac32(slot: Slot, msg: [u8; 32]) -> Result<[u8; 32], Error> {
     let mut digest = [0; 32];
     unsafe {
-        // Start SHA w/ HMAC setup
-        let status = cryptoauthlib::atcab_sha_base(
-            4,
-            slot as u16,
-            core::ptr::null(),
-            core::ptr::null_mut(),
-            core::ptr::null_mut(),
-        )
-        .into_result()?;
+        with_retries(|| {
+            // Start SHA w/ HMAC setup
+            cryptoauthlib::atcab_sha_base(
+                4,
+                slot as u16,
+                core::ptr::null(),
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+            )
+            .into_result()
+        })?;
         let mut digest_len = digest.len() as u16;
-        // Send the contents to be hashed. Place the result in the output buffer.
-        let status = cryptoauthlib::atcab_sha_base(
-            (3 << 6) | 2,
-            msg.len() as u16,
-            msg.as_ptr(),
-            digest.as_mut_ptr(),
-            (&mut digest_len) as *mut u16,
-        )
-        .into_result()?;
+        with_retries(|| {
+            // Send the contents to be hashed. Place the result in the output buffer.
+            cryptoauthlib::atcab_sha_base(
+                (3 << 6) | 2,
+                msg.len() as u16,
+                msg.as_ptr(),
+                digest.as_mut_ptr(),
+                (&mut digest_len) as *mut u16,
+            )
+            .into_result()
+        })?;
     }
     Ok(digest)
 }
@@ -1179,6 +1190,11 @@ fn se_mixin_key(slot: Slot, msg: [u8; 32], secrets: &RomSecrets) -> Result<[u8; 
 }
 
 fn se_pair_unlock(secrets: &RomSecrets) -> Result<(), Error> {
+    writeln!(
+        crate::uart::Uart::<crate::uart::Uart1>::new(),
+        "inside se_pair_unlock"
+    )
+    .ok();
     const MAX_ATTEMPTS: usize = 3;
     for _ in 0..MAX_ATTEMPTS - 1 {
         if se_checkmac(Slot::PairingSecret, secrets.pairing_secret).is_ok() {
@@ -1260,7 +1276,27 @@ fn crc16(data: &[u8]) -> u16 {
     crc
 }
 
-#[derive(Debug)]
+fn with_retries<T>(mut f: impl FnMut() -> Result<T, Error>) -> Result<T, Error> {
+    const MAX_RETRIES: u32 = 5;
+    for i in 1..MAX_RETRIES {
+        match f() {
+            Ok(result) => return Ok(result),
+            Err(Error::EXECUTION_ERROR) | Err(Error::COMM_FAIL) => unsafe {
+                writeln!(
+                    crate::uart::Uart::<crate::uart::Uart1>::new(),
+                    "XXX RETRYING"
+                )
+                .ok();
+                // TODO Log every retry to measure how much time is being wasted, or have a counter
+                cryptoauthlib::hal_delay_ms(i * 200);
+            },
+            Err(e) => return Err(e),
+        }
+    }
+    f()
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct Error(pub i32);
 
 trait AtcaStatusIntoResult {
@@ -1280,6 +1316,9 @@ impl AtcaStatusIntoResult for i32 {
 impl Error {
     /// Existing pin is wrong (during change attempt).
     const OLD_AUTH_FAIL: Error = Error(-113);
+
+    const EXECUTION_ERROR: Error = Error(cryptoauthlib::ATCA_EXECUTION_ERROR);
+    const COMM_FAIL: Error = Error(cryptoauthlib::ATCA_COMM_FAIL);
 
     pub fn is_checkmac_fail(&self) -> bool {
         self.0 == cryptoauthlib::ATCA_CHECKMAC_VERIFY_FAILED

@@ -294,17 +294,16 @@ fn _entry() -> ! {
         }
         */
 
-        //se_port::change_pin(None, &se_port::Pin([42; 32]), &secrets).unwrap();
         se_port::change_pin(
-            Some(&se_port::Pin([43; 32])),
-            &se_port::Pin([42; 32]),
+            Some(&se_port::Pin([42; 32])),
+            &se_port::Pin([43; 32]),
             &secrets,
         )
         .unwrap();
         writeln!(console, "pin changed").ok();
 
-        //let result = se_port::pin_login_attempt(&se_port::Pin([42; 32]), &secrets).unwrap();
-        //writeln!(console, "pin_login_attempt: {:?}", result).ok();
+        //se_port::pin_login_attempt(&se_port::Pin([42; 32]), &secrets).unwrap();
+        //writeln!(console, "logged in").ok();
     }
     // */
     fill_display_background();
