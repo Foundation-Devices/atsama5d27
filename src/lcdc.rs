@@ -161,6 +161,7 @@ impl Lcdc {
         // Configure the LCD timing parameters
         self.wait_for_sync_in_progress();
         self.select_pwm_clock_source(PWM_CLOCK_SOURCE);
+        self.wait_for_sync_in_progress();
         self.set_clock_divider(PIXEL_CLOCK_DIV);
 
         // Disable all layers for now
@@ -171,6 +172,7 @@ impl Lcdc {
 
         self.wait_for_sync_in_progress();
         self.set_hsync_pulse_width(HSYNC_LENGTH);
+        self.wait_for_sync_in_progress();
         self.set_vsync_pulse_width(VSYNC_LENGTH);
 
         self.wait_for_sync_in_progress();
@@ -185,21 +187,31 @@ impl Lcdc {
 
         self.wait_for_sync_in_progress();
         self.set_num_active_rows(self.h);
+        self.wait_for_sync_in_progress();
         self.set_num_pixels_per_line(self.w);
+
+        self.wait_for_sync_in_progress();
+        self.set_lcdc_clk_polarity(true);
 
         self.wait_for_sync_in_progress();
         self.set_lcdc_clk_source(true);
 
         self.wait_for_sync_in_progress();
         self.set_display_guard_time(DISPLAY_GUARD_NUM_FRAMES);
+        self.wait_for_sync_in_progress();
         self.set_output_mode(OUTPUT_COLOR_MODE);
+        self.wait_for_sync_in_progress();
         self.set_display_signal_synchronization(true);
+        self.wait_for_sync_in_progress();
         self.set_vsync_pulse_start(SYNC_EDGE);
+        self.wait_for_sync_in_progress();
         self.set_vsync_polarity(VSYNC_POLARITY);
+        self.wait_for_sync_in_progress();
         self.set_hsync_polarity(HSYNC_POLARITY);
 
         self.wait_for_sync_in_progress();
         self.set_pwm_signal_polarity(PWM_SIGNAL_POLARITY);
+        self.wait_for_sync_in_progress();
         self.set_pwm_prescaler(PWM_PRESCALER);
 
         // 2. Enable pixel clock
@@ -298,6 +310,11 @@ impl Lcdc {
     fn set_lcdc_clk_source(&mut self, is_x2: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
         lcdc_csr.rmwf(LCDCFG0_CLKSEL, is_x2 as u32)
+    }
+
+    fn set_lcdc_clk_polarity(&mut self, on_falling: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.rmwf(LCDCFG0_CLKPOL, on_falling as u32)
     }
 
     pub fn wait_for_sync_in_progress(&self) {

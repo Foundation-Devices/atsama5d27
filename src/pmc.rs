@@ -244,6 +244,11 @@ impl Pmc {
         pmc_csr.wo(PMC_PCR, val);
     }
 
+    pub fn enable_system_clock_isc(&mut self) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
+        pmc_csr.wfo(PMC_SCER_ISCCK, 1);
+    }
+
     pub fn enable_system_clock_lcdc(&mut self) {
         let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
         pmc_csr.wfo(PMC_SCER_LCDCK, 1);
