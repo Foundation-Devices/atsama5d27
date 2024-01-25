@@ -99,7 +99,7 @@ const PWM_CLOCK_SOURCE: LcdcPwmClockSource = LcdcPwmClockSource::System;
 const PWM_PRESCALER: u8 = 5;
 const HSYNC_LENGTH: u16 = 60;
 const VSYNC_LENGTH: u16 = 60;
-const PIXEL_CLOCK_DIV: u8 = 6;
+const PIXEL_CLOCK_DIV: u8 = 16;
 const DISPLAY_GUARD_NUM_FRAMES: u16 = 1;
 const OUTPUT_COLOR_MODE: OutputColorMode = OutputColorMode::Mode24Bpp;
 const SYNC_EDGE: VsyncSyncEdge = VsyncSyncEdge::First;
@@ -186,6 +186,9 @@ impl Lcdc {
         self.wait_for_sync_in_progress();
         self.set_num_active_rows(self.h);
         self.set_num_pixels_per_line(self.w);
+
+        self.wait_for_sync_in_progress();
+        self.set_lcdc_clk_source(true);
 
         self.wait_for_sync_in_progress();
         self.set_display_guard_time(DISPLAY_GUARD_NUM_FRAMES);
@@ -290,6 +293,11 @@ impl Lcdc {
         self.set_system_bus_dma_burst_enable(layer, false);
 
         self.set_channel_enable(layer, false);
+    }
+
+    fn set_lcdc_clk_source(&mut self, is_x2: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.rmwf(LCDCFG0_CLKSEL, is_x2 as u32)
     }
 
     pub fn wait_for_sync_in_progress(&self) {
