@@ -1,7 +1,7 @@
 //! Power Management Controller.
 
 use utralib::{
-    utra::pmc::{PMC_PCR, PMC_PCR_PID},
+    utra::pmc::{PMC_PCR, PMC_PCR_PID, PMC_SCER_ISCCK, PMC_SCER_LCDCK},
     *,
 };
 
@@ -242,5 +242,15 @@ impl Pmc {
         val |= PMC_PCR_CMD_SET;
 
         pmc_csr.wo(PMC_PCR, val);
+    }
+
+    pub fn enable_system_clock_isc(&mut self) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
+        pmc_csr.wfo(PMC_SCER_ISCCK, 1);
+    }
+
+    pub fn enable_system_clock_lcdc(&mut self) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
+        pmc_csr.wfo(PMC_SCER_LCDCK, 1);
     }
 }

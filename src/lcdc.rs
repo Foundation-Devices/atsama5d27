@@ -99,7 +99,7 @@ const PWM_CLOCK_SOURCE: LcdcPwmClockSource = LcdcPwmClockSource::System;
 const PWM_PRESCALER: u8 = 5;
 const HSYNC_LENGTH: u16 = 60;
 const VSYNC_LENGTH: u16 = 60;
-const PIXEL_CLOCK_DIV: u8 = 6;
+const PIXEL_CLOCK_DIV: u8 = 16;
 const DISPLAY_GUARD_NUM_FRAMES: u16 = 1;
 const OUTPUT_COLOR_MODE: OutputColorMode = OutputColorMode::Mode24Bpp;
 const SYNC_EDGE: VsyncSyncEdge = VsyncSyncEdge::First;
@@ -108,10 +108,10 @@ const HSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
 const DEFAULT_BRIGHTNESS_PCT: u32 = 55;
 const PWM_SIGNAL_POLARITY: SignalPolarity = SignalPolarity::Positive;
 pub const DEFAULT_GFX_COLOR_MODE: ColorMode = ColorMode::Argb8888;
-const LOWER_MARGIN: u16 = 0x02;
-const UPPER_MARGIN: u16 = 0x10;
-const RIGHT_MARGIN: u16 = 40;
-const LEFT_MARGIN: u16 = 40;
+const VFP: u16 = 15;
+const VBP: u16 = 31;
+const HFP: u16 = 8;
+const HBP: u16 = 12;
 
 pub struct LayerConfig {
     id: LcdcLayerId,
@@ -161,40 +161,51 @@ impl Lcdc {
         // Configure the LCD timing parameters
         self.wait_for_sync_in_progress();
         self.select_pwm_clock_source(PWM_CLOCK_SOURCE);
+        self.wait_for_sync_in_progress();
         self.set_clock_divider(PIXEL_CLOCK_DIV);
-
-        // Disable all layers for now
-        self.set_layer_clock_gating_disable(LcdcLayerId::Base, false);
-        self.set_layer_clock_gating_disable(LcdcLayerId::Ovr1, false);
-        self.set_layer_clock_gating_disable(LcdcLayerId::Ovr2, false);
-        self.set_layer_clock_gating_disable(LcdcLayerId::Heo, false);
 
         self.wait_for_sync_in_progress();
         self.set_hsync_pulse_width(HSYNC_LENGTH);
+        self.wait_for_sync_in_progress();
         self.set_vsync_pulse_width(VSYNC_LENGTH);
 
         self.wait_for_sync_in_progress();
-        self.set_vertical_front_porch_width(LOWER_MARGIN); //Set the vertical porches
-        self.set_vertical_back_porch_width(UPPER_MARGIN);
+        self.set_vertical_front_porch_width(VFP); //Set the vertical porches
+        self.wait_for_sync_in_progress();
+        self.set_vertical_back_porch_width(VBP);
 
         self.wait_for_sync_in_progress();
-        self.set_horizontal_front_porch_width(RIGHT_MARGIN); //Set the horizontal porches
-        self.set_horizontal_back_porch_width(LEFT_MARGIN);
+        self.set_horizontal_front_porch_width(HFP); //Set the horizontal porches
+        self.wait_for_sync_in_progress();
+        self.set_horizontal_back_porch_width(HBP);
 
         self.wait_for_sync_in_progress();
         self.set_num_active_rows(self.h);
+        self.wait_for_sync_in_progress();
         self.set_num_pixels_per_line(self.w);
 
         self.wait_for_sync_in_progress();
+        self.set_lcdc_clk_polarity(true);
+
+        self.wait_for_sync_in_progress();
+        self.set_lcdc_clk_source(true);
+
+        self.wait_for_sync_in_progress();
         self.set_display_guard_time(DISPLAY_GUARD_NUM_FRAMES);
+        self.wait_for_sync_in_progress();
         self.set_output_mode(OUTPUT_COLOR_MODE);
+        self.wait_for_sync_in_progress();
         self.set_display_signal_synchronization(true);
+        self.wait_for_sync_in_progress();
         self.set_vsync_pulse_start(SYNC_EDGE);
+        self.wait_for_sync_in_progress();
         self.set_vsync_polarity(VSYNC_POLARITY);
+        self.wait_for_sync_in_progress();
         self.set_hsync_polarity(HSYNC_POLARITY);
 
         self.wait_for_sync_in_progress();
         self.set_pwm_signal_polarity(PWM_SIGNAL_POLARITY);
+        self.wait_for_sync_in_progress();
         self.set_pwm_prescaler(PWM_PRESCALER);
 
         // 2. Enable pixel clock
@@ -250,11 +261,12 @@ impl Lcdc {
         self.set_transfer_descriptor_fetch_enable(layer, true);
         self.set_blender_overlay_layer_enable(layer, true);
         self.set_blender_dma_layer_enable(layer, true);
-        self.set_blender_local_alpha_enable(layer, true);
-        // self.set_blender_iterated_color_enable(layer, false);
-        // self.set_blender_use_iterated_color(layer, true);
 
-        self.set_layer_clock_gating_disable(layer, false);
+        self.set_blender_global_alpha_enable(layer, true);
+        self.set_blender_chroma_key_enable(layer, false);
+        self.blender_set_global_alpha(layer, 0xff);
+        self.set_blender_local_alpha_enable(layer, false);
+
         self.set_use_dma_path_enable(layer, true);
         self.set_rgb_mode_input(layer, DEFAULT_GFX_COLOR_MODE);
 
@@ -288,6 +300,16 @@ impl Lcdc {
         self.set_system_bus_dma_burst_enable(layer, false);
 
         self.set_channel_enable(layer, false);
+    }
+
+    fn set_lcdc_clk_source(&mut self, is_x2: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.rmwf(LCDCFG0_CLKSEL, is_x2 as u32)
+    }
+
+    fn set_lcdc_clk_polarity(&mut self, on_falling: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+        lcdc_csr.rmwf(LCDCFG0_CLKPOL, on_falling as u32)
     }
 
     pub fn wait_for_sync_in_progress(&self) {
@@ -787,6 +809,50 @@ impl Lcdc {
             LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_LAEN, enable as u32),
             LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_LAEN, enable as u32),
             LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_LAEN, enable as u32),
+        }
+    }
+
+    pub fn set_blender_global_alpha_enable(&self, layer: LcdcLayerId, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_GAEN, enable as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_GAEN, enable as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_GAEN, enable as u32),
+        }
+    }
+
+    pub fn set_blender_chroma_key_enable(&self, layer: LcdcLayerId, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_CRKEY, enable as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_CRKEY, enable as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_CRKEY, enable as u32),
+        }
+    }
+
+    pub fn set_blender_rev_alpha(&self, layer: LcdcLayerId, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_REVALPHA, enable as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_REVALPHA, enable as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_REVALPHA, enable as u32),
+        }
+    }
+
+    pub fn set_blender_inv(&self, layer: LcdcLayerId, enable: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG9_INV, enable as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG9_INV, enable as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_INV, enable as u32),
         }
     }
 
