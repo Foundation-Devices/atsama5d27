@@ -108,10 +108,10 @@ const HSYNC_POLARITY: SignalPolarity = SignalPolarity::Negative;
 const DEFAULT_BRIGHTNESS_PCT: u32 = 55;
 const PWM_SIGNAL_POLARITY: SignalPolarity = SignalPolarity::Positive;
 pub const DEFAULT_GFX_COLOR_MODE: ColorMode = ColorMode::Argb8888;
-const LOWER_MARGIN: u16 = 0x02;
-const UPPER_MARGIN: u16 = 0x10;
-const RIGHT_MARGIN: u16 = 40;
-const LEFT_MARGIN: u16 = 40;
+const VFP: u16 = 15;
+const VBP: u16 = 31;
+const HFP: u16 = 8;
+const HBP: u16 = 12;
 
 pub struct LayerConfig {
     id: LcdcLayerId,
@@ -174,12 +174,14 @@ impl Lcdc {
         self.set_vsync_pulse_width(VSYNC_LENGTH);
 
         self.wait_for_sync_in_progress();
-        self.set_vertical_front_porch_width(LOWER_MARGIN); //Set the vertical porches
-        self.set_vertical_back_porch_width(UPPER_MARGIN);
+        self.set_vertical_front_porch_width(VFP); //Set the vertical porches
+        self.wait_for_sync_in_progress();
+        self.set_vertical_back_porch_width(VBP);
 
         self.wait_for_sync_in_progress();
-        self.set_horizontal_front_porch_width(RIGHT_MARGIN); //Set the horizontal porches
-        self.set_horizontal_back_porch_width(LEFT_MARGIN);
+        self.set_horizontal_front_porch_width(HFP); //Set the horizontal porches
+        self.wait_for_sync_in_progress();
+        self.set_horizontal_back_porch_width(HBP);
 
         self.wait_for_sync_in_progress();
         self.set_num_active_rows(self.h);
