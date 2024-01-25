@@ -1,7 +1,7 @@
 //! Power Management Controller.
 
 use utralib::{
-    utra::pmc::{PMC_PCR, PMC_PCR_PID},
+    utra::pmc::{PMC_PCR, PMC_PCR_PID, PMC_SCER_ISCCK, PMC_SCER_LCDCK},
     *,
 };
 
