@@ -50,9 +50,6 @@ impl LcdSpi {
     }
 
     pub fn run_init_sequence(&mut self) {
-        self.send_command(0x01);
-        self.pit.busy_wait_ms(self.curr_clock_freq, 200);
-
         self.send_command(0xFF);
         self.send_data(0x77);
         self.send_data(0x01);
