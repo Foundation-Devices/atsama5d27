@@ -1,5 +1,7 @@
-use bitflags::bitflags;
-use utralib::{utra::isc::*, CSR, HW_ISC_BASE};
+use {
+    bitflags::bitflags,
+    utralib::{utra::isc::*, CSR, HW_ISC_BASE},
+};
 
 bitflags! {
     #[derive(Debug, Copy, Clone)]

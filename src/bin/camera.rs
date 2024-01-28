@@ -1,14 +1,13 @@
 #![no_std]
 #![no_main]
 
-use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
-use ovm7690_rs::Ovm7690;
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
         display::FramebufDisplay,
+        isc::{DmaControlConfig, DmaDescriptorView, DmaView, Isc, MckSel},
         l2cc::{Counter, EventCounterKind, L2cc},
-        lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
+        lcdc::{ColorMode, LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
         lcdspi::LcdSpi,
         pio::{Direction, Event, Func, Pio, PioB, PioC, PioPort},
         pit::{Pit, PIV_MAX},
@@ -36,9 +35,9 @@ use {
         primitives::{Circle, Line, PrimitiveStyleBuilder, Rectangle, StyledDrawable},
         text::Text,
     },
+    embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs,
+    ovm7690_rs::Ovm7690,
 };
-use atsama5d27::isc::{DmaControlConfig, DmaDescriptorView, DmaView, Isc, MckSel};
-use atsama5d27::lcdc::ColorMode;
 
 const WIDTH: usize = 480;
 const HEIGHT: usize = 800;
@@ -46,7 +45,7 @@ const HEIGHT: usize = 800;
 #[repr(align(4))]
 struct Aligned4<const SIZE: usize>([u32; SIZE]);
 
-static mut FRAMEBUFFER_ONE: Aligned4<{WIDTH * HEIGHT}> = Aligned4([0; WIDTH * HEIGHT]);
+static mut FRAMEBUFFER_ONE: Aligned4<{ WIDTH * HEIGHT }> = Aligned4([0; WIDTH * HEIGHT]);
 static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
@@ -56,14 +55,16 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
 const CAM_WIDTH: usize = 480;
 const CAM_HEIGHT: usize = 640;
 
-static mut FRAMEBUFFER_CAM_ONE: Aligned4<{CAM_WIDTH * CAM_HEIGHT}> = Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
+static mut FRAMEBUFFER_CAM_ONE: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
+    Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
 static mut DMA_DESC_CAM_ONE: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
     next: 0,
 };
 
-static mut FRAMEBUFFER_CAM_TWO: Aligned4<{CAM_WIDTH * CAM_HEIGHT}> = Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
+static mut FRAMEBUFFER_CAM_TWO: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
+    Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
 static mut DMA_DESC_CAM_TWO: LcdDmaDesc = LcdDmaDesc {
     addr: 0,
     ctrl: 0,
@@ -184,21 +185,22 @@ fn _entry() -> ! {
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
     let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
-    lcdc.init(&[LayerConfig::new(
-        LcdcLayerId::Base,
-        fb1,
-        dma_desc_addr_one,
-        dma_desc_addr_one,
-    )], || ());
+    lcdc.init(
+        &[LayerConfig::new(
+            LcdcLayerId::Base,
+            fb1,
+            dma_desc_addr_one,
+            dma_desc_addr_one,
+        )],
+        || (),
+    );
 
     lcdc.set_window_size(CAM_LAYER, CAM_WIDTH as u16, CAM_HEIGHT as u16);
     lcdc.set_window_pos(CAM_LAYER, 0, 0);
-    lcdc.update_layer(&LayerConfig::new(
-        CAM_LAYER,
-        fb_cam_one,
-        dma_desc_cam_one,
-        dma_desc_cam_one,
-    ), ||());
+    lcdc.update_layer(
+        &LayerConfig::new(CAM_LAYER, fb_cam_one, dma_desc_cam_one, dma_desc_cam_one),
+        || (),
+    );
     lcdc.enable_layer(CAM_LAYER);
     lcdc.set_rgb_mode_input(CAM_LAYER, ColorMode::Rgb565);
 
@@ -248,7 +250,10 @@ fn _entry() -> ! {
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10); // Wait OVM7690 T2 power-up sequence timing
 
     let mut camera = Ovm7690::new(unsafe { twi0.clone() });
-    assert!(camera.verify_chip_id().expect("verify chip ID"), "failed to verify OVM7690 chip ID");
+    assert!(
+        camera.verify_chip_id().expect("verify chip ID"),
+        "failed to verify OVM7690 chip ID"
+    );
     camera.init().expect("init OVM7690");
     camera.enable().expect("enable OVM7690");
 
@@ -258,14 +263,31 @@ fn _entry() -> ! {
         descriptor_enable: true,
         ..Default::default()
     };
-    writeln!(console, "Configuring DMA desc addr #1: {:08x}", isc_dma_view_one).ok();
-    writeln!(console, "Configuring DMA desc addr #2: {:08x}", isc_dma_view_two).ok();
+    writeln!(
+        console,
+        "Configuring DMA desc addr #1: {:08x}",
+        isc_dma_view_one
+    )
+    .ok();
+    writeln!(
+        console,
+        "Configuring DMA desc addr #2: {:08x}",
+        isc_dma_view_two
+    )
+    .ok();
     writeln!(console, "Configuring DMA fb: {:08x}", fb_cam_one).ok();
 
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
     writeln!(console, "INTSR: {:?}", isc.interrupt_status()).ok();
 
-    isc.configure(isc_dma_view_one, isc_dma_view_one, isc_dma_view_two, isc_dma_view_two, fb_cam_one as u32, &dma_control_config);
+    isc.configure(
+        isc_dma_view_one,
+        isc_dma_view_one,
+        isc_dma_view_two,
+        isc_dma_view_two,
+        fb_cam_one as u32,
+        &dma_control_config,
+    );
     isc.start_capture();
 
     unsafe { TWI0 = Some(twi0.clone()) };
@@ -277,9 +299,7 @@ fn _entry() -> ! {
 }
 
 #[no_mangle]
-unsafe extern "C" fn pioa_irq_handler() {
-
-}
+unsafe extern "C" fn pioa_irq_handler() {}
 
 #[no_mangle]
 unsafe extern "C" fn aic_spurious_handler() {
