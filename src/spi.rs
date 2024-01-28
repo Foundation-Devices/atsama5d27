@@ -117,9 +117,7 @@ impl Spi {
     }
 
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
-        Self {
-            base_addr
-        }
+        Self { base_addr }
     }
 
     pub fn set_enabled(&mut self, enabled: bool) {

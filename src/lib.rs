@@ -9,6 +9,7 @@ pub mod console;
 pub mod display;
 pub mod dma;
 pub mod flexcom;
+pub mod isc;
 pub mod l1cache;
 pub mod l2cc;
 pub mod lcdc;

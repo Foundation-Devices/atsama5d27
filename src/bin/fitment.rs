@@ -176,12 +176,15 @@ fn _entry() -> ! {
     configure_lcdc_pins();
     pmc.enable_peripheral_clock(PeripheralId::Lcdc);
     let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
-    lcdc.init(&[LayerConfig::new(
-        LcdcLayerId::Base,
-        fb1,
-        dma_desc_addr_one,
-        dma_desc_addr_one,
-    )]);
+    lcdc.init(
+        &[LayerConfig::new(
+            LcdcLayerId::Base,
+            fb1,
+            dma_desc_addr_one,
+            dma_desc_addr_one,
+        )],
+        || (),
+    );
     lcdc.wait_for_sync_in_progress();
     lcdc.set_pwm_compare_value(0xff / 2);
 
