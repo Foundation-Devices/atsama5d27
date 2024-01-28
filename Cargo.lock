@@ -27,6 +27,7 @@ dependencies = [
  "embedded-hal",
  "ft3269",
  "is31fl32xx",
+ "ovm7690-rs",
  "png-decoder",
  "r0",
  "rtt-target",
@@ -218,6 +219,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "ovm7690-rs"
+version = "0.1.0"
+dependencies = [
+ "embedded-hal",
 ]
 
 [[package]]
