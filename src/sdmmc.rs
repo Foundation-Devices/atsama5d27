@@ -268,6 +268,12 @@ impl Sdmmc {
         }
     }
 
+    pub fn with_alt_base_addr(base_addr: u32) -> Self {
+        Self {
+            base_addr
+        }
+    }
+
     pub fn status(&self) -> SdmmcStatus {
         let csr = CSR::new(self.base_addr as *mut u32);
         SdmmcStatus::from_bits_truncate(csr.r(PSR))
