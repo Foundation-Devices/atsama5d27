@@ -487,11 +487,11 @@ impl Sdmmc {
                 return Err(SdMmcError::Error(self.error_status()));
             }
 
-            if timeout - 1 == 0 {
-                use core::fmt::Write;
-                core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "about to timeout, status: {:?} | expected {:?}", status, ns).ok();
-                core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "state: {:?}", self.status()).ok();
-            }
+            // if timeout - 1 == 0 {
+            //     use core::fmt::Write;
+            //     core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "about to timeout, status: {:?} | expected {:?}", status, ns).ok();
+            //     core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "state: {:?}", self.status()).ok();
+            // }
 
             timeout -= 1;
         }
