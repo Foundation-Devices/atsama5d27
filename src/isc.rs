@@ -111,7 +111,7 @@ enum Polarity {
     High = 0,
 
     /// Signal is active low, i.e. valid pixels are sampled when the signal is deasserted.
-    Low,
+    Low = 1,
 }
 
 #[derive(Debug)]
@@ -139,6 +139,62 @@ enum PfeVideoMode {
     SfBottom = 5,
     /// Video source is interlaced, one field is captured starting immediately.
     SfImmediate = 6,
+}
+
+#[derive(Debug)]
+pub enum BayerPattern {
+    GrGr = 0,
+    RgRg = 1,
+    GbGb = 2,
+    BgBg = 3,
+}
+
+#[derive(Debug)]
+pub enum CcirByteOrder {
+    /// CBY Byte ordering Cb0, Y0, Cr0, Y1
+    Cby = 0,
+    /// CRY Byte ordering Cr0, Y0, Cb0, Y1
+    Cry = 1,
+    /// YCB Byte ordering Y0, Cb0, Y1, Cr0
+    Ycb = 2,
+    /// YCR Byte ordering Y0, Cr0, Y1, Cb0
+    Ycr = 3,
+}
+
+// Implement above structure in Rust
+#[derive(Debug)]
+pub struct ColorCorrectionConfig {
+    r_offset: u16,
+    g_offset: u16,
+    b_offset: u16,
+    rr_gain: u16,
+    rg_gain: u16,
+    rb_gain: u16,
+    gg_gain: u16,
+    gr_gain: u16,
+    gb_gain: u16,
+    bg_gain: u16,
+    br_gain: u16,
+    bb_gain: u16,
+}
+
+impl Default for ColorCorrectionConfig {
+    fn default() -> Self {
+        ColorCorrectionConfig {
+            r_offset: 0,
+            g_offset: 0,
+            b_offset: 0,
+            rr_gain: 0x100,
+            rg_gain: 0,
+            rb_gain: 0,
+            gg_gain: 0x100,
+            gr_gain: 0,
+            gb_gain: 0,
+            bg_gain: 0,
+            br_gain: 0,
+            bb_gain: 0x100,
+        }
+    }
 }
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -198,7 +254,7 @@ impl DmaView {
 
 #[derive(Debug, Copy, Clone)]
 #[repr(u8)]
-pub enum MckSel {
+pub enum ClkSel {
     Hclock = 0,
     Isclk,
     Gck,
@@ -219,9 +275,7 @@ impl Isc {
         Isc { base_addr }
     }
 
-    pub fn init(&mut self, mck_div: u8, mck_sel: MckSel, isp_div: u8) {
-        self.reset();
-
+    pub fn init(&mut self, mck_div: u8, mck_sel: ClkSel, ic_div: u8, ic_sel: ClkSel) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
 
         // Configure master clock
@@ -229,14 +283,14 @@ impl Isc {
         csr.rmwf(CLKCFG_MCDIV, mck_div as u32);
 
         self.wait_for_sync_clk();
-        csr.wfo(CLKEN_MCEN, 1); // Enable master clock
+        csr.wfo(CLKEN_MCEN, 1); // Enable master clock to provide the cam chip with the clock
 
         // Configure ISP clock
-        csr.rmwf(CLKCFG_ICDIV, isp_div as u32);
-        csr.rmwf(CLKCFG_ICSEL, 0);
+        csr.rmwf(CLKCFG_ICDIV, ic_div as u32);
+        csr.rmwf(CLKCFG_ICSEL, ic_sel as u32);
 
         self.wait_for_sync_clk();
-        csr.wfo(CLKEN_ICEN, 1); // Enable ISP clock to provide the cam chip with the clock
+        csr.wfo(CLKEN_ICEN, 1); // Enable ISP clock
 
         assert_ne!(csr.rf(CLKSR_MCSR), 0);
         assert_ne!(csr.rf(CLKSR_ICSR), 0);
@@ -270,7 +324,10 @@ impl Isc {
         fb_phys_addr: u32,
         dma_control_config: &DmaControlConfig,
     ) {
+        self.reset();
+
         self.pfe_set_continuous_mode(true);
+        self.pfe_set_pclk_gated(true);
 
         // Configure the Parallel Front End module performs data
         // re-sampling across clock domain boundary. The PFE module
@@ -288,8 +345,33 @@ impl Isc {
         // Set pixel clock polarity
         self.pfe_set_pclk_polarity(Polarity::High);
 
+        // Enable Gamma Correction
+        // self.gamma_enable(true, false, false, false);
+
+        // Enable Color Filter Array Interpolation
+        // self.cfa_enable(true);
+        // self.cfa_configure(BayerPattern::BgBg, true);
+
+        // The White Balance (WB) module captures the data bus from the PFE module,
+        // each Bayer color component (R,Gr, B, Gb) can be manually adjusted using
+        // an offset and a gain.
+        // self.wb_enable(true);
+        // self.wb_set_bayer_pattern(BayerPattern::BgBg);
+
+        // Default value for White balance settings
+        // self.wb_adjust_color_offset(0, 0, 0, 0);
+        // self.wb_adjust_color_gain(0x200, 0x200, 0x200, 0x200);
+
+        // Configure contrast & brightness control (CBC)
+        // self.cbc_enable(true);
+        // self.cbc_configure(false, CcirByteOrder::Cby, 0x0, 0x100);
+
+        // Configure color correction
+        // self.cc_enable(true);
+        // self.cc_configure(&ColorCorrectionConfig::default());
+
         // Set color output mode and alpha value
-        self.rlp_configure(RlpMode::Rgb565, 0xff); // TODO: try 0xff alpha too
+        self.rlp_configure(RlpMode::Dat8, 0xff);
 
         // Configure DMA
         self.configure_dma(
@@ -312,8 +394,13 @@ impl Isc {
     }
 
     pub fn interrupt_status(&mut self) -> ISCStatus {
-        let mut csr = CSR::new(self.base_addr as *mut u32);
+        let csr = CSR::new(self.base_addr as *mut u32);
         ISCStatus::from_bits_truncate(csr.r(INTSR))
+    }
+
+    pub fn enable_interrupt(&mut self, isr: ISCStatus) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wo(INTEN, isr.bits());
     }
 
     fn configure_dma(
@@ -343,8 +430,8 @@ impl Isc {
 
         self.set_dma_desc_phys_addr(dma_desc_phys_addr_1);
         self.dma_configure_register(
-            DmaInputMode::Packed16,
-            DMABurstSize::Single,
+            DmaInputMode::Packed8,
+            DMABurstSize::Beats16,
             DMABurstSize::Single,
         );
         self.dma_enable(dma_control_config);
@@ -382,6 +469,99 @@ impl Isc {
         csr.rmwf(DCFG_IMODE, imode as u32);
         csr.rmwf(DCFG_YMBSIZE, ymbsize as u32);
         csr.rmwf(DCFG_CMBSIZE, cmbsize as u32);
+    }
+
+    fn cfa_enable(&mut self, enable: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CFA_CTRL_ENABLE, enable as u32);
+    }
+
+    fn cfa_configure(&mut self, pattern: BayerPattern, interpolate_edges: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(CFA_CFG_BAYCFG, pattern as u32);
+        csr.rmwf(CFA_CFG_EITPOL, interpolate_edges as u32);
+    }
+
+    fn gamma_enable(&mut self, enable: bool, r: bool, g: bool, b: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        if enable {
+            csr.rmwf(GAM_CTRL_ENABLE, 1);
+            csr.rmwf(GAM_CTRL_RENABLE, r as u32);
+            csr.rmwf(GAM_CTRL_GENABLE, g as u32);
+            csr.rmwf(GAM_CTRL_BENABLE, b as u32);
+        } else {
+            csr.rmwf(GAM_CTRL_ENABLE, 0);
+            csr.rmwf(GAM_CTRL_RENABLE, 0);
+            csr.rmwf(GAM_CTRL_GENABLE, 0);
+            csr.rmwf(GAM_CTRL_BENABLE, 0);
+        }
+    }
+
+    fn wb_enable(&mut self, enable: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(WB_CTRL_ENABLE, enable as u32);
+    }
+
+    fn wb_set_bayer_pattern(&mut self, pattern: BayerPattern) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(WB_CFG_BAYCFG, pattern as u32);
+    }
+
+    fn wb_adjust_color_offset(&mut self, b: u16, gb: u16, r: u16, gr: u16) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(WB_O_BGB_BOFST, b as u32);
+        csr.wfo(WB_O_BGB_GBOFST, gb as u32);
+        csr.wfo(WB_O_RGR_ROFST, r as u32);
+        csr.wfo(WB_O_RGR_GROFST, gr as u32);
+    }
+
+    fn wb_adjust_color_gain(&mut self, b: u16, gb: u16, r: u16, gr: u16) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(WB_G_BGB_BGAIN, b as u32);
+        csr.wfo(WB_G_BGB_GBGAIN, gb as u32);
+        csr.wfo(WB_G_RGR_RGAIN, r as u32);
+        csr.wfo(WB_G_RGR_GRGAIN, gr as u32);
+    }
+
+    fn cbc_enable(&mut self, enable: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CBC_CTRL_ENABLE, enable as u32);
+    }
+
+    fn cbc_configure(&mut self, stream_enable: bool, byte_order: CcirByteOrder, brightness: u16, contrast: u16) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        if stream_enable {
+            csr.rmwf(CBC_CFG_CCIR, 1);
+            csr.rmwf(CBC_CFG_CCIRMODE, byte_order as u32);
+        } else {
+            csr.wfo(CBC_CFG_CCIR, 0);
+        }
+
+        csr.wo(CBC_BRIGHT, brightness as u32);
+        csr.wo(CBC_CONTRAST, contrast as u32);
+    }
+
+    fn cc_enable(&mut self, enable: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CC_CTRL_ENABLE, enable as u32);
+    }
+
+    fn cc_configure(&mut self, config: &ColorCorrectionConfig) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(CC_RR_RG_RRGAIN, config.rr_gain as u32);
+        csr.rmwf(CC_RR_RG_RGGAIN, config.rg_gain as u32);
+        csr.rmwf(CC_RB_OR_RBGAIN, config.rb_gain as u32);
+        csr.rmwf(CC_RB_OR_ROFST, config.r_offset as u32);
+
+        csr.rmwf(CC_GR_GG_GRGAIN, config.gr_gain as u32);
+        csr.rmwf(CC_GR_GG_GGGAIN, config.gg_gain as u32);
+        csr.rmwf(CC_GB_OG_GBGAIN, config.gb_gain as u32);
+        csr.rmwf(CC_GB_OG_ROFST, config.g_offset as u32);
+
+        csr.rmwf(CC_BR_BG_BRGAIN, config.br_gain as u32);
+        csr.rmwf(CC_BR_BG_BGGAIN, config.bg_gain as u32);
+        csr.rmwf(CC_BB_OB_BBGAIN, config.bb_gain as u32);
+        csr.rmwf(CC_BB_OB_BOFST, config.b_offset as u32);
     }
 
     /// Configures Rounding, Limiting and Packing Mode.
@@ -426,6 +606,12 @@ impl Isc {
     fn pfe_set_continuous_mode(&mut self, enable: bool) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.rmwf(PFE_CFG0_CONT, enable as u32);
+    }
+
+    /// Set PFE (Parallel Front End) pixel clock in gated mode
+    fn pfe_set_pclk_gated(&mut self, gated: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(PFE_CFG0_GATED, gated as u32);
     }
 
     fn reset(&mut self) {
