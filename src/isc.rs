@@ -45,6 +45,7 @@ bitflags! {
 
 /// DMA Memory Burst Size
 #[derive(Debug)]
+#[allow(dead_code)]
 enum DMABurstSize {
     /// DMA single access
     Single = 0,
@@ -58,6 +59,7 @@ enum DMABurstSize {
 
 /// DMA Input Mode Selection
 #[derive(Debug)]
+#[allow(dead_code)]
 enum DmaInputMode {
     /// 8 bits, single channel packed
     Packed8 = 0,
@@ -76,6 +78,7 @@ enum DmaInputMode {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 enum RlpMode {
     /// 8-bit data.
     Dat8 = 0,
@@ -115,6 +118,7 @@ enum Polarity {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 enum PfeBps {
     Twelve = 0,
     Eleven = 1,
@@ -124,6 +128,7 @@ enum PfeBps {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 enum PfeVideoMode {
     /// Video source is progressive.
     Progressive = 0,
@@ -163,6 +168,7 @@ pub enum CcirByteOrder {
 
 // Implement above structure in Rust
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ColorCorrectionConfig {
     r_offset: u16,
     g_offset: u16,
@@ -345,31 +351,6 @@ impl Isc {
         // Set pixel clock polarity
         self.pfe_set_pclk_polarity(Polarity::High);
 
-        // Enable Gamma Correction
-        // self.gamma_enable(true, false, false, false);
-
-        // Enable Color Filter Array Interpolation
-        // self.cfa_enable(true);
-        // self.cfa_configure(BayerPattern::BgBg, true);
-
-        // The White Balance (WB) module captures the data bus from the PFE module,
-        // each Bayer color component (R,Gr, B, Gb) can be manually adjusted using
-        // an offset and a gain.
-        // self.wb_enable(true);
-        // self.wb_set_bayer_pattern(BayerPattern::BgBg);
-
-        // Default value for White balance settings
-        // self.wb_adjust_color_offset(0, 0, 0, 0);
-        // self.wb_adjust_color_gain(0x200, 0x200, 0x200, 0x200);
-
-        // Configure contrast & brightness control (CBC)
-        // self.cbc_enable(true);
-        // self.cbc_configure(false, CcirByteOrder::Cby, 0x0, 0x100);
-
-        // Configure color correction
-        // self.cc_enable(true);
-        // self.cc_configure(&ColorCorrectionConfig::default());
-
         // Set color output mode and alpha value
         self.rlp_configure(RlpMode::Dat8, 0xff);
 
@@ -528,7 +509,13 @@ impl Isc {
         csr.wfo(CBC_CTRL_ENABLE, enable as u32);
     }
 
-    fn cbc_configure(&mut self, stream_enable: bool, byte_order: CcirByteOrder, brightness: u16, contrast: u16) {
+    fn cbc_configure(
+        &mut self,
+        stream_enable: bool,
+        byte_order: CcirByteOrder,
+        brightness: u16,
+        contrast: u16,
+    ) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         if stream_enable {
             csr.rmwf(CBC_CFG_CCIR, 1);

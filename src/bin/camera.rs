@@ -1,20 +1,16 @@
 #![no_std]
 #![no_main]
 
-use core::sync::atomic::{AtomicU32, AtomicU64};
-use embedded_hal::digital::v2::InputPin;
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
         display::FramebufDisplay,
-        isc::{DmaControlConfig, DmaDescriptorView, DmaView, Isc, ClkSel},
-        l2cc::{Counter, EventCounterKind, L2cc},
+        isc::{ClkSel, DmaControlConfig, DmaView, ISCStatus, Isc},
         lcdc::{ColorMode, LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
         lcdspi::LcdSpi,
-        pio::{Direction, Event, Func, Pio, PioB, PioC, PioPort},
+        pio::{Direction, Func, Pio, PioB, PioC, PioPort},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
-        sfr::Sfr,
         spi::{ChipSelect, Spi},
         tc::Tc,
         twi::Twi,
@@ -27,20 +23,12 @@ use {
         sync::atomic::{
             compiler_fence,
             AtomicBool,
+            AtomicU32,
             Ordering::{Relaxed, SeqCst},
         },
     },
-    embedded_graphics::{
-        mono_font::{ascii::FONT_9X18, MonoTextStyle},
-        pixelcolor::Rgb888,
-        prelude::*,
-        primitives::{Circle, Line, PrimitiveStyleBuilder, Rectangle, StyledDrawable},
-        text::Text,
-    },
-    embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs,
     ovm7690_rs::Ovm7690,
 };
-use atsama5d27::isc::ISCStatus;
 
 const WIDTH: usize = 480;
 const HEIGHT: usize = 800;
@@ -76,7 +64,7 @@ static mut DMA_DESC_CAM_TWO: LcdDmaDesc = LcdDmaDesc {
 
 const CAM_LAYER: LcdcLayerId = LcdcLayerId::Ovr1;
 
-const ISC_MASTER_CLK_DIV: u8 = 8;
+const ISC_MASTER_CLK_DIV: u8 = 13; // This gives around 30 fps
 const ISC_MASTER_CLK_SEL: ClkSel = ClkSel::Hclock;
 const ISC_ISP_CLK_DIV: u8 = 2;
 const ISC_ISP_CLK_SEL: ClkSel = ClkSel::Hclock;
@@ -90,18 +78,15 @@ type UartType = Uart<Uart1>;
 const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 const TC_PERIPH_ID: PeripheralId = PeripheralId::Tc0;
 
-static HAD_TC0_IRQ: AtomicBool = AtomicBool::new(false);
-
 // MCK: 164MHz
 // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
 const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
 
 static mut TWI0: Option<Twi> = None;
-static mut ISC: Option<Isc> = None;
 
 static mut DISPLAY: Option<FramebufDisplay> = None;
 
-static NUM_FRAMES: AtomicU64 = AtomicU64::new(0);
+static NUM_FRAMES: AtomicU32 = AtomicU32::new(0);
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -116,9 +101,6 @@ fn _entry() -> ! {
         r0::zero_bss(&mut _sbss, &mut _ebss);
     }
 
-    NUM_ROWS.store(0, Relaxed);
-    NUM_COLS.store(0, Relaxed);
-
     atsama5d27::l1cache::disable_dcache();
 
     let mut pmc = Pmc::new();
@@ -132,7 +114,6 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Twi0);
     pmc.enable_peripheral_clock(PeripheralId::Spi0);
     pmc.enable_peripheral_clock(PeripheralId::Isi); // Isi = Isc
-    pmc.enable_system_clock_isc(); // Allows to use MCKx2 clock freq
 
     let mut aic = Aic::new();
     aic.init();
@@ -150,14 +131,6 @@ fn _entry() -> ! {
     aic.set_interrupt_handler(InterruptEntry {
         peripheral_id: TC_PERIPH_ID,
         vector_fn_ptr: tc0_irq_ptr,
-        kind: SourceKind::LevelSensitive,
-        priority: 0,
-    });
-
-    let pio_irq_ptr = pioc_irq_handler as unsafe extern "C" fn() as usize;
-    aic.set_interrupt_handler(InterruptEntry {
-        peripheral_id: PeripheralId::Pioc,
-        vector_fn_ptr: pio_irq_ptr,
         kind: SourceKind::LevelSensitive,
         priority: 0,
     });
@@ -250,9 +223,18 @@ fn _entry() -> ! {
     writeln!(console, "TWI0 status: {:?}", twi0.status()).ok();
 
     let mut isc = Isc::new();
-    isc.init(ISC_MASTER_CLK_DIV, ISC_MASTER_CLK_SEL, ISC_ISP_CLK_DIV, ISC_ISP_CLK_SEL);
+    isc.init(
+        ISC_MASTER_CLK_DIV,
+        ISC_MASTER_CLK_SEL,
+        ISC_ISP_CLK_DIV,
+        ISC_ISP_CLK_SEL,
+    );
 
+    #[cfg(feature = "camera-prod")]
     let mut cam_pwdn = Pio::pb0();
+    #[cfg(feature = "camera-dev")]
+    let mut cam_pwdn = Pio::pa30();
+
     cam_pwdn.set_func(Func::Gpio);
     cam_pwdn.set_direction(Direction::Output);
     cam_pwdn.set(true);
@@ -263,16 +245,19 @@ fn _entry() -> ! {
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 10); // Wait OVM7690 T2 power-up sequence timing
 
     let mut camera = Ovm7690::new(unsafe { twi0.clone() });
+    while let Err(e) = camera.verify_chip_id() {
+        writeln!(console, "failed to verify OVM7690 chip ID: {:?}", e).ok();
+        writeln!(console, "TWI0 status: {:?}", twi0.status()).ok();
+        pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
+    }
+
     assert!(
         camera.verify_chip_id().expect("verify chip ID"),
         "failed to verify OVM7690 chip ID"
     );
     camera.sw_reset().expect("software reset OVM7690");
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 500);
-    camera.enable().expect("enable");
-    writeln!(console, "0x12: {:02x?}", camera.read_reg(ovm7690_rs::Register::REG12)).ok();
     camera.init().expect("init OVM7690");
-    writeln!(console, "0x12: {:02x?}", camera.read_reg(ovm7690_rs::Register::REG12)).ok();
 
     let isc_dma_view_one = (unsafe { &mut ISC_DMA_VIEW_ONE } as *const _) as u32;
     let isc_dma_view_two = (unsafe { &mut ISC_DMA_VIEW_TWO } as *const _) as u32;
@@ -294,7 +279,7 @@ fn _entry() -> ! {
     .ok();
     writeln!(console, "Configuring DMA fb: {:08x}", fb_cam_one).ok();
 
-    // isc.enable_interrupt(ISCStatus::HD | ISCStatus::VD | ISCStatus::DDONE);
+    isc.enable_interrupt(ISCStatus::DDONE);
     isc.configure(
         isc_dma_view_one,
         isc_dma_view_one,
@@ -306,50 +291,22 @@ fn _entry() -> ! {
     writeln!(console, "Status: {:?}", isc.interrupt_status()).ok();
     isc.start_capture();
 
+    NUM_FRAMES.store(0, Relaxed);
+
+    let mut tc0 = Tc::new();
+    tc0.init();
+    tc0.set_interrupt(true);
+    let delay_ms = 1000;
+    let ticks_per_ms = MASTER_CLOCK_SPEED / 2 / 128 / 1000;
+    tc0.set_period(delay_ms * ticks_per_ms);
+    tc0.start();
+
     unsafe { TWI0 = Some(twi0.clone()) };
 
     loop {
-        writeln!(console, "Status: {:?}", isc.interrupt_status()).ok();
+        // writeln!(console, "Status: {:?}", isc.interrupt_status()).ok();
         armv7::asm::wfi();
     }
-}
-
-static NUM_CLOCKS: AtomicU64 = AtomicU64::new(0);
-static MCLK_WAS_HIGH: AtomicBool = AtomicBool::new(false);
-
-#[no_mangle]
-unsafe extern "C" fn pioc_irq_handler() {
-    let status = PioC::get_interrupt_status(None);
-
-    // let vsync = Pio::pc22();
-    // if status >> 22 & 1 == 1 && !vsync.get() {
-    //     writeln!(UartType::new(), "vsync: {}", vsync.get()).ok();
-        // NUM_FRAMES.store(NUM_FRAMES.load(Relaxed) + 1, Relaxed);
-        // NUM_ROWS.store(0, Relaxed);
-        // NUM_COLS.store(0, Relaxed);
-    // }
-
-    let pclk = Pio::pc21();
-    let hsync = Pio::pc23();
-
-    // if status >> 23 & 1 == 1 && hsync.get() && !vsync.get() {
-    //     NUM_ROWS.store(NUM_ROWS.load(Relaxed) + 1, Relaxed);
-    // }
-
-    if status >> 21 & 1 == 1 && pclk.get() {
-        NUM_COLS.store(NUM_COLS.load(Relaxed) + 1, Relaxed);
-    }
-    // if status >> 24 & 1 == 1 {
-    //     let mclk = Pio::pc24();
-    //     if mclk.get() {
-    //         MCLK_WAS_HIGH.store(true, Relaxed);
-    //     }
-    //
-    //     if MCLK_WAS_HIGH.load(Relaxed) && !mclk.get() {
-    //         NUM_CLOCKS.store(NUM_CLOCKS.load(Relaxed) + 1, Relaxed);
-    //         MCLK_WAS_HIGH.store(false, Relaxed);
-    //     }
-    // }
 }
 
 #[no_mangle]
@@ -361,8 +318,7 @@ unsafe extern "C" fn aic_spurious_handler() {
 unsafe extern "C" fn uart_irq_handler() {
     let mut uart = UartType::new();
     let char = uart.getc() as char;
-    writeln!(uart, "Received character: {}, clocks: {}", char, NUM_CLOCKS.load(Relaxed)).ok();
-    NUM_CLOCKS.store(0, Relaxed);
+    writeln!(uart, "Received character: {}", char).ok();
 }
 
 #[no_mangle]
@@ -371,30 +327,18 @@ unsafe extern "C" fn tc0_irq_handler() {
 
     let status = tc0.status();
     if status != 0 {
-        NUM_CLOCKS.store(NUM_CLOCKS.load(Relaxed) + 1, Relaxed);
+        writeln!(UartType::new(), "num frames: {}", NUM_FRAMES.load(Relaxed)).ok();
+        NUM_FRAMES.store(0, Relaxed);
     }
 }
-
-static NUM_ROWS: AtomicU64 = AtomicU64::new(0);
-static NUM_COLS: AtomicU64 = AtomicU64::new(0);
 
 #[no_mangle]
 unsafe extern "C" fn isc_irq_handler() {
     let mut isc = Isc::new();
 
     let status = isc.interrupt_status();
-    if status.contains(ISCStatus::HD) {
-        let rows = NUM_ROWS.load(Relaxed);
-        NUM_ROWS.store(rows + 1, Relaxed);
-    }
-    if status.contains(ISCStatus::VD) {
-        let cols = NUM_COLS.load(Relaxed);
-        NUM_COLS.store(cols + 1, Relaxed);
-    }
     if status.contains(ISCStatus::DDONE) {
-        writeln!(UartType::new(), "Done with {}x{}, {:?}", NUM_COLS.load(Relaxed), NUM_ROWS.load(Relaxed), status).ok();
-        NUM_COLS.store(0, Relaxed);
-        NUM_ROWS.store(0, Relaxed);
+        NUM_FRAMES.store(NUM_FRAMES.load(Relaxed) + 1, Relaxed);
     }
 }
 
@@ -414,32 +358,6 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 fn configure_isc_pins() {
-    /*
-    Pio::pc13().set_func(Func::Gpio);
-    Pio::pc13().set_direction(Direction::Input);
-    Pio::pc14().set_func(Func::Gpio);
-    Pio::pc14().set_direction(Direction::Input);
-    Pio::pc15().set_func(Func::Gpio);
-    Pio::pc15().set_direction(Direction::Input);
-    Pio::pc16().set_func(Func::Gpio);
-    Pio::pc16().set_direction(Direction::Input);
-    Pio::pc17().set_func(Func::Gpio);
-    Pio::pc17().set_direction(Direction::Input);
-    Pio::pc18().set_func(Func::Gpio);
-    Pio::pc18().set_direction(Direction::Input);
-    Pio::pc19().set_func(Func::Gpio);
-    Pio::pc19().set_direction(Direction::Input);
-    Pio::pc20().set_func(Func::Gpio);
-    Pio::pc20().set_direction(Direction::Input);
-    Pio::pc21().set_func(Func::Gpio);
-    Pio::pc21().set_direction(Direction::Input);
-    Pio::pc22().set_func(Func::Gpio);
-    Pio::pc22().set_direction(Direction::Input);
-    Pio::pc23().set_func(Func::Gpio);
-    Pio::pc23().set_direction(Direction::Input);
-
-    Pio::pc24().set_func(Func::C);*/
-
     // Assign from PC13 to PC24 to func C which is ISC
     PioC::configure_pins_by_mask(None, 0x1ffe000, Func::C, None);
 }

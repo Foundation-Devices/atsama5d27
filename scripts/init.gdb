@@ -12,3 +12,7 @@ target remote :3334
 
 load
 c
+
+define dc
+    dump binary memory ~/Downloads/cam.bin $arg0 ($arg0 + 640 * 480 * 4)
+end
