@@ -269,9 +269,7 @@ impl Sdmmc {
     }
 
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
-        Self {
-            base_addr
-        }
+        Self { base_addr }
     }
 
     pub fn status(&self) -> SdmmcStatus {
@@ -489,8 +487,9 @@ impl Sdmmc {
 
             // if timeout - 1 == 0 {
             //     use core::fmt::Write;
-            //     core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "about to timeout, status: {:?} | expected {:?}", status, ns).ok();
-            //     core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "state: {:?}", self.status()).ok();
+            //     core::writeln!(crate::uart::Uart::<crate::uart::Uart1>::new(), "about to timeout,
+            // status: {:?} | expected {:?}", status, ns).ok();     core::writeln!
+            // (crate::uart::Uart::<crate::uart::Uart1>::new(), "state: {:?}", self.status()).ok();
             // }
 
             timeout -= 1;

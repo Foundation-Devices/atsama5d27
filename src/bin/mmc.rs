@@ -145,7 +145,11 @@ fn _entry() -> ! {
     };
     let block_number = 0;
     let cmd = SDCommand::new(
-        SDCmd::Sd(if NUM_BLOCKS == 1 { SDCmdInner::ReadSingleBlock } else { SDCmdInner::ReadMultipleBlocks }),
+        SDCmd::Sd(if NUM_BLOCKS == 1 {
+            SDCmdInner::ReadSingleBlock
+        } else {
+            SDCmdInner::ReadMultipleBlocks
+        }),
         SDRespType::R1,
         block_number,
     );

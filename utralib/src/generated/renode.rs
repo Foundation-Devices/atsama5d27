@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-use core::convert::TryInto;
-use core::sync::atomic::AtomicPtr;
+use core::{convert::TryInto, sync::atomic::AtomicPtr};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Register {
@@ -134,8 +133,8 @@ where
                 .write_volatile(value_as_usize)
         };
         // Ensure the compiler doesn't re-order the write.
-        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered before
-        // *reads*, but this method only *writes* to the locations.
+        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered
+        // before *reads*, but this method only *writes* to the locations.
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
     }
     /// Write the entire contents of a register without reading it first
@@ -144,8 +143,8 @@ where
         let value_as_usize: usize = value.try_into().unwrap_or_default();
         unsafe { usize_base.add(reg.offset).write_volatile(value_as_usize) };
         // Ensure the compiler doesn't re-order the write.
-        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered before
-        // *reads*, but this method only *writes* to the locations.
+        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered
+        // before *reads*, but this method only *writes* to the locations.
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
     }
     /// Zero a field from a provided value
@@ -177,12 +176,12 @@ where
             base: AtomicPtr::new(base),
         }
     }
-    /// In reality, we should wrap this in an `Arc` so we can be truly safe across a multi-core
-    /// implementation, but for our single-core system this is fine. The reason we don't do it
-    /// immediately is that UTRA also needs to work in a `no_std` environment, where `Arc`
-    /// does not exist, and so additional config flags would need to be introduced to not break
-    /// that compability issue. If migrating to multicore, this technical debt would have to be
-    /// addressed.
+    /// In reality, we should wrap this in an `Arc` so we can be truly safe across a
+    /// multi-core implementation, but for our single-core system this is fine. The
+    /// reason we don't do it immediately is that UTRA also needs to work in a
+    /// `no_std` environment, where `Arc` does not exist, and so additional config
+    /// flags would need to be introduced to not break that compability issue. If
+    /// migrating to multicore, this technical debt would have to be addressed.
     pub fn clone(&self) -> Self {
         AtomicCsr {
             base: AtomicPtr::new(self.base.load(core::sync::atomic::Ordering::SeqCst)),
@@ -238,8 +237,8 @@ where
                 .write_volatile(value_as_usize)
         };
         // Ensure the compiler doesn't re-order the write.
-        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered before
-        // *reads*, but this method only *writes* to the locations.
+        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered
+        // before *reads*, but this method only *writes* to the locations.
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
     }
     /// Write the entire contents of a register without reading it first
@@ -249,8 +248,8 @@ where
         let value_as_usize: usize = value.try_into().unwrap_or_default();
         unsafe { usize_base.add(reg.offset).write_volatile(value_as_usize) };
         // Ensure the compiler doesn't re-order the write.
-        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered before
-        // *reads*, but this method only *writes* to the locations.
+        // We use `SeqCst`, because `Acquire` only prevents later accesses from being reordered
+        // before *reads*, but this method only *writes* to the locations.
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
     }
     /// Zero a field from a provided value
