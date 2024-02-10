@@ -283,6 +283,7 @@ dependencies = [
 [[package]]
 name = "ovm7690-rs"
 version = "0.1.0"
+source = "git+https://github.com/Foundation-Devices/ovm7690-rs.git#5c2727aa51c7169fcf0376679885ddd1666222eb"
 dependencies = [
  "embedded-hal",
 ]
