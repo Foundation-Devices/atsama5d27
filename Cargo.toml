@@ -48,6 +48,8 @@ lcd-console = ["embedded-graphics"]
 fitment = ["hal", "ft3269", "drv2605", "is31fl32xx"]
 camera = ["hal", "ovm7690-rs"]
 mmc = ["embedded-sdmmc"]
+camera-dev = []
+camera-prod = []
 
 default = ["lcd-console", "hal"]
 
