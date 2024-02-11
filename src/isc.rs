@@ -327,7 +327,8 @@ impl Isc {
         dma_desc_phys_addr_1: u32,
         dma_desc_addr_2: u32,
         dma_desc_phys_addr_2: u32,
-        fb_phys_addr: u32,
+        fb_1_phys_addr: u32,
+        fb_2_phys_addr: u32,
         dma_control_config: &DmaControlConfig,
     ) {
         self.reset();
@@ -360,7 +361,8 @@ impl Isc {
             dma_desc_phys_addr_1,
             dma_desc_addr_2,
             dma_desc_phys_addr_2,
-            fb_phys_addr,
+            fb_1_phys_addr,
+            fb_2_phys_addr,
             dma_control_config,
         );
 
@@ -390,14 +392,15 @@ impl Isc {
         dma_desc_phys_addr_1: u32,
         dma_desc_addr_2: u32,
         dma_desc_phys_addr_2: u32,
-        fb_phys_addr: u32,
+        fb_1_phys_addr: u32,
+        fb_2_phys_addr: u32,
         dma_control_config: &DmaControlConfig,
     ) {
         let dma_desc_1 = dma_desc_addr_1 as *mut DmaView;
         unsafe {
             (*dma_desc_1).ctrl = 0b01; // Mode = packed (0), descriptor enable = 1
             (*dma_desc_1).next_desc = dma_desc_phys_addr_2; // Loop the descriptor linked list
-            (*dma_desc_1).addr = fb_phys_addr;
+            (*dma_desc_1).addr = fb_1_phys_addr;
             (*dma_desc_1).stride = 0;
         }
 
@@ -405,7 +408,7 @@ impl Isc {
         unsafe {
             (*dma_desc_2).ctrl = 0b01; // Mode = packed (0), descriptor enable = 1
             (*dma_desc_2).next_desc = dma_desc_phys_addr_1; // Loop the descriptor linked list
-            (*dma_desc_2).addr = fb_phys_addr;
+            (*dma_desc_2).addr = fb_2_phys_addr;
             (*dma_desc_2).stride = 0;
         }
 

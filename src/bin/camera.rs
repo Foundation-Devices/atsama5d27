@@ -286,6 +286,7 @@ fn _entry() -> ! {
         isc_dma_view_two,
         isc_dma_view_two,
         fb_cam_one as u32,
+        fb_cam_one as u32, // TODO: change to the second buffer when double buffering is on
         &dma_control_config,
     );
     writeln!(console, "Status: {:?}", isc.interrupt_status()).ok();
