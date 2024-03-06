@@ -37,6 +37,7 @@ drv2605 = { version = "0.1.0", optional = true }
 is31fl32xx = { version = "0.1.0", optional = true }
 ovm7690-rs = { git = "https://github.com/Foundation-Devices/ovm7690-rs.git", optional = true }
 embedded-sdmmc = { version = "0.6.0", default-features = false, optional = true }
+usb-device = "0.3.1"
 
 [build-dependencies]
 png-decoder = "0.1.1"

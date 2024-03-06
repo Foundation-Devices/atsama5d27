@@ -28,3 +28,4 @@ pub mod tc;
 pub mod trng;
 pub mod twi;
 pub mod uart;
+pub mod usb_bus;

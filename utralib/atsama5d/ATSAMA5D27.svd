@@ -72376,6 +72376,1410 @@
             </field>
           </fields>
         </register>
+        <register>
+          <name>EPTCFG0</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0100</addressOffset>
+          <size>0x20</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EPT_SIZE</name>
+              <description>Endpoint Size</description>
+              <bitRange>[2:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_DIR</name>
+              <description>Endpoint Direction</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_TYPE</name>
+              <description>Endpoint Type</description>
+              <bitRange>[5:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BK_NUMBER</name>
+              <description>Number of Banks</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>NB_TRANS</name>
+              <description>Number Of Transactions per Microframe</description>
+              <bitRange>[9:8]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_MAPD</name>
+              <description>Endpoint Mapped</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCFG1</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0120</addressOffset>
+          <size>0x20</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EPT_SIZE</name>
+              <description>Endpoint Size</description>
+              <bitRange>[2:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_DIR</name>
+              <description>Endpoint Direction</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_TYPE</name>
+              <description>Endpoint Type</description>
+              <bitRange>[5:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BK_NUMBER</name>
+              <description>Number of Banks</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>NB_TRANS</name>
+              <description>Number Of Transactions per Microframe</description>
+              <bitRange>[9:8]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_MAPD</name>
+              <description>Endpoint Mapped</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCFG2</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0140</addressOffset>
+          <size>0x20</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EPT_SIZE</name>
+              <description>Endpoint Size</description>
+              <bitRange>[2:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_DIR</name>
+              <description>Endpoint Direction</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_TYPE</name>
+              <description>Endpoint Type</description>
+              <bitRange>[5:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BK_NUMBER</name>
+              <description>Number of Banks</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>NB_TRANS</name>
+              <description>Number Of Transactions per Microframe</description>
+              <bitRange>[9:8]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_MAPD</name>
+              <description>Endpoint Mapped</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCFG3</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0160</addressOffset>
+          <size>0x20</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EPT_SIZE</name>
+              <description>Endpoint Size</description>
+              <bitRange>[2:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_DIR</name>
+              <description>Endpoint Direction</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_TYPE</name>
+              <description>Endpoint Type</description>
+              <bitRange>[5:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BK_NUMBER</name>
+              <description>Number of Banks</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>NB_TRANS</name>
+              <description>Number Of Transactions per Microframe</description>
+              <bitRange>[9:8]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>EPT_MAPD</name>
+              <description>Endpoint Mapped</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTL0</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x010C</addressOffset>
+          <size>0x20</size>
+          <access>read</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTL1</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x012C</addressOffset>
+          <size>0x20</size>
+          <access>read</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTL2</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x014C</addressOffset>
+          <size>0x20</size>
+          <access>read</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTL3</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x016C</addressOffset>
+          <size>0x20</size>
+          <access>read</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>read</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTLEN0</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0104</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTLEN1</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0124</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTLEN2</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0144</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTCTLEN3</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0164</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>EPT_ENABL</name>
+              <description>Endpoint Enable</description>
+              <bitRange>[0:0]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>AUTO_VALID</name>
+              <description>Packet Auto-Valid Enabled</description>
+              <bitRange>[1:1]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>INTDIS_DMA</name>
+              <description>Interrupt Disables DMA</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NYET_DIS</name>
+              <description>NYET Disable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error Interrupt Enabled</description>
+              <bitRange>[8:8]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data Interrupt Enabled</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete Interrupt Enabled</description>
+              <bitRange>[10:10]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Interrupt Enabled</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP Interrupt Enabled</description>
+              <bitRange>[12:12]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent Interrupt Enabled</description>
+              <bitRange>[13:13]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAKIN Interrupt Enabled</description>
+              <bitRange>[14:14]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAKOUT Interrupt Enabled</description>
+              <bitRange>[15:15]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK</name>
+              <description>Busy Bank Interrupt Enabled</description>
+              <bitRange>[18:18]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet Interrupt Enabled</description>
+              <bitRange>[31:31]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSETSTA0</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0114</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request Set</description>
+              <bitRange>[5:5]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>KILL Bank Set</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Set</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSETSTA1</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0134</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request Set</description>
+              <bitRange>[5:5]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>KILL Bank Set</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Set</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSETSTA2</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0154</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request Set</description>
+              <bitRange>[5:5]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>KILL Bank Set</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Set</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSETSTA3</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x0174</addressOffset>
+          <size>0x20</size>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request Set</description>
+              <bitRange>[5:5]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>KILL Bank Set</description>
+              <bitRange>[9:9]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready Set</description>
+              <bitRange>[11:11]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSTA0</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x011C</addressOffset>
+          <size>0x20</size>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TOGGLESQ_STA</name>
+              <description>Toggle Sequencing</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data/KILL Bank</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAK IN</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAK OUT</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>CURBK_CTLDIR</name>
+              <description>Current Bank/Control Direction</description>
+              <bitRange>[17:16]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK_STA</name>
+              <description>Busy Bank Number</description>
+              <bitRange>[19:18]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BYTE_COUNT</name>
+              <description>UDPHS Byte Count</description>
+              <bitRange>[30:20]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSTA1</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x013C</addressOffset>
+          <size>0x20</size>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TOGGLESQ_STA</name>
+              <description>Toggle Sequencing</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data/KILL Bank</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAK IN</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAK OUT</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>CURBK_CTLDIR</name>
+              <description>Current Bank/Control Direction</description>
+              <bitRange>[17:16]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK_STA</name>
+              <description>Busy Bank Number</description>
+              <bitRange>[19:18]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BYTE_COUNT</name>
+              <description>UDPHS Byte Count</description>
+              <bitRange>[30:20]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSTA2</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x015C</addressOffset>
+          <size>0x20</size>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TOGGLESQ_STA</name>
+              <description>Toggle Sequencing</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data/KILL Bank</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAK IN</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAK OUT</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>CURBK_CTLDIR</name>
+              <description>Current Bank/Control Direction</description>
+              <bitRange>[17:16]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK_STA</name>
+              <description>Busy Bank Number</description>
+              <bitRange>[19:18]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BYTE_COUNT</name>
+              <description>UDPHS Byte Count</description>
+              <bitRange>[30:20]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EPTSTA3</name>
+          <description>UDPHS Endpoint Configuration Register</description>
+          <addressOffset>0x017C</addressOffset>
+          <size>0x20</size>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>FRCESTALL</name>
+              <description>Stall Handshake Request</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TOGGLESQ_STA</name>
+              <description>Toggle Sequencing</description>
+              <bitRange>[7:6]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>ERR_OVFLW</name>
+              <description>Overflow Error</description>
+              <bitRange>[8:8]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RXRDY_TXKL</name>
+              <description>Received OUT Data/KILL Bank</description>
+              <bitRange>[9:9]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TX_COMPLT</name>
+              <description>Transmitted IN Data Complete</description>
+              <bitRange>[10:10]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>TXRDY</name>
+              <description>TX Packet Ready</description>
+              <bitRange>[11:11]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RX_SETUP</name>
+              <description>Received SETUP</description>
+              <bitRange>[12:12]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>STALL_SNT</name>
+              <description>Stall Sent</description>
+              <bitRange>[13:13]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_IN</name>
+              <description>NAK IN</description>
+              <bitRange>[14:14]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>NAK_OUT</name>
+              <description>NAK OUT</description>
+              <bitRange>[15:15]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>CURBK_CTLDIR</name>
+              <description>Current Bank/Control Direction</description>
+              <bitRange>[17:16]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BUSY_BANK_STA</name>
+              <description>Busy Bank Number</description>
+              <bitRange>[19:18]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>BYTE_COUNT</name>
+              <description>UDPHS Byte Count</description>
+              <bitRange>[30:20]</bitRange>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>SHRT_PCKT</name>
+              <description>Short Packet</description>
+              <bitRange>[31:31]</bitRange>
+              <access>read-only</access>
+            </field>
+          </fields>
+        </register>
       </registers>
     </peripheral>
     <peripheral>
