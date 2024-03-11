@@ -73780,6 +73780,498 @@
             </field>
           </fields>
         </register>
+        <register>
+          <name>DMAADDRESS0</name>
+          <description>UDPHS DMA Channel Address Register</description>
+          <addressOffset>0x0314</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>BUFF_ADD</name>
+              <description>Buffer Address</description>
+              <bitRange>[31:0]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMAADDRESS1</name>
+          <description>UDPHS DMA Channel Address Register</description>
+          <addressOffset>0x0324</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>BUFF_ADD</name>
+              <description>Buffer Address</description>
+              <bitRange>[31:0]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMAADDRESS2</name>
+          <description>UDPHS DMA Channel Address Register</description>
+          <addressOffset>0x0334</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>BUFF_ADD</name>
+              <description>Buffer Address</description>
+              <bitRange>[31:0]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMAADDRESS3</name>
+          <description>UDPHS DMA Channel Address Register</description>
+          <addressOffset>0x0344</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>BUFF_ADD</name>
+              <description>Buffer Address</description>
+              <bitRange>[31:0]</bitRange>
+              <access>read-write</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMACONTROL0</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x0318</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Command</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>LDNXT_DSC</name>
+              <description>Load Next Channel Transfer Descriptor Enable (Command)</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_EN</name>
+              <description>End of Transfer Enable (Control)</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_B_EN</name>
+              <description>End of Buffer Enable (Control)</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_IT</name>
+              <description>End of Transfer Interrupt Enable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BUFFIT</name>
+              <description>End of Buffer Interrupt Enable</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LD_IT</name>
+              <description>Descriptor Loaded Interrupt Enable</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BURST_LCK</name>
+              <description>Burst Lock Enable</description>
+              <bitRange>[7:7]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_LENGTH</name>
+              <description>Buffer Byte Length (Write-only)</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMACONTROL1</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x0328</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Command</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>LDNXT_DSC</name>
+              <description>Load Next Channel Transfer Descriptor Enable (Command)</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_EN</name>
+              <description>End of Transfer Enable (Control)</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_B_EN</name>
+              <description>End of Buffer Enable (Control)</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_IT</name>
+              <description>End of Transfer Interrupt Enable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BUFFIT</name>
+              <description>End of Buffer Interrupt Enable</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LD_IT</name>
+              <description>Descriptor Loaded Interrupt Enable</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BURST_LCK</name>
+              <description>Burst Lock Enable</description>
+              <bitRange>[7:7]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_LENGTH</name>
+              <description>Buffer Byte Length (Write-only)</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMACONTROL2</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x0338</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Command</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>LDNXT_DSC</name>
+              <description>Load Next Channel Transfer Descriptor Enable (Command)</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_EN</name>
+              <description>End of Transfer Enable (Control)</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_B_EN</name>
+              <description>End of Buffer Enable (Control)</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_IT</name>
+              <description>End of Transfer Interrupt Enable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BUFFIT</name>
+              <description>End of Buffer Interrupt Enable</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LD_IT</name>
+              <description>Descriptor Loaded Interrupt Enable</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BURST_LCK</name>
+              <description>Burst Lock Enable</description>
+              <bitRange>[7:7]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_LENGTH</name>
+              <description>Buffer Byte Length (Write-only)</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMACONTROL3</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x0348</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Command</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>LDNXT_DSC</name>
+              <description>Load Next Channel Transfer Descriptor Enable (Command)</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_EN</name>
+              <description>End of Transfer Enable (Control)</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_B_EN</name>
+              <description>End of Buffer Enable (Control)</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_IT</name>
+              <description>End of Transfer Interrupt Enable</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BUFFIT</name>
+              <description>End of Buffer Interrupt Enable</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LD_IT</name>
+              <description>Descriptor Loaded Interrupt Enable</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BURST_LCK</name>
+              <description>Burst Lock Enable</description>
+              <bitRange>[7:7]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_LENGTH</name>
+              <description>Buffer Byte Length (Write-only)</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMASTATUS0</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x031C</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Status</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>CHANN_ACT</name>
+              <description>Channel Active Status</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_ST</name>
+              <description>End of Channel Transfer Status</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BF_ST</name>
+              <description>End of Channel Buffer Status</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LDST</name>
+              <description>Descriptor Loaded Status</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_COUNT</name>
+              <description>Buffer Byte Count</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMASTATUS1</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x032C</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Status</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>CHANN_ACT</name>
+              <description>Channel Active Status</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_ST</name>
+              <description>End of Channel Transfer Status</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BF_ST</name>
+              <description>End of Channel Buffer Status</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LDST</name>
+              <description>Descriptor Loaded Status</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_COUNT</name>
+              <description>Buffer Byte Count</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMASTATUS2</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x033C</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Status</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>CHANN_ACT</name>
+              <description>Channel Active Status</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_ST</name>
+              <description>End of Channel Transfer Status</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BF_ST</name>
+              <description>End of Channel Buffer Status</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LDST</name>
+              <description>Descriptor Loaded Status</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_COUNT</name>
+              <description>Buffer Byte Count</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DMASTATUS3</name>
+          <description>UDPHS DMA Channel Control Register</description>
+          <addressOffset>0x034C</addressOffset>
+          <size>0x10</size>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CHANN_ENB</name>
+              <description>Channel Enable Status</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>CHANN_ACT</name>
+              <description>Channel Active Status</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_TR_ST</name>
+              <description>End of Channel Transfer Status</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>END_BF_ST</name>
+              <description>End of Channel Buffer Status</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>DESC_LDST</name>
+              <description>Descriptor Loaded Status</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>BUFF_COUNT</name>
+              <description>Buffer Byte Count</description>
+              <bitRange>[31:16]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
       </registers>
     </peripheral>
     <peripheral>

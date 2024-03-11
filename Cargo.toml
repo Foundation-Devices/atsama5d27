@@ -17,6 +17,9 @@ required-features = ["fitment"]
 name = "se"
 
 [[bin]]
+name = "usb"
+
+[[bin]]
 name = "camera"
 required-features = ["camera"]
 
@@ -38,6 +41,7 @@ is31fl32xx = { version = "0.1.0", optional = true }
 ovm7690-rs = { git = "https://github.com/Foundation-Devices/ovm7690-rs.git", optional = true }
 embedded-sdmmc = { version = "0.6.0", default-features = false, optional = true }
 usb-device = "0.3.1"
+usbd-storage = { version = "0.2.0", features = ["bbb", "scsi"] }
 
 [build-dependencies]
 png-decoder = "0.1.1"

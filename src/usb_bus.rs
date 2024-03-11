@@ -1,8 +1,17 @@
-use {usb_device::bus::UsbBus, utralib::CSR};
+use {
+    crate::uart::{Uart, Uart1},
+    core::fmt::Write,
+    usb_device::bus::UsbBus,
+    utralib::CSR,
+};
 
-struct Bus;
+type Console = Uart<Uart1>;
+
+#[derive(Debug)]
+pub struct Bus;
 
 // TODO I might actually end up needing to support all 16 endpoints
+// TODO For better performance, consider setting BURST_LCK to 1
 
 impl UsbBus for Bus {
     fn alloc_ep(
@@ -11,8 +20,22 @@ impl UsbBus for Bus {
         ep_addr: Option<usb_device::endpoint::EndpointAddress>,
         ep_type: usb_device::endpoint::EndpointType,
         max_packet_size: u16,
-        interval: u8,
+        _interval: u8,
     ) -> usb_device::Result<usb_device::endpoint::EndpointAddress> {
+        // TODO Endpoints must be configured in order (from 0 to 3) - this is why MAPD is not
+        // being set
+        // TODO Idea: store them here and then apply them all in enable()
+
+        writeln!(
+            Console::new(),
+            "alloc_ep {:?} {:?} {:?} {:?}",
+            ep_dir,
+            ep_addr,
+            ep_type,
+            max_packet_size
+        )
+        .unwrap();
+
         if matches!(
             ep_type,
             usb_device::endpoint::EndpointType::Isochronous { .. }
@@ -34,9 +57,7 @@ impl UsbBus for Bus {
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
 
         let ep_index = ep_addr.map(|addr| addr.index()).unwrap_or_else(|| {
-            if udphs.rf(utralib::utra::udphs::EPTCTL0_EPT_ENABL) == 0 {
-                0
-            } else if udphs.rf(utralib::utra::udphs::EPTCTL1_EPT_ENABL) == 0 {
+            if udphs.rf(utralib::utra::udphs::EPTCTL1_EPT_ENABL) == 0 {
                 1
             } else if udphs.rf(utralib::utra::udphs::EPTCTL2_EPT_ENABL) == 0 {
                 2
@@ -46,6 +67,8 @@ impl UsbBus for Bus {
                 panic!("No free endpoint available for {ep_type:?} {ep_dir:?} {max_packet_size}")
             }
         });
+
+        writeln!(Console::new(), "ep_index {}", ep_index).ok();
 
         let (
             f_ept_size,
@@ -58,6 +81,7 @@ impl UsbBus for Bus {
             f_en_tx_complt,
             f_en_rxrdy_txkl,
             f_en_rx_setup,
+            f_auto_valid,
         ) = match ep_index {
             0 => (
                 utralib::utra::udphs::EPTCFG0_EPT_SIZE,
@@ -70,6 +94,7 @@ impl UsbBus for Bus {
                 utralib::utra::udphs::EPTCTLEN0_TX_COMPLT,
                 utralib::utra::udphs::EPTCTLEN0_RXRDY_TXKL,
                 utralib::utra::udphs::EPTCTLEN0_RX_SETUP,
+                utralib::utra::udphs::EPTCTL0_AUTO_VALID,
             ),
             1 => (
                 utralib::utra::udphs::EPTCFG1_EPT_SIZE,
@@ -82,6 +107,7 @@ impl UsbBus for Bus {
                 utralib::utra::udphs::EPTCTLEN1_TX_COMPLT,
                 utralib::utra::udphs::EPTCTLEN1_RXRDY_TXKL,
                 utralib::utra::udphs::EPTCTLEN1_RX_SETUP,
+                utralib::utra::udphs::EPTCTL1_AUTO_VALID,
             ),
             2 => (
                 utralib::utra::udphs::EPTCFG2_EPT_SIZE,
@@ -94,6 +120,7 @@ impl UsbBus for Bus {
                 utralib::utra::udphs::EPTCTLEN2_TX_COMPLT,
                 utralib::utra::udphs::EPTCTLEN2_RXRDY_TXKL,
                 utralib::utra::udphs::EPTCTLEN2_RX_SETUP,
+                utralib::utra::udphs::EPTCTL2_AUTO_VALID,
             ),
             3 => (
                 utralib::utra::udphs::EPTCFG3_EPT_SIZE,
@@ -106,9 +133,12 @@ impl UsbBus for Bus {
                 utralib::utra::udphs::EPTCTLEN3_TX_COMPLT,
                 utralib::utra::udphs::EPTCTLEN3_RXRDY_TXKL,
                 utralib::utra::udphs::EPTCTLEN3_RX_SETUP,
+                utralib::utra::udphs::EPTCTL3_AUTO_VALID,
             ),
             _ => panic!("invalid endpoint index {ep_index}"),
         };
+
+        writeln!(Console::new(), "ept_size {}", ept_size).ok();
 
         udphs.wfo(f_ept_size, ept_size);
         udphs.wfo(
@@ -128,9 +158,6 @@ impl UsbBus for Bus {
             },
         );
         udphs.wfo(f_ept_bk_number, 2);
-        if udphs.rf(f_ept_mapd) != 1 {
-            panic!("mapd not set, configuration uses too much memory");
-        }
 
         udphs.wfo(f_ien, 1);
         udphs.wfo(f_en_rx_setup, 1);
@@ -138,13 +165,20 @@ impl UsbBus for Bus {
             usb_device::UsbDirection::Out => {
                 udphs.wfo(f_en_rxrdy_txkl, 1);
                 udphs.wfo(f_en_tx_complt, 0);
+                udphs.wfo(f_auto_valid, 1);
             }
             usb_device::UsbDirection::In => {
                 udphs.wfo(f_en_rxrdy_txkl, 0);
                 udphs.wfo(f_en_tx_complt, 1);
+                udphs.wfo(f_auto_valid, 0);
             }
         }
         udphs.wfo(f_en_ept_enabl, 1);
+
+        writeln!(Console::new(), "ept_mapd {}", udphs.rf(f_ept_mapd)).ok();
+        if udphs.rf(f_ept_mapd) != 1 {
+            panic!("mapd not set, configuration uses too much memory");
+        }
 
         Ok(usb_device::endpoint::EndpointAddress::from_parts(
             ep_index, ep_dir,
@@ -152,14 +186,17 @@ impl UsbBus for Bus {
     }
 
     fn enable(&mut self) {
+        writeln!(Console::new(), "enable").ok();
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         udphs.wfo(utralib::utra::udphs::CTRL_EN_UDPHS, 1);
     }
 
     fn reset(&self) {
-        // TODO Is it OK to do nothing here? The other code enables interrupts, but I can
-        // do that in alloc_ep
-        // Also my poll never returns PollResult::Reset... so may be fine
+        writeln!(Console::new(), "reset").ok();
+        // TODO Problem: I never disable endpoints
+        // Should I do that here?
+        // Not sure
+        // Check if the other code does it anywhere
     }
 
     fn set_device_address(&self, addr: u8) {
@@ -172,16 +209,118 @@ impl UsbBus for Bus {
         ep_addr: usb_device::endpoint::EndpointAddress,
         buf: &[u8],
     ) -> usb_device::Result<usize> {
-        todo!()
+        let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
+        let (
+            f_dmaaddress,
+            f_buff_length,
+            f_end_buffit,
+            f_chann_enb_command,
+            f_chann_enb_status,
+            f_chann_act_status,
+        ) = match ep_addr.index() {
+            0 => (
+                utralib::utra::udphs::DMAADDRESS0_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL0_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL0_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL0_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS0_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS0_CHANN_ACT,
+            ),
+            1 => (
+                utralib::utra::udphs::DMAADDRESS1_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL1_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL1_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL1_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS1_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS1_CHANN_ACT,
+            ),
+            2 => (
+                utralib::utra::udphs::DMAADDRESS2_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL2_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL2_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL2_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS2_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS2_CHANN_ACT,
+            ),
+            3 => (
+                utralib::utra::udphs::DMAADDRESS3_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL3_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL3_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL3_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS3_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS3_CHANN_ACT,
+            ),
+            _ => panic!("invalid endpoint index {}", ep_addr.index()),
+        };
+        udphs.wfo(f_dmaaddress, buf.as_ptr() as u32);
+        udphs.wfo(f_buff_length, buf.len() as u32);
+        udphs.wfo(f_end_buffit, 1);
+        udphs.wfo(f_chann_enb_command, 1);
+        // TODO Probably need to have a function which waits for the interrupt to send a message
+        // down a channel (connection). But this condition still has to wait - at least the
+        // CHANN_ACT bit has to be 0
+        while udphs.rf(f_chann_enb_status) == 1 || udphs.rf(f_chann_act_status) == 1 {}
+        Ok(buf.len())
     }
 
+    // TODO This is the only thing left
     fn read(
         &self,
         ep_addr: usb_device::endpoint::EndpointAddress,
         buf: &mut [u8],
     ) -> usb_device::Result<usize> {
-        // TODO This should clear the corresponding RX_SETUP and RXRDY_TXKL flags
-        todo!()
+        let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
+        let (
+            f_dmaaddress,
+            f_buff_length,
+            f_end_buffit,
+            f_chann_enb_command,
+            f_chann_enb_status,
+            f_chann_act_status,
+        ) = match ep_addr.index() {
+            0 => (
+                utralib::utra::udphs::DMAADDRESS0_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL0_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL0_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL0_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS0_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS0_CHANN_ACT,
+            ),
+            1 => (
+                utralib::utra::udphs::DMAADDRESS1_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL1_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL1_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL1_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS1_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS1_CHANN_ACT,
+            ),
+            2 => (
+                utralib::utra::udphs::DMAADDRESS2_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL2_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL2_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL2_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS2_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS2_CHANN_ACT,
+            ),
+            3 => (
+                utralib::utra::udphs::DMAADDRESS3_BUFF_ADD,
+                utralib::utra::udphs::DMACONTROL3_BUFF_LENGTH,
+                utralib::utra::udphs::DMACONTROL3_END_BUFFIT,
+                utralib::utra::udphs::DMACONTROL3_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS3_CHANN_ENB,
+                utralib::utra::udphs::DMASTATUS3_CHANN_ACT,
+            ),
+            _ => panic!("invalid endpoint index {}", ep_addr.index()),
+        };
+        udphs.wfo(f_dmaaddress, buf.as_ptr() as u32);
+        udphs.wfo(f_buff_length, buf.len() as u32);
+        udphs.wfo(f_end_buffit, 1);
+        udphs.wfo(f_chann_enb_command, 1);
+        // TODO Probably need to have a function which waits for the interrupt to send a message
+        // down a channel (connection). But this condition still has to wait - at least the
+        // CHANN_ACT bit has to be 0
+        while udphs.rf(f_chann_enb_status) == 1 || udphs.rf(f_chann_act_status) == 1 {}
+        Ok(buf.len())
     }
 
     fn set_stalled(&self, ep_addr: usb_device::endpoint::EndpointAddress, stalled: bool) {
@@ -264,9 +403,9 @@ impl UsbBus for Bus {
         }
 
         if ep_out == 0 && ep_in_complete == 0 && ep_setup == 0 {
-            PollResult::None
+            usb_device::bus::PollResult::None
         } else {
-            PollResult::Data {
+            usb_device::bus::PollResult::Data {
                 ep_out,
                 ep_in_complete,
                 ep_setup,

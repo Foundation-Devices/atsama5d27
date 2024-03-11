@@ -42,6 +42,7 @@ dependencies = [
  "r0",
  "rtt-target",
  "usb-device",
+ "usbd-storage",
  "utralib",
 ]
 
@@ -462,6 +463,16 @@ dependencies = [
  "heapless",
  "num_enum 0.6.1",
  "portable-atomic",
+]
+
+[[package]]
+name = "usbd-storage"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "979b86a93f9f8816afebaf1d06cc1efab4102cd7f257e0d4fc604ee4d2740789"
+dependencies = [
+ "num_enum 0.6.1",
+ "usb-device",
 ]
 
 [[package]]
