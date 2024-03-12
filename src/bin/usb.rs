@@ -38,6 +38,7 @@ use {
             TransportError,
         },
     },
+    utralib::CSR,
 };
 
 static mut USB_EP_MEMORY: [u32; 1024] = [0u32; 1024];
@@ -144,6 +145,9 @@ fn _entry() -> ! {
 
     // TODO Don't forget to do this
     pmc.enable_peripheral_clock(PeripheralId::Udphs);
+    let mut pmc_csr = CSR::new(utralib::HW_PMC_BASE as *mut u32);
+    pmc_csr.wfo(utralib::utra::pmc::CKGR_UCKR_UPLLEN, 1);
+    pmc_csr.wfo(utralib::utra::pmc::PMC_USB_USBS, 1);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -197,7 +201,7 @@ fn _entry() -> ! {
     let uart4_rx = Pio::pb3();
     uart4_rx.set_func(Func::A);
 
-    let usb_bus = atsama5d27::usb_bus::Bus;
+    let usb_bus = atsama5d27::usb_bus::Bus::default();
     let allocator = usb_device::bus::UsbBusAllocator::new(usb_bus);
     let mut scsi =
         usbd_storage::subclass::scsi::Scsi::new(&allocator, USB_PACKET_SIZE, MAX_LUN, unsafe {
