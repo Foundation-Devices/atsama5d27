@@ -194,8 +194,6 @@ impl UsbBus for Bus {
                 _ => panic!("invalid endpoint index {ep_index}"),
             };
 
-            writeln!(Console::new(), "ept_size {}", ept_size).ok();
-
             udphs.wfo(f_ept_size, ept_size);
             udphs.wfo(
                 f_ept_dir,
@@ -236,7 +234,6 @@ impl UsbBus for Bus {
             }
             udphs.wfo(f_en_ept_enabl, 1);
 
-            writeln!(Console::new(), "ept_mapd {}", udphs.rf(f_ept_mapd)).ok();
             if udphs.rf(f_ept_mapd) != 1 {
                 panic!("mapd not set, configuration uses too much memory");
             }
@@ -244,6 +241,7 @@ impl UsbBus for Bus {
     }
 
     fn reset(&self) {
+        writeln!(Console::new(), "reset").ok();
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         udphs.wfo(utralib::utra::udphs::EPTRST_EPT_0, 1);
         udphs.wfo(utralib::utra::udphs::EPTRST_EPT_1, 1);
@@ -255,6 +253,7 @@ impl UsbBus for Bus {
     }
 
     fn set_device_address(&self, addr: u8) {
+        writeln!(Console::new(), "set_device_address {:?}", addr).ok();
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         udphs.wfo(utralib::utra::udphs::CTRL_DEV_ADDR, addr.into());
     }
@@ -264,6 +263,15 @@ impl UsbBus for Bus {
         ep_addr: usb_device::endpoint::EndpointAddress,
         buf: &[u8],
     ) -> usb_device::Result<usize> {
+        writeln!(
+            Console::new(),
+            "write {:?} {:?} {:?}",
+            ep_addr.index(),
+            buf.len(),
+            buf
+        )
+        .ok();
+
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         let (
             f_dmaaddress,
@@ -325,6 +333,8 @@ impl UsbBus for Bus {
         ep_addr: usb_device::endpoint::EndpointAddress,
         buf: &mut [u8],
     ) -> usb_device::Result<usize> {
+        writeln!(Console::new(), "read {:?} {:?}", ep_addr.index(), buf.len()).ok();
+
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         let (
             f_dmaaddress,
@@ -382,6 +392,13 @@ impl UsbBus for Bus {
     }
 
     fn set_stalled(&self, ep_addr: usb_device::endpoint::EndpointAddress, stalled: bool) {
+        writeln!(
+            Console::new(),
+            "set_stalled {:?} {:?}",
+            ep_addr.index(),
+            stalled
+        )
+        .ok();
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
         udphs.wfo(
             match ep_addr.index() {
@@ -397,34 +414,49 @@ impl UsbBus for Bus {
 
     fn is_stalled(&self, ep_addr: usb_device::endpoint::EndpointAddress) -> bool {
         let udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
-        udphs.rf(match ep_addr.index() {
+        let result = udphs.rf(match ep_addr.index() {
             0 => utralib::utra::udphs::EPTSETSTA0_FRCESTALL,
             1 => utralib::utra::udphs::EPTSETSTA1_FRCESTALL,
             2 => utralib::utra::udphs::EPTSETSTA2_FRCESTALL,
             3 => utralib::utra::udphs::EPTSETSTA3_FRCESTALL,
             _ => panic!("invalid endpoint index {}", ep_addr.index()),
-        }) == 1
+        }) == 1;
+        writeln!(
+            Console::new(),
+            "is_stalled {:?} {:?}",
+            ep_addr.index(),
+            result
+        )
+        .ok();
+        result
     }
 
-    fn suspend(&self) {}
+    fn suspend(&self) {
+        writeln!(Console::new(), "suspend").ok();
+    }
 
-    fn resume(&self) {}
+    fn resume(&self) {
+        writeln!(Console::new(), "resume").ok();
+    }
 
     fn poll(&self) -> usb_device::bus::PollResult {
         let mut udphs = CSR::new(utralib::HW_UDPHS_BASE as *mut u32);
 
         if udphs.rf(utralib::utra::udphs::INTSTA_ENDRESET) == 1 {
             udphs.wfo(utralib::utra::udphs::CLRINT_ENDRESET, 1);
+            writeln!(Console::new(), "poll reset").ok();
             return usb_device::bus::PollResult::Reset;
         }
 
         if udphs.rf(utralib::utra::udphs::INTSTA_ENDOFRSM) == 1 {
             udphs.wfo(utralib::utra::udphs::CLRINT_ENDOFRSM, 1);
+            writeln!(Console::new(), "poll resume").ok();
             return usb_device::bus::PollResult::Resume;
         }
 
         if udphs.rf(utralib::utra::udphs::INTSTA_DET_SUSPD) == 1 {
             udphs.wfo(utralib::utra::udphs::CLRINT_DET_SUSPD, 1);
+            writeln!(Console::new(), "poll suspend").ok();
             return usb_device::bus::PollResult::Suspend;
         }
 
@@ -476,8 +508,17 @@ impl UsbBus for Bus {
         }
 
         if ep_out == 0 && ep_in_complete == 0 && ep_setup == 0 {
+            //writeln!(Console::new(), "poll none").ok();
             usb_device::bus::PollResult::None
         } else {
+            writeln!(
+                Console::new(),
+                "poll out:{:04b} in_complete:{:04b} setup:{:04b}",
+                ep_out,
+                ep_in_complete,
+                ep_setup
+            )
+            .ok();
             usb_device::bus::PollResult::Data {
                 ep_out,
                 ep_in_complete,

@@ -240,9 +240,12 @@ fn process_command(
 
     match command.kind {
         ScsiCommand::TestUnitReady { .. } => {
+            writeln!(UartType::new(), "TestUnitReady").ok();
             command.pass();
+            writeln!(UartType::new(), "TestUnitReady passed").ok();
         }
         ScsiCommand::Inquiry { .. } => {
+            writeln!(UartType::new(), "Inquiry").ok();
             command.try_write_data_all(&[
                 0x00, // periph qualifier, periph device type
                 0x80, // Removable
@@ -258,8 +261,10 @@ fn process_command(
                 b'1', b'.', b'2', b'3', // 4-byte product revision
             ])?;
             command.pass();
+            writeln!(UartType::new(), "Inquiry passed").ok();
         }
         ScsiCommand::RequestSense { .. } => unsafe {
+            writeln!(UartType::new(), "RequestSense").ok();
             command.try_write_data_all(&[
                 0x70, /* RESPONSE CODE. Set to 70h for information on
                        * current errors */
@@ -284,22 +289,28 @@ fn process_command(
             ])?;
             STATE.reset();
             command.pass();
+            writeln!(UartType::new(), "RequestSense passed").ok();
         },
         ScsiCommand::ReadCapacity10 { .. } => {
+            writeln!(UartType::new(), "ReadCapacity10").ok();
             let mut data = [0u8; 8];
             let _ = &mut data[0..4].copy_from_slice(&u32::to_be_bytes(BLOCKS - 1));
             let _ = &mut data[4..8].copy_from_slice(&u32::to_be_bytes(BLOCK_SIZE));
             command.try_write_data_all(&data)?;
             command.pass();
+            writeln!(UartType::new(), "ReadCapacity10 passed").ok();
         }
         ScsiCommand::ReadCapacity16 { .. } => {
+            writeln!(UartType::new(), "ReadCapacity16").ok();
             let mut data = [0u8; 16];
             let _ = &mut data[0..8].copy_from_slice(&u32::to_be_bytes(BLOCKS - 1));
             let _ = &mut data[8..12].copy_from_slice(&u32::to_be_bytes(BLOCK_SIZE));
             command.try_write_data_all(&data)?;
             command.pass();
+            writeln!(UartType::new(), "ReadCapacity16 passed").ok();
         }
         ScsiCommand::ReadFormatCapacities { .. } => {
+            writeln!(UartType::new(), "ReadFormatCapacities").ok();
             let mut data = [0u8; 12];
             let _ = &mut data[0..4].copy_from_slice(&[
                 0x00, 0x00, 0x00, 0x08, // capacity list length
@@ -313,8 +324,16 @@ fn process_command(
 
             command.try_write_data_all(&data)?;
             command.pass();
+            writeln!(UartType::new(), "ReadFormatCapacities passed").ok();
         }
         ScsiCommand::Read { lba, len } => unsafe {
+            writeln!(
+                UartType::new(),
+                "Read: lba: {}, len: {}",
+                lba as u32,
+                len as u32
+            )
+            .ok();
             let lba = lba as u32;
             let len = len as u32;
             if STATE.storage_offset != (len * BLOCK_SIZE) as usize {
@@ -337,8 +356,16 @@ fn process_command(
                 command.pass();
                 STATE.storage_offset = 0;
             }
+            writeln!(UartType::new(), "Read passed").ok();
         },
         ScsiCommand::Write { lba, len } => unsafe {
+            writeln!(
+                UartType::new(),
+                "Write: lba: {}, len: {}",
+                lba as u32,
+                len as u32
+            )
+            .ok();
             let lba = lba as u32;
             let len = len as u32;
             if STATE.storage_offset != (len * BLOCK_SIZE) as usize {
@@ -362,8 +389,10 @@ fn process_command(
                 command.pass();
                 STATE.storage_offset = 0;
             }
+            writeln!(UartType::new(), "Write passed").ok();
         },
         ScsiCommand::ModeSense6 { .. } => {
+            writeln!(UartType::new(), "ModeSense6").ok();
             command.try_write_data_all(&[
                 0x03, // number of bytes that follow
                 0x00, // the media type is SBC
@@ -371,10 +400,13 @@ fn process_command(
                 0x00, // no mode-parameter block descriptors
             ])?;
             command.pass();
+            writeln!(UartType::new(), "ModeSense6 passed").ok();
         }
         ScsiCommand::ModeSense10 { .. } => {
+            writeln!(UartType::new(), "ModeSense10").ok();
             command.try_write_data_all(&[0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])?;
             command.pass();
+            writeln!(UartType::new(), "ModeSense10 passed").ok();
         }
         ref unknown_scsi_kind => {
             writeln!(
