@@ -281,24 +281,11 @@ impl Lcdc {
     }
 
     pub fn disable_layer(&self, layer: LcdcLayerId) {
-        self.set_transfer_descriptor_fetch_enable(layer, false);
-        self.set_blender_overlay_layer_enable(layer, false);
-        self.set_blender_dma_layer_enable(layer, false);
-        self.set_blender_local_alpha_enable(layer, false);
-        self.set_blender_iterated_color_enable(layer, false);
-        self.set_blender_use_iterated_color(layer, false);
-
-        self.set_layer_clock_gating_disable(layer, true);
         self.set_use_dma_path_enable(layer, false);
-        self.set_rgb_mode_input(layer, DEFAULT_GFX_COLOR_MODE);
-
         self.set_transfer_descriptor_fetch_enable(layer, false);
         self.update_overlay_attributes_enable(layer);
         self.update_attribute(layer);
-
-        self.set_system_bus_dma_burst_length(layer, BurstLength::Incr16);
         self.set_system_bus_dma_burst_enable(layer, false);
-
         self.set_channel_enable(layer, false);
     }
 
