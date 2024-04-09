@@ -19,7 +19,7 @@ impl Sfr {
         }
     }
 
-    /// Creates L2CC instance with a different base address. Used with virtual memory
+    /// Creates SFR instance with a different base address. Used with virtual memory
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
         Self { base_addr }
     }
