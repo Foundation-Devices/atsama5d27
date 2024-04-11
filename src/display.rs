@@ -57,6 +57,9 @@ impl DrawTarget for FramebufDisplay {
 
             let x = point.x as usize;
             let y = point.y as usize;
+            if self.w * y + x >= self.fb.len() {
+                continue;
+            }
             self.fb[self.w * y + x] = RawU24::from(color).into_inner();
         }
 
