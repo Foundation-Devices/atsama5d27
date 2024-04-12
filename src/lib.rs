@@ -3,6 +3,7 @@
 
 #![no_std]
 
+pub mod adc;
 pub mod aes;
 pub mod aic;
 pub mod cache;
@@ -30,4 +31,3 @@ pub mod tc;
 pub mod trng;
 pub mod twi;
 pub mod uart;
-pub mod adc;
