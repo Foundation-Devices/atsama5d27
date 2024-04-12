@@ -116,7 +116,10 @@ fn _entry() -> ! {
 }
 
 fn noise_get_u16(adc: &Adc, ch: AdcChannel, bits_per_noise_sample: usize) -> u16 {
-    assert_ne!(bits_per_noise_sample, 0, "bits_per_noise_sample can't be zero");
+    assert_ne!(
+        bits_per_noise_sample, 0,
+        "bits_per_noise_sample can't be zero"
+    );
     let mut res = 0u16;
 
     for _ in 0..(16 / bits_per_noise_sample) {
