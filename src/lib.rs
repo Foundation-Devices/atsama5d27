@@ -3,6 +3,7 @@
 
 #![no_std]
 
+pub mod adc;
 pub mod aes;
 pub mod aic;
 pub mod cache;
