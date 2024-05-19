@@ -25,7 +25,6 @@ use {
     },
 };
 
-
 global_asm!(include_str!("../start.S"));
 
 type UartType = Uart<Uart1>;
