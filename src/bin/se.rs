@@ -4,17 +4,14 @@
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
-        display::FramebufDisplay,
+        flexcom::{ChMode, CharLength, Flexcom, OpMode, Parity},
         l2cc::{Counter, EventCounterKind, L2cc},
-        lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
-        lcdspi::LcdSpi,
-        pio::{Direction, Func, Pio, PioB, PioC, PioPort},
+        pio::{Func, Pio},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         sfr::Sfr,
-        spi::{ChipSelect, Spi},
         tc::Tc,
-        uart::{Parity, Uart, Uart1, Uart4},
+        uart::{Uart, Uart1},
     },
     core::{
         arch::global_asm,
@@ -26,19 +23,6 @@ use {
             Ordering::{Relaxed, SeqCst},
         },
     },
-    embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle},
-};
-
-const WIDTH: usize = 480;
-const HEIGHT: usize = 800;
-
-#[repr(align(4))]
-struct Aligned4([u32; WIDTH * HEIGHT]);
-static mut FRAMEBUFFER_ONE: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
-static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
-    addr: 0,
-    ctrl: 0,
-    next: 0,
 };
 
 global_asm!(include_str!("../start.S"));
@@ -52,8 +36,6 @@ static HAD_TC0_IRQ: AtomicBool = AtomicBool::new(false);
 // MCK: 164MHz
 // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
 const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
-
-static mut DISPLAY: Option<FramebufDisplay> = None;
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -93,9 +75,8 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Piob);
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
     pmc.enable_peripheral_clock(PeripheralId::Piod);
-    // pmc.enable_peripheral_clock(PeripheralId::Flexcom2);
+    pmc.enable_peripheral_clock(PeripheralId::Flexcom2);
     pmc.enable_peripheral_clock(PeripheralId::Spi0);
-    pmc.enable_peripheral_clock(PeripheralId::Uart4);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -129,29 +110,7 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
-    let dma_desc_addr_one = (unsafe { &mut DMA_DESC_ONE } as *const _) as usize;
-    let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
-    configure_lcdc_pins();
-    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-    let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
-    lcdc.init(
-        &[LayerConfig::new(
-            LcdcLayerId::Base,
-            fb1,
-            dma_desc_addr_one,
-            dma_desc_addr_one,
-        )],
-        || (),
-    );
-    lcdc.wait_for_sync_in_progress();
-    lcdc.set_pwm_compare_value(0xff / 2);
-
     let mut console = uart;
-    let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER_ONE.0 }, WIDTH, HEIGHT);
-    unsafe {
-        DISPLAY = Some(display);
-    }
-
     tc0.set_interrupt(true);
 
     // Timer for delays
@@ -160,33 +119,37 @@ fn _entry() -> ! {
     pit.set_enabled(true);
     pit.set_clock_speed(MASTER_CLOCK_SPEED);
 
-    // Stabilize PD26 pin to avoid it glitching the Uart4 because I shorted them on my board
-    let swi = Pio::pd26();
-    swi.set_func(Func::Gpio);
-    swi.set_direction(Direction::Input); // FLEXCOM2_IO0
-
-    let uart4_tx = Pio::pb4();
-    uart4_tx.set_func(Func::A);
-    let uart4_rx = Pio::pb3();
-    uart4_rx.set_func(Func::A);
+    let flexcom_tx = Pio::pd26();
+    flexcom_tx.set_func(Func::C);
+    let flexcom_rx = Pio::pd27();
+    flexcom_rx.set_func(Func::C);
 
     const SE_BAUD: u32 = 230400;
 
-    let mut swi_uart = Uart::<Uart4>::new();
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
-    swi_uart.set_parity(Parity::No);
+    let mut swi = Flexcom::flexcom2();
+    swi.set_parity(Parity::No);
+    swi.set_op_mode(OpMode::Usart);
+    swi.set_ch_mode(ChMode::Normal);
+    swi.set_char_length(CharLength::SevenBit);
+    swi.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
 
-    swi_uart.set_tx(true);
-    swi_uart.set_rx(false);
-    swi_uart.write_byte(0x00); // Wake-up call
+    swi.set_tx(true);
+    swi.set_rx(false);
+    swi.write_byte(0x00).unwrap(); // Wake-up call
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 3); // Closest to 2.5 ms
 
     // Restore original baud rate and send calibration command
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
-    swi_send(&mut swi_uart, &[0x88]);
+    swi.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
+
+    // Every time the baud rate is changed we need to reconfigure the UART too
+    swi.set_parity(Parity::No);
+    swi.set_op_mode(OpMode::Usart);
+    swi.set_ch_mode(ChMode::Normal);
+    swi.set_char_length(CharLength::SevenBit);
+    swi_send(&mut swi, &[0x88]);
 
     let mut response = [0u8; 4];
-    swi_receive(&mut swi_uart, &mut response);
+    swi_receive(&mut swi, &mut response);
     writeln!(console, "Received the response from SE: {response:02x?}").ok();
 
     match response {
@@ -195,13 +158,12 @@ fn _entry() -> ! {
         _ => writeln!(console, "Unexpected response").ok(),
     };
 
-    fill_display_background();
     loop {
         armv7::asm::wfi();
     }
 }
 
-fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
+fn swi_receive(uart: &mut Flexcom, buf: &mut [u8]) {
     uart.set_rx(true);
     uart.set_tx(false);
 
@@ -215,28 +177,27 @@ fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
     }
 }
 
-fn swi_receive_bit(uart: &mut Uart<Uart4>) -> bool {
-    // Convert to 7-bit message since we're running on 8-bit UART
-    let byte = (uart.getc() >> 1) & 0x7F;
+fn swi_receive_bit(uart: &mut Flexcom) -> bool {
+    let byte = uart.read_byte().expect("read_byte") & 0x7F;
     (byte ^ 0x7F) < 2
 }
 
-fn swi_send(uart: &mut Uart<Uart4>, data: &[u8]) {
-    uart.set_rx(false);
-    uart.set_tx(true);
+fn swi_send(swi: &mut Flexcom, data: &[u8]) {
+    swi.set_rx(false);
+    swi.set_tx(true);
 
     for byte in data {
         for i in 0..8 {
             let bit_mask = 1 << i;
             let bit = byte & bit_mask != 0;
-            swi_send_bit(uart, bit);
+            swi_send_bit(swi, bit);
         }
     }
 }
 
-fn swi_send_bit(uart: &mut Uart<Uart4>, bit: bool) {
+fn swi_send_bit(swi: &mut Flexcom, bit: bool) {
     let byte = if bit { 0x7F } else { 0x7D };
-    uart.write_byte(byte | 1_u8 << 7);
+    swi.write_byte(byte).expect("write_byte");
 }
 
 #[no_mangle]
@@ -284,49 +245,5 @@ fn panic(_info: &PanicInfo) -> ! {
         unsafe {
             core::arch::asm!("bkpt");
         }
-    }
-}
-
-#[cfg_attr(not(feature = "lcd-console"), allow(dead_code))]
-fn configure_lcdc_pins() {
-    let mut pit = Pit::new();
-    pit.set_interval(PIV_MAX);
-    pit.set_enabled(true);
-
-    // PB1: reset LCD panel
-    let mut pio = Pio::pb1();
-    pio.set_func(Func::Gpio);
-    pio.set_direction(Direction::Output);
-    pio.set(false);
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
-    pio.set(true);
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
-
-    let mosi = Pio::pa15();
-    mosi.set_func(Func::A); // SPI0_MOSI
-    let sck = Pio::pa14();
-    sck.set_func(Func::A); // SPI0_SPCK
-    let cs = Pio::pa19();
-    cs.set_func(Func::A); // SPI0_NPCS0
-
-    let mut lcdspi = LcdSpi::new(Spi::spi0(), ChipSelect::Cs2, MASTER_CLOCK_SPEED, pit);
-    lcdspi.run_init_sequence();
-
-    // PB11 - PB31
-    PioB::configure_pins_by_mask(None, 0xFFFFF800, Func::A, None);
-    PioB::clear_all(None);
-
-    // PC0 - PC8
-    PioC::configure_pins_by_mask(None, 0x1ff, Func::A, None);
-}
-
-fn fill_display_background() {
-    if let Some(display) = unsafe { &mut DISPLAY } {
-        display
-            .fill_solid(
-                &Rectangle::new(Point::new(0, 0), Size::new(WIDTH as u32, HEIGHT as u32)),
-                Rgb888::CSS_GRAY,
-            )
-            .expect("fill");
     }
 }
