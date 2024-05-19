@@ -5,6 +5,7 @@ use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
         display::FramebufDisplay,
+        flexcom::{ChMode, CharLength, Flexcom, OpMode, Parity},
         l2cc::{Counter, EventCounterKind, L2cc},
         lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
         lcdspi::LcdSpi,
@@ -14,7 +15,7 @@ use {
         sfr::Sfr,
         spi::{ChipSelect, Spi},
         tc::Tc,
-        uart::{Parity, Uart, Uart1, Uart4},
+        uart::{Uart, Uart1},
     },
     core::{
         arch::global_asm,
@@ -93,9 +94,8 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Piob);
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
     pmc.enable_peripheral_clock(PeripheralId::Piod);
-    // pmc.enable_peripheral_clock(PeripheralId::Flexcom2);
+    pmc.enable_peripheral_clock(PeripheralId::Flexcom2);
     pmc.enable_peripheral_clock(PeripheralId::Spi0);
-    pmc.enable_peripheral_clock(PeripheralId::Uart4);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -160,33 +160,37 @@ fn _entry() -> ! {
     pit.set_enabled(true);
     pit.set_clock_speed(MASTER_CLOCK_SPEED);
 
-    // Stabilize PD26 pin to avoid it glitching the Uart4 because I shorted them on my board
-    let swi = Pio::pd26();
-    swi.set_func(Func::Gpio);
-    swi.set_direction(Direction::Input); // FLEXCOM2_IO0
-
-    let uart4_tx = Pio::pb4();
-    uart4_tx.set_func(Func::A);
-    let uart4_rx = Pio::pb3();
-    uart4_rx.set_func(Func::A);
+    let flexcom_tx = Pio::pd26();
+    flexcom_tx.set_func(Func::C);
+    let flexcom_rx = Pio::pd27();
+    flexcom_rx.set_func(Func::C);
 
     const SE_BAUD: u32 = 230400;
 
-    let mut swi_uart = Uart::<Uart4>::new();
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
-    swi_uart.set_parity(Parity::No);
+    let mut swi = Flexcom::flexcom2();
+    swi.set_parity(Parity::No);
+    swi.set_op_mode(OpMode::Usart);
+    swi.set_ch_mode(ChMode::Normal);
+    swi.set_char_length(CharLength::SevenBit);
+    swi.set_baud(MASTER_CLOCK_SPEED, SE_BAUD / 2);
 
-    swi_uart.set_tx(true);
-    swi_uart.set_rx(false);
-    swi_uart.write_byte(0x00); // Wake-up call
+    swi.set_tx(true);
+    swi.set_rx(false);
+    swi.write_byte(0x00).unwrap(); // Wake-up call
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 3); // Closest to 2.5 ms
 
     // Restore original baud rate and send calibration command
-    swi_uart.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
-    swi_send(&mut swi_uart, &[0x88]);
+    swi.set_baud(MASTER_CLOCK_SPEED, SE_BAUD);
+
+    // Every time the baud rate is changed we need to reconfigure the UART too
+    swi.set_parity(Parity::No);
+    swi.set_op_mode(OpMode::Usart);
+    swi.set_ch_mode(ChMode::Normal);
+    swi.set_char_length(CharLength::SevenBit);
+    swi_send(&mut swi, &[0x88]);
 
     let mut response = [0u8; 4];
-    swi_receive(&mut swi_uart, &mut response);
+    swi_receive(&mut swi, &mut response);
     writeln!(console, "Received the response from SE: {response:02x?}").ok();
 
     match response {
@@ -201,7 +205,7 @@ fn _entry() -> ! {
     }
 }
 
-fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
+fn swi_receive(uart: &mut Flexcom, buf: &mut [u8]) {
     uart.set_rx(true);
     uart.set_tx(false);
 
@@ -215,28 +219,27 @@ fn swi_receive(uart: &mut Uart<Uart4>, buf: &mut [u8]) {
     }
 }
 
-fn swi_receive_bit(uart: &mut Uart<Uart4>) -> bool {
-    // Convert to 7-bit message since we're running on 8-bit UART
-    let byte = (uart.getc() >> 1) & 0x7F;
+fn swi_receive_bit(uart: &mut Flexcom) -> bool {
+    let byte = uart.read_byte().expect("read_byte") & 0x7F;
     (byte ^ 0x7F) < 2
 }
 
-fn swi_send(uart: &mut Uart<Uart4>, data: &[u8]) {
-    uart.set_rx(false);
-    uart.set_tx(true);
+fn swi_send(swi: &mut Flexcom, data: &[u8]) {
+    swi.set_rx(false);
+    swi.set_tx(true);
 
     for byte in data {
         for i in 0..8 {
             let bit_mask = 1 << i;
             let bit = byte & bit_mask != 0;
-            swi_send_bit(uart, bit);
+            swi_send_bit(swi, bit);
         }
     }
 }
 
-fn swi_send_bit(uart: &mut Uart<Uart4>, bit: bool) {
+fn swi_send_bit(swi: &mut Flexcom, bit: bool) {
     let byte = if bit { 0x7F } else { 0x7D };
-    uart.write_byte(byte | 1_u8 << 7);
+    swi.write_byte(byte).expect("write_byte");
 }
 
 #[no_mangle]
