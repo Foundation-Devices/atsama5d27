@@ -4,16 +4,12 @@
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
-        display::FramebufDisplay,
         flexcom::{ChMode, CharLength, Flexcom, OpMode, Parity},
         l2cc::{Counter, EventCounterKind, L2cc},
-        lcdc::{LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
-        lcdspi::LcdSpi,
-        pio::{Direction, Func, Pio, PioB, PioC, PioPort},
+        pio::{Func, Pio},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         sfr::Sfr,
-        spi::{ChipSelect, Spi},
         tc::Tc,
         uart::{Uart, Uart1},
     },
@@ -27,20 +23,8 @@ use {
             Ordering::{Relaxed, SeqCst},
         },
     },
-    embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle},
 };
 
-const WIDTH: usize = 480;
-const HEIGHT: usize = 800;
-
-#[repr(align(4))]
-struct Aligned4([u32; WIDTH * HEIGHT]);
-static mut FRAMEBUFFER_ONE: Aligned4 = Aligned4([0; WIDTH * HEIGHT]);
-static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
-    addr: 0,
-    ctrl: 0,
-    next: 0,
-};
 
 global_asm!(include_str!("../start.S"));
 
@@ -53,8 +37,6 @@ static HAD_TC0_IRQ: AtomicBool = AtomicBool::new(false);
 // MCK: 164MHz
 // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
 const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
-
-static mut DISPLAY: Option<FramebufDisplay> = None;
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -129,29 +111,7 @@ fn _entry() -> ! {
     uart.set_rx_interrupt(true);
     uart.set_rx(true);
 
-    let dma_desc_addr_one = (unsafe { &mut DMA_DESC_ONE } as *const _) as usize;
-    let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
-    configure_lcdc_pins();
-    pmc.enable_peripheral_clock(PeripheralId::Lcdc);
-    let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
-    lcdc.init(
-        &[LayerConfig::new(
-            LcdcLayerId::Base,
-            fb1,
-            dma_desc_addr_one,
-            dma_desc_addr_one,
-        )],
-        || (),
-    );
-    lcdc.wait_for_sync_in_progress();
-    lcdc.set_pwm_compare_value(0xff / 2);
-
     let mut console = uart;
-    let display = FramebufDisplay::new(unsafe { &mut FRAMEBUFFER_ONE.0 }, WIDTH, HEIGHT);
-    unsafe {
-        DISPLAY = Some(display);
-    }
-
     tc0.set_interrupt(true);
 
     // Timer for delays
@@ -199,7 +159,6 @@ fn _entry() -> ! {
         _ => writeln!(console, "Unexpected response").ok(),
     };
 
-    fill_display_background();
     loop {
         armv7::asm::wfi();
     }
@@ -287,49 +246,5 @@ fn panic(_info: &PanicInfo) -> ! {
         unsafe {
             core::arch::asm!("bkpt");
         }
-    }
-}
-
-#[cfg_attr(not(feature = "lcd-console"), allow(dead_code))]
-fn configure_lcdc_pins() {
-    let mut pit = Pit::new();
-    pit.set_interval(PIV_MAX);
-    pit.set_enabled(true);
-
-    // PB1: reset LCD panel
-    let mut pio = Pio::pb1();
-    pio.set_func(Func::Gpio);
-    pio.set_direction(Direction::Output);
-    pio.set(false);
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
-    pio.set(true);
-    pit.busy_wait_ms(MASTER_CLOCK_SPEED, 100);
-
-    let mosi = Pio::pa15();
-    mosi.set_func(Func::A); // SPI0_MOSI
-    let sck = Pio::pa14();
-    sck.set_func(Func::A); // SPI0_SPCK
-    let cs = Pio::pa19();
-    cs.set_func(Func::A); // SPI0_NPCS0
-
-    let mut lcdspi = LcdSpi::new(Spi::spi0(), ChipSelect::Cs2, MASTER_CLOCK_SPEED, pit);
-    lcdspi.run_init_sequence();
-
-    // PB11 - PB31
-    PioB::configure_pins_by_mask(None, 0xFFFFF800, Func::A, None);
-    PioB::clear_all(None);
-
-    // PC0 - PC8
-    PioC::configure_pins_by_mask(None, 0x1ff, Func::A, None);
-}
-
-fn fill_display_background() {
-    if let Some(display) = unsafe { &mut DISPLAY } {
-        display
-            .fill_solid(
-                &Rectangle::new(Point::new(0, 0), Size::new(WIDTH as u32, HEIGHT as u32)),
-                Rgb888::CSS_GRAY,
-            )
-            .expect("fill");
     }
 }
