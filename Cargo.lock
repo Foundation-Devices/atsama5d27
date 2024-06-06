@@ -31,6 +31,7 @@ version = "0.1.0"
 dependencies = [
  "armv7",
  "bitflags",
+ "bq24157",
  "drv2605",
  "embedded-graphics",
  "embedded-hal",
@@ -64,10 +65,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
 
 [[package]]
+name = "bitfield"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c821a6e124197eb56d907ccc2188eab1038fb919c914f47976e64dd8dbc855d1"
+
+[[package]]
 name = "bitflags"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "327762f6e5a765692301e5bb513e0d9fef63be86bbc14528052b1cd3e6f03e07"
+
+[[package]]
+name = "bq24157"
+version = "0.1.0"
+source = "git+https://github.com/Foundation-Devices/bq24157.git#9e0452ba709b437705d3bfce42a4d0cd1acd77c5"
+dependencies = [
+ "bitfield 0.15.0",
+ "embedded-hal",
+]
 
 [[package]]
 name = "byteorder"
@@ -108,7 +124,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c629ac8aeaf71f2e2cdf460938d9e398da7aec850541d48f3c5ce5c2fa85e87"
 dependencies = [
- "bitfield",
+ "bitfield 0.13.2",
  "embedded-hal",
 ]
 
@@ -290,7 +306,7 @@ dependencies = [
 [[package]]
 name = "ovm7690-rs"
 version = "0.1.0"
-source = "git+https://github.com/Foundation-Devices/ovm7690-rs.git#5c2727aa51c7169fcf0376679885ddd1666222eb"
+source = "git+https://github.com/Foundation-Devices/ovm7690-rs.git#351844f720ecc6f5ed6ef37c97d9070e1b2a831b"
 dependencies = [
  "embedded-hal",
 ]
