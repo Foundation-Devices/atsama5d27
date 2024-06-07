@@ -27,7 +27,7 @@ use {
     },
     ehci::{
         descriptors::{DescriptorSet, EndpointType},
-        EndpointDirection,
+        EndpointDirection, QtdPool, QtdPoolElement, QueueHeadPool, QueueHeadPoolElement,
     },
     log::{debug, error, info, trace, warn},
     utralib::HW_UHPHS_EHCI_BASE,
@@ -43,6 +43,9 @@ type UartType = Uart<Uart1>;
 const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 
 static TICK_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+static mut QH_POOL_BACKING: [QueueHeadPoolElement; 5] = unsafe { core::mem::zeroed() };
+static mut QTD_POOL_BACKING: [QtdPoolElement; 10] = unsafe { core::mem::zeroed() };
 
 // ----- Initialization functions -----
 
@@ -124,16 +127,6 @@ fn setup_tick_counter(aic: &mut Aic) {
     pit.reset();
     pit.set_interrupt(true);
     pit.set_enabled(true);
-}
-
-fn sleep_ms(ms: usize) {
-    let ticks = TICK_COUNT.load(SeqCst);
-    loop {
-        armv7::asm::wfi();
-        if ticks + ms <= TICK_COUNT.load(SeqCst) {
-            break;
-        }
-    }
 }
 
 fn init_twi0() -> Twi {
@@ -239,10 +232,7 @@ impl<'a> mass_storage::UsbHostCommands for BlockingUsbWrapper<'a> {
         data_len: usize,
     ) -> core::result::Result<Vec<u8>, mass_storage::UsbError> {
         self.controller
-            .schedule_transfer(
-                self.address,
-                ehci::Transfer::new_bulk_in(self.ep_in, data_len, 0),
-            )
+            .schedule_bulk_in(self.address, self.ep_in, data_len, 0)
             .map_err(|_| mass_storage::UsbError::Other)?;
         let result = self
             .wait_transfer_result()
@@ -256,10 +246,7 @@ impl<'a> mass_storage::UsbHostCommands for BlockingUsbWrapper<'a> {
 
     fn bulk_out(&mut self, data: &[u8]) -> core::result::Result<usize, mass_storage::UsbError> {
         self.controller
-            .schedule_transfer(
-                self.address,
-                ehci::Transfer::new_bulk_out(self.ep_out, data, 0),
-            )
+            .schedule_bulk_out(self.address, self.ep_out, data, 0)
             .map_err(|_| mass_storage::UsbError::Other)?;
         let result = self
             .wait_transfer_result()
@@ -305,14 +292,15 @@ impl ehci::EventHandler<u32> for DeviceConnectionListener {
                     EndpointDirection::Out => ep_out = endpoint.get_endpoint_number(),
                     EndpointDirection::In => ep_in = endpoint.get_endpoint_number(),
                 }
-                controller
-                    .open_endpoint(
-                        address,
-                        endpoint.get_endpoint_number(),
-                        endpoint.max_packet_size,
-                        endpoint.get_direction(),
-                    )
-                    .ok();
+                if let Err(e) = controller.open_endpoint(
+                    address,
+                    endpoint.get_endpoint_number(),
+                    endpoint.max_packet_size,
+                    endpoint.get_direction(),
+                ) {
+                    warn!("Could not open endpoint {endpoint:?}: {e:?}");
+                    return;
+                }
             }
         }
         debug!("Using endpoints IN:{ep_in} OUT:{ep_out}");
@@ -367,7 +355,13 @@ fn test_usb() -> ! {
     bc_otg.set_direction(pio::Direction::Output);
     bc_otg.set(true);
 
-    let mut ehci_ctrl = ehci::Controller::new(HW_UHPHS_EHCI_BASE).unwrap();
+    let mut ehci_ctrl = ehci::Controller::new(
+        HW_UHPHS_EHCI_BASE,
+        unsafe { QueueHeadPool::new(QH_POOL_BACKING.as_mut_ptr_range()) },
+        unsafe { QtdPool::new(QTD_POOL_BACKING.as_mut_ptr_range()) },
+        flush_caches,
+    )
+    .unwrap();
     let mut otg_prev = false;
 
     loop {
@@ -421,4 +415,20 @@ fn panic(_info: &PanicInfo) -> ! {
             core::arch::asm!("bkpt");
         }
     }
+}
+
+// ----- Utils -----
+
+fn sleep_ms(ms: usize) {
+    let ticks = TICK_COUNT.load(SeqCst);
+    loop {
+        armv7::asm::wfi();
+        if ticks + ms <= TICK_COUNT.load(SeqCst) {
+            break;
+        }
+    }
+}
+
+fn flush_caches(_: &[u8]) {
+    /* No caches are used in this example */
 }
