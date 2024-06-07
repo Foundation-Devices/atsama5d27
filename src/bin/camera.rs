@@ -22,8 +22,8 @@ use {
         panic::PanicInfo,
         sync::atomic::{
             compiler_fence,
-            AtomicBool,
             AtomicU32,
+            AtomicU8,
             Ordering::{Relaxed, SeqCst},
         },
     },
@@ -33,7 +33,7 @@ use {
 const WIDTH: usize = 480;
 const HEIGHT: usize = 800;
 
-#[repr(align(4))]
+#[repr(align(16))]
 struct Aligned4<const SIZE: usize>([u32; SIZE]);
 
 static mut FRAMEBUFFER_ONE: Aligned4<{ WIDTH * HEIGHT }> = Aligned4([0; WIDTH * HEIGHT]);
@@ -43,8 +43,8 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
     next: 0,
 };
 
-const CAM_WIDTH: usize = 640;
-const CAM_HEIGHT: usize = 480;
+const CAM_WIDTH: usize = 480;
+const CAM_HEIGHT: usize = 640;
 
 static mut FRAMEBUFFER_CAM_ONE: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
     Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
@@ -56,15 +56,9 @@ static mut DMA_DESC_CAM_ONE: LcdDmaDesc = LcdDmaDesc {
 
 static mut FRAMEBUFFER_CAM_TWO: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
     Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
-static mut DMA_DESC_CAM_TWO: LcdDmaDesc = LcdDmaDesc {
-    addr: 0,
-    ctrl: 0,
-    next: 0,
-};
-
 const CAM_LAYER: LcdcLayerId = LcdcLayerId::Ovr1;
 
-const ISC_MASTER_CLK_DIV: u8 = 13; // This gives around 30 fps
+const ISC_MASTER_CLK_DIV: u8 = 15; // This gives around 30 fps
 const ISC_MASTER_CLK_SEL: ClkSel = ClkSel::Hclock;
 const ISC_ISP_CLK_DIV: u8 = 2;
 const ISC_ISP_CLK_SEL: ClkSel = ClkSel::Hclock;
@@ -167,7 +161,15 @@ fn _entry() -> ! {
     }
 
     let dma_desc_cam_one = (unsafe { &mut DMA_DESC_CAM_ONE } as *const _) as usize;
-    let fb_cam_one = unsafe { FRAMEBUFFER_CAM_ONE.0.as_ptr() as usize };
+    let fb_cam_one = 0x20cf3000; //unsafe { FRAMEBUFFER_CAM_ONE.0.as_ptr() as usize };
+    let fb_cam_two = 0x20c5c000; //unsafe { FRAMEBUFFER_CAM_TWO.0.as_ptr() as usize };
+
+    unsafe {
+        let slice = core::slice::from_raw_parts_mut(fb_cam_one as *mut u32, CAM_WIDTH * CAM_HEIGHT);
+        slice.fill(0);
+        let slice = core::slice::from_raw_parts_mut(fb_cam_two as *mut u32, CAM_WIDTH * CAM_HEIGHT);
+        slice.fill(0);
+    }
 
     configure_isc_pins();
     configure_lcdc_pins();
@@ -190,7 +192,41 @@ fn _entry() -> ! {
         || (),
     );
     lcdc.enable_layer(CAM_LAYER);
+    lcdc.set_channel_enable(CAM_LAYER, false);
     lcdc.set_rgb_mode_input(CAM_LAYER, ColorMode::Rgb565);
+
+    const CAMERA_BYTES_PER_PX: usize = 2;
+    let img_h = CAM_WIDTH as i32;
+    let img_w = CAM_HEIGHT as i32;
+    let bytes_per_row = img_w * CAMERA_BYTES_PER_PX as i32;
+    let bytes_per_pixel = CAMERA_BYTES_PER_PX as i32;
+
+    // Rotate the image 90 degrees
+    let _padding = 0;
+    let _xstride = -(bytes_per_row * (img_h - 1));
+    let _pstride = bytes_per_row - bytes_per_pixel;
+    let _offset = 0;
+
+    // Rotate  90: Down,Left -> Top,Right (with w,h swap)
+    // let _pstride = 0 - (bytes_per_pixel + bytes_per_row + _padding);
+    // let _xstride = (bytes_per_row + padding) * (img_h - 1);
+    // let _offset = (bytes_per_row + padding) * (img_h - 1);
+
+    // Rotate 270
+    // let _pstride = bytes_per_row + padding - bytes_per_pixel;
+    // let _xstride = 0 - 2 * bytes_per_pixel - (bytes_per_row + padding) * (img_h - 1);
+    // let _offset = bytes_per_pixel * (img_w - 1);
+
+    lcdc.set_pixel_stride(CAM_LAYER, _pstride);
+    lcdc.set_horiz_stride(CAM_LAYER, _xstride);
+    lcdc.update_overlay_attributes_enable(CAM_LAYER);
+    lcdc.update_attribute(CAM_LAYER);
+
+    lcdc.update_layer(
+        &LayerConfig::new(CAM_LAYER, fb_cam_one, dma_desc_cam_one, dma_desc_cam_one),
+        || (),
+    );
+    lcdc.set_channel_enable(CAM_LAYER, true);
 
     lcdc.wait_for_sync_in_progress();
     lcdc.set_pwm_compare_value(0xff / 2);
@@ -251,10 +287,6 @@ fn _entry() -> ! {
         pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
     }
 
-    assert!(
-        camera.verify_chip_id().expect("verify chip ID"),
-        "failed to verify OVM7690 chip ID"
-    );
     camera.sw_reset().expect("software reset OVM7690");
     pit.busy_wait_ms(MASTER_CLOCK_SPEED, 500);
     camera.init().expect("init OVM7690");
@@ -302,6 +334,9 @@ fn _entry() -> ! {
     tc0.set_period(delay_ms * ticks_per_ms);
     tc0.start();
 
+    VAL.store(0, Relaxed);
+    REG.store(0x6f, Relaxed);
+
     unsafe { TWI0 = Some(twi0.clone()) };
 
     loop {
@@ -314,6 +349,9 @@ fn _entry() -> ! {
 unsafe extern "C" fn aic_spurious_handler() {
     core::arch::asm!("bkpt");
 }
+
+static VAL: AtomicU8 = AtomicU8::new(0);
+static REG: AtomicU8 = AtomicU8::new(0);
 
 #[no_mangle]
 unsafe extern "C" fn uart_irq_handler() {

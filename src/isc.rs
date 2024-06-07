@@ -376,6 +376,12 @@ impl Isc {
         csr.wfo(CTRLEN_CAPTURE, 1);
     }
 
+    pub fn stop_capture(&mut self) {
+        self.wait_for_sync();
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CTRLDIS_DISABLE, 1);
+    }
+
     pub fn interrupt_status(&mut self) -> ISCStatus {
         let csr = CSR::new(self.base_addr as *mut u32);
         ISCStatus::from_bits_truncate(csr.r(INTSR))
@@ -384,6 +390,18 @@ impl Isc {
     pub fn enable_interrupt(&mut self, isr: ISCStatus) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.wo(INTEN, isr.bits());
+    }
+
+    pub fn set_max_cols(&mut self, cols: u16) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(PFE_CFG0_COLEN, 1);
+        csr.rmwf(PFE_CFG1_COLMAX, cols as u32);
+    }
+
+    pub fn set_max_rows(&mut self, rows: u16) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(PFE_CFG0_ROWEN, 1);
+        csr.rmwf(PFE_CFG2_ROWMAX, rows as u32);
     }
 
     fn configure_dma(
