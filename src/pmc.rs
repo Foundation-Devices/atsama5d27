@@ -1,7 +1,10 @@
 //! Power Management Controller.
 
 use utralib::{
-    utra::pmc::{PMC_PCR, PMC_PCR_PID, PMC_SCER_ISCCK, PMC_SCER_LCDCK},
+    utra::pmc::{
+        CKGR_UCKR, CKGR_UCKR_BIASEN, CKGR_UCKR_UPLLCOUNT, CKGR_UCKR_UPLLEN, PMC_PCR, PMC_PCR_PID,
+        PMC_SCER_ISCCK, PMC_SCER_LCDCK,
+    },
     *,
 };
 
@@ -252,5 +255,15 @@ impl Pmc {
     pub fn enable_system_clock_lcdc(&mut self) {
         let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
         pmc_csr.wfo(PMC_SCER_LCDCK, 1);
+    }
+
+    pub fn enable_usb_high_speed_host_clock(&mut self) {
+        let mut pmc_csr = CSR::new(self.base_addr as *mut u32);
+        pmc_csr.wo(
+            CKGR_UCKR,
+            pmc_csr.ms(CKGR_UCKR_UPLLCOUNT, 8)
+                | pmc_csr.ms(CKGR_UCKR_UPLLEN, 1)
+                | pmc_csr.ms(CKGR_UCKR_BIASEN, 1),
+        )
     }
 }

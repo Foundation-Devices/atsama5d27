@@ -93617,5 +93617,23 @@
         </register>
       </registers>
     </peripheral>
+    <peripheral>
+      <name>UHPHS_OHCI</name>
+      <baseAddress>0x00400000</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x1000</size>
+        <usage>registers</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>UHPHS_EHCI</name>
+      <baseAddress>0x00500000</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x1000</size>
+        <usage>registers</usage>
+      </addressBlock>
+    </peripheral>
   </peripherals>
 </device>

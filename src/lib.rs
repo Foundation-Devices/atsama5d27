@@ -13,11 +13,15 @@ pub mod console;
 pub mod display;
 pub mod dma;
 pub mod flexcom;
+#[cfg(feature = "heap")]
+pub mod heap;
 pub mod isc;
 pub mod l1cache;
 pub mod l2cc;
 pub mod lcdc;
 pub mod lcdspi;
+#[cfg(feature = "logging")]
+pub mod logging;
 pub mod pio;
 pub mod pit;
 pub mod pmc;
