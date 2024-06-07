@@ -973,4 +973,38 @@ impl Lcdc {
             LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG12_GA, alpha as u32),
         }
     }
+
+    pub fn set_rotation_optimization_dis(&self, layer: LcdcLayerId, rotdis: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG0_ROTDIS, rotdis as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG0_ROTDIS, rotdis as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG0_ROTDIS, rotdis as u32),
+        }
+    }
+
+    pub fn set_lock_dis(&self, layer: LcdcLayerId, lockdis: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG0_LOCKDIS, lockdis as u32),
+            LcdcLayerId::Ovr2 => lcdc_csr.rmwf(OVR2CFG0_LOCKDIS, lockdis as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG0_LOCKDIS, lockdis as u32),
+        }
+    }
+
+    pub fn set_sif(&self, layer: LcdcLayerId, sif: bool) {
+        let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
+
+        match layer {
+            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG0_SIF, sif as u32),
+            LcdcLayerId::Ovr2 => (), /* FIXME: OVR2CFG0_SIF not found in generated utralib: */
+            // lcdc_csr.rmwf(OVR2CFG0_SIF, sif as u32),
+            LcdcLayerId::Heo => lcdc_csr.rmwf(HEOCFG0_SIF, sif as u32),
+        }
+    }
 }

@@ -285,7 +285,7 @@ macro_rules! impl_pins {
     ($port:ty, [$($name:ident => $pin:expr),+]) => {
         $(
             impl Pio<$port, $pin> {
-                pub fn $name() -> Self {
+                pub const fn $name() -> Self {
                     Self { port: PhantomData, alt_base_addr: None }
                 }
             }
