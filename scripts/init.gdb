@@ -10,6 +10,10 @@ set pagination off
 # JLinkGDB server is expected to be running at this port
 target remote :3334
 
+monitor reset
+shell sleep 2
+monitor halt
+
 load
 c
 
