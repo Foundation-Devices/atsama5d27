@@ -40,6 +40,10 @@ required-features = ["charger"]
 name = "uart-dma"
 required-features = []
 
+[[bin]]
+name = "usbhost"
+required-features = ["usb-host"]
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
@@ -55,6 +59,11 @@ ovm7690-rs = { git = "https://github.com/Foundation-Devices/ovm7690-rs.git", opt
 embedded-sdmmc = { version = "0.6.0", default-features = false, optional = true }
 hex = { version = "0.4.3", default-features = false, optional = true }
 bq24157 = { git = "https://github.com/Foundation-Devices/bq24157.git", optional = true }
+ehci = { git = "https://github.com/Foundation-Devices/ehci.git", optional = true }
+mass-storage = { git = "https://github.com/Foundation-Devices/mass-storage.git", optional = true }
+embedded-alloc = { version = "0.5.1", optional = true }
+critical-section = {version = "1.1.2", optional = true }
+log = { version = "0.4.21", optional = true }
 
 [build-dependencies]
 png-decoder = "0.1.1"
@@ -70,6 +79,10 @@ camera-dev = []
 camera-prod = []
 sha = ["hex"]
 charger = ["bq24157"]
+heap = ["embedded-alloc"]
+logging = ["log", "heap", "critical-section"]
+critical-section = ["dep:critical-section", "armv7/critical-section"]
+usb-host = ["bq24157", "ehci", "mass-storage", "heap", "logging"]
 
 default = ["lcd-console", "hal"]
 
