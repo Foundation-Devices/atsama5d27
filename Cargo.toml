@@ -52,6 +52,7 @@ embedded-sdmmc = { version = "0.6.0", default-features = false, optional = true 
 hex = { version = "0.4.3", default-features = false, optional = true }
 bq24157 = { git = "https://github.com/Foundation-Devices/bq24157.git", optional = true }
 volatile-register = "0.2.2"
+bitfield = "0.15.0"
 
 [build-dependencies]
 png-decoder = "0.1.1"
@@ -68,7 +69,7 @@ camera-prod = []
 sha = ["hex"]
 charger = ["bq24157"]
 
-default = ["lcd-console", "hal"]
+default = ["lcd-console", "hal", "charger"]
 
 [profile.dev]
 #codegen-units = 1

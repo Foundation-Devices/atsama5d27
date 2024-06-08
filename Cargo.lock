@@ -30,6 +30,7 @@ name = "atsama5d27"
 version = "0.1.0"
 dependencies = [
  "armv7",
+ "bitfield 0.15.0",
  "bitflags",
  "bq24157",
  "drv2605",

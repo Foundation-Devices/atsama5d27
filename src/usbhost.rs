@@ -1,5 +1,6 @@
 //! USB Host driver
 
+use bitfield::bitfield;
 use volatile_register::{RO, RW};
 
 const UHPHS_BASE: u32 = 0x00500000;
@@ -20,8 +21,8 @@ pub struct Caps {
 
 #[repr(C)]
 pub struct OpRegs {
-    cmd: RW<u32>,
-    status: RW<u32>,
+    cmd: RW<Command>,
+    status: RW<Status>,
     interrupt_enable: RW<u32>,
     frame_index: RW<u32>,
     control_data_segment: RW<u32>,
@@ -29,7 +30,56 @@ pub struct OpRegs {
     async_list: RW<u32>,
     _reserved: [u32; 9],
     config: RW<u32>,
-    ports: [RW<u32>; 3],
+    ports: [RW<PortControl>; 3],
+}
+
+bitfield! {
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub struct Command(u32);
+    impl Debug;
+
+    pub run, set_run: 0;
+    pub hc_reset, set_hc_reset: 1;
+    pub periodic_schedule_enable, set_periodic_schedule_enable: 4;
+    pub async_schedule_enable, set_async_schedule_enable: 5;
+}
+
+bitfield! {
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub struct Status(u32);
+    impl Debug;
+
+    pub interrupt, set_interrupt: 0;
+    pub error_interrupt, set_error_interrupt: 1;
+    pub port_change, set_port_change: 2;
+    pub frame_list_rollover, set_frame_list_rollover: 3;
+    pub host_system_error, set_host_system_error: 4;
+    pub interrupt_on_async_advance, set_interrupt_on_async_advance: 5;
+    pub halted, _: 12;
+    pub reclamation, _: 13;
+    pub periodic_schedule_status, _: 14;
+    pub async_schedule_status, _: 15;
+}
+
+bitfield! {
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub struct PortControl(u32);
+    impl Debug;
+
+    pub  connected,_: 0;
+    pub  connected_changed,set_connected_changed: 1;
+    pub  enabled,set_enabled: 2;
+    pub  enabled_changed,set_enabled_changed: 3;
+    pub  overcurrent,_: 4;
+    pub  overcurrent_changed,set_overcurrent_changed: 5;
+    pub  force_resume,set_force_resume: 6;
+    pub  suspend,set_suspend: 7;
+    pub  reset,set_reset: 8;
+    pub  line_status,_: 11, 10;
+    pub  owner,set_owner: 13;
 }
 
 impl UsbHost {
@@ -46,7 +96,12 @@ impl UsbHost {
     }
 
     pub fn run(&mut self) {
-        unsafe { (*self.opregs).cmd.modify(|v| v | 1) };
+        unsafe {
+            (*self.opregs).cmd.modify(|mut v| {
+                v.set_run(true);
+                v
+            })
+        };
     }
 
     pub fn configure(&mut self) {
@@ -62,8 +117,11 @@ impl UsbHost {
             (*self.caps).capability_params.read()
         })
         .ok();
-        writeln!(w, "Cmd:        {:x}", unsafe { (*self.opregs).cmd.read() }).ok();
-        writeln!(w, "Status:     {:x}", unsafe {
+        writeln!(w, "Cmd:        {:#x?}", unsafe {
+            (*self.opregs).cmd.read()
+        })
+        .ok();
+        writeln!(w, "Status:     {:#x?}", unsafe {
             (*self.opregs).status.read()
         })
         .ok();
@@ -83,16 +141,8 @@ impl UsbHost {
             (*self.opregs).config.read()
         })
         .ok();
-        writeln!(w, "Ports[0]:   {:x}", unsafe {
+        writeln!(w, "Ports[0]:   {:#x?}", unsafe {
             (*self.opregs).ports[0].read()
-        })
-        .ok();
-        writeln!(w, "Ports[1]:   {:x}", unsafe {
-            (*self.opregs).ports[1].read()
-        })
-        .ok();
-        writeln!(w, "Ports[2]:   {:x}", unsafe {
-            (*self.opregs).ports[2].read()
         })
         .ok();
     }
