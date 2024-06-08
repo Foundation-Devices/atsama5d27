@@ -108,6 +108,27 @@ impl UsbHost {
         unsafe { (*self.opregs).config.write(1) };
     }
 
+    pub fn auto_reset(&mut self, port: usize) {
+        let mut port_status = unsafe { (*self.opregs).ports[port].read() };
+        if !port_status.connected() {
+            return;
+        }
+        if port_status.enabled() {
+            port_status.set_reset(false);
+        } else {
+            // We should check the line status bit, and release the device if it's 1,
+            // but we don't support low-speed devices, so whatever.
+
+            // Toggle reset
+            if !port_status.reset() {
+                port_status.set_reset(true);
+            } else {
+                port_status.set_reset(false);
+            }
+        }
+        unsafe { (*self.opregs).ports[port].write(port_status) }
+    }
+
     pub fn debug_info<W: core::fmt::Write>(&mut self, w: &mut W) {
         writeln!(w, "SParams:    {:x}", unsafe {
             (*self.caps).structural_params.read()

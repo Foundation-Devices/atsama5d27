@@ -262,6 +262,7 @@ fn test_usb(
     usb.configure();
     loop {
         pit.busy_wait_ms(MASTER_CLOCK_SPEED, 500);
+        usb.auto_reset(0);
         usb.debug_info(uart);
         let otg = otg_id.get();
         bc_otg.set(otg);
