@@ -13,7 +13,7 @@ use {
         tc::Tc,
         twi::Twi,
         uart::{Uart, Uart1},
-        usbhost::UsbHost,
+        usbhost::{Qtd, QueueHead, UsbHost, UsbRequest},
     },
     core::{
         arch::global_asm,
@@ -260,19 +260,48 @@ fn test_usb(
     usb.debug_info(uart);
     usb.run();
     usb.configure();
+
+    let mut qh = QueueHead::new(0, 0, 0x40);
+    unsafe { qh.link_to_self() };
+    let mut setup_data = [0u8; 8];
+    let mut dev_desc = [0u8; 0x40];
+
+    let mut qtds = unsafe {
+        [
+            Qtd::new_setup(
+                UsbRequest {
+                    typ: 0x80,
+                    request: 6, /*GET_DESCRIPTOR*/
+                    value: 0x100,
+                    index: 0,
+                    length: 0x40,
+                },
+                &mut setup_data,
+            ),
+            Qtd::new_in(&mut dev_desc),
+            Qtd::new_out(&[]),
+        ]
+    };
+    for qtd in &mut qtds {
+        unsafe { qh.add_qtd(qtd) }
+    }
     loop {
         pit.busy_wait_ms(MASTER_CLOCK_SPEED, 500);
         usb.auto_reset(0);
+        if usb.is_enabled(0) {
+            usb.set_async_queue_head(&mut qh);
+        }
         usb.debug_info(uart);
         let otg = otg_id.get();
         bc_otg.set(otg);
-        writeln!(uart, "OTG: {:?}", otg);
+        writeln!(uart, "QH: {qh:#?}");
+        writeln!(uart, "Desc: {dev_desc:?}");
+        writeln!(uart, "OTG: {otg:?}");
         let status = bq.status().unwrap();
-        writeln!(uart, "Charger: {:?}", status).ok();
+        writeln!(uart, "Charger: {status:?}").ok();
         writeln!(uart, "Charger status: {:?}", status.state().unwrap()).ok();
         writeln!(uart);
     }
-    Ok(())
 }
 
 #[no_mangle]
