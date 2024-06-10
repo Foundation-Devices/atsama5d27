@@ -352,8 +352,7 @@ impl Twi {
     }
 
     fn wait_for_status(&self, status: TWIStatus) -> Result<(), I2cError> {
-        let mut counter = TOP_TIMEOUT_CYCLES;
-        while counter > 0 {
+        for _ in 0..TOP_TIMEOUT_CYCLES {
             let curr_status = self.status();
 
             if curr_status.contains(TWIStatus::NACK) {
@@ -366,8 +365,6 @@ impl Twi {
             if curr_status.contains(status) {
                 return Ok(());
             }
-
-            counter -= 1;
         }
 
         Err(I2cError::Timeout)
