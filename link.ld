@@ -27,6 +27,7 @@ SECTIONS
     _sdata = .;
     *(.vectors)
     *(.data)
+    *(.data.*)
     _edata = .;
   } > DDR_MEM
 
@@ -35,6 +36,7 @@ SECTIONS
     . = ALIGN(4);
     _sbss = .;
     *(.bss)
+    *(.bss.*)
     _ebss = .;
   } > DDR_MEM
 
