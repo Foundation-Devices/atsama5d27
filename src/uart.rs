@@ -79,6 +79,25 @@ impl<U: UartPeriph> Uart<U> {
         }
     }
 
+    pub fn init(&mut self, clock_speed: u32, baud_rate: u32, parity: Parity) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+
+        // Reset everything
+        csr.wfo(CR_RSTTX, 1);
+        csr.wfo(CR_RSTRX, 1);
+        csr.wfo(CR_RXDIS, 1);
+        csr.wfo(CR_TXDIS, 1);
+        csr.wfo(CR_RSTSTA, 1);
+
+        // Set baud rate and parity
+        csr.wo(BRGR, clock_speed / (16 * baud_rate));
+        self.set_parity(parity);
+
+        // Enable receiver and transmitter
+        csr.wfo(CR_RXEN, 1);
+        csr.wfo(CR_TXEN, 1);
+    }
+
     pub fn set_baud(&mut self, clock_speed: u32, baud_rate: u32) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
 
@@ -159,6 +178,16 @@ impl<U: UartPeriph> Uart<U> {
             armv7::asm::nop();
         }
 
+        uart_csr.rf(RHR_RXCHR) as u8
+    }
+
+    pub fn is_overrun(&self) -> bool {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
+        uart_csr.rf(SR_OVRE) != 0
+    }
+
+    pub fn getc_isr(&self) -> u8 {
+        let uart_csr = CSR::new(self.base_addr as *mut u32);
         uart_csr.rf(RHR_RXCHR) as u8
     }
 }

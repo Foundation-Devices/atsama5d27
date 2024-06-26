@@ -36,6 +36,10 @@ required-features = []
 name = "charger"
 required-features = ["charger"]
 
+[[bin]]
+name = "uart-dma"
+required-features = []
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
