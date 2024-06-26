@@ -99,6 +99,7 @@ fn _entry() -> ! {
     uart.set_rx(true);
 
     init_logging(uart, Some(&TICK_COUNT));
+    log::set_max_level(log::LevelFilter::Info);
 
     // Enable interrupts
     unsafe {
@@ -325,7 +326,7 @@ impl ehci::EventHandler<u32> for DeviceConnectionListener {
                 return;
             }
         };
-        info!("First 4 blocks: {blocks:x?}");
+        debug!("First 4 blocks: {blocks:x?}");
     }
 
     fn device_disconnected(&mut self, _controller: &mut ehci::Controller<u32>, _address: u8) {
