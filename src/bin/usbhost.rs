@@ -327,6 +327,12 @@ impl ehci::EventHandler<u32> for DeviceConnectionListener {
             }
         };
         debug!("First 4 blocks: {blocks:x?}");
+
+        // List volume contents (if it's FAT formatted)
+        info!("Reading files...");
+        if list_files_on_disk(&mut mass_storage).is_err() {
+            error!("Couldn't read the FAT FS volume");
+        }
     }
 
     fn device_disconnected(&mut self, _controller: &mut ehci::Controller<u32>, _address: u8) {
