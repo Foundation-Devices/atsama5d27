@@ -82,7 +82,7 @@ charger = ["bq24157"]
 heap = ["embedded-alloc"]
 logging = ["log", "heap", "critical-section"]
 critical-section = ["dep:critical-section", "armv7/critical-section"]
-usb-host = ["bq24157", "ehci", "mass-storage", "heap", "logging"]
+usb-host = ["bq24157", "ehci", "mass-storage", "heap", "logging", "embedded-sdmmc"]
 
 default = ["lcd-console", "hal"]
 
