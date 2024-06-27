@@ -21,6 +21,8 @@ use {
     },
     core::{
         arch::global_asm,
+        cell::RefCell,
+        fmt::Debug,
         panic::PanicInfo,
         ptr::addr_of_mut,
         sync::atomic::{compiler_fence, AtomicUsize, Ordering::SeqCst},
@@ -29,7 +31,9 @@ use {
         descriptors::{DescriptorSet, EndpointType},
         EndpointDirection, QtdPool, QtdPoolElement, QueueHeadPool, QueueHeadPoolElement,
     },
+    embedded_sdmmc::{BlockDevice, TimeSource, VolumeIdx, VolumeManager},
     log::{debug, error, info, trace, warn},
+    mass_storage::{MassStorageError, MassStorageHost},
     utralib::HW_UHPHS_EHCI_BASE,
 };
 
@@ -272,66 +276,14 @@ impl ehci::EventHandler<u32> for DeviceConnectionListener {
         descriptor: DescriptorSet,
     ) {
         info!("Device connected");
-        let mut ep_in = 0;
-        let mut ep_out = 0;
-        let Some(configuration) = descriptor.configurations().next() else {
-            warn!("No config descriptor");
+        let Some(mass_storage) = create_mass_storage_device(controller, address, descriptor) else {
+            warn!("Could not open mass storage device");
             return;
         };
-        let Some(interface) = configuration.interfaces().find(|interface| {
-            interface.interface_class == 8 /* Mass strorage */
-                && interface.interface_sub_class == 6
-                && interface.interface_protocol == 0x50 /* Bulk only */
-        }) else {
-            warn!("Could not find mass storage interface");
-            return;
-        };
-
-        for endpoint in interface.endpoints() {
-            if endpoint.get_endpoint_type() == Some(EndpointType::Bulk) {
-                match endpoint.get_direction() {
-                    EndpointDirection::Out => ep_out = endpoint.get_endpoint_number(),
-                    EndpointDirection::In => ep_in = endpoint.get_endpoint_number(),
-                }
-                if let Err(e) = controller.open_endpoint(
-                    address,
-                    endpoint.get_endpoint_number(),
-                    endpoint.max_packet_size,
-                    endpoint.get_direction(),
-                ) {
-                    warn!("Could not open endpoint {endpoint:?}: {e:?}");
-                    return;
-                }
-            }
-        }
-        debug!("Using endpoints IN:{ep_in} OUT:{ep_out}");
-        let wrapper = BlockingUsbWrapper {
-            address,
-            ep_in,
-            ep_out,
-            controller,
-        };
-        let mut mass_storage = match mass_storage::MassStorageHost::new(wrapper) {
-            Ok(ms) => ms,
-            Err(e) => {
-                error!("Could not init mass storage device: {e:?}");
-                return;
-            }
-        };
-
-        let blocks = match mass_storage.read(0, 4) {
-            Ok(b) => b,
-            Err(e) => {
-                error!("Could not read 4 blocks from block 0: {e:?}");
-                return;
-            }
-        };
-        debug!("First 4 blocks: {blocks:x?}");
 
         // List volume contents (if it's FAT formatted)
-        info!("Reading files...");
-        if list_files_on_disk(&mut mass_storage).is_err() {
-            error!("Couldn't read the FAT FS volume");
+        if let Err(e) = list_files_on_disk(mass_storage) {
+            error!("Couldn't read the FAT FS volume: {e:?}");
         }
     }
 
@@ -347,6 +299,62 @@ impl ehci::EventHandler<u32> for DeviceConnectionListener {
         _context: u32,
     ) {
         info!("Spurious transfer result");
+    }
+}
+
+// ----- Mass storage -> embedded-emmc BlockDevice -----
+
+struct MassStorageWrapper<'a>(RefCell<MassStorageHost<BlockingUsbWrapper<'a>>>);
+
+impl<'a> Debug for MassStorageWrapper<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "MassStorageWrapper")
+    }
+}
+
+impl<'a> BlockDevice for MassStorageWrapper<'a> {
+    type Error = MassStorageError;
+
+    fn read(
+        &self,
+        blocks: &mut [embedded_sdmmc::Block],
+        start_block_idx: embedded_sdmmc::BlockIdx,
+        _reason: &str,
+    ) -> Result<(), Self::Error> {
+        let data = self
+            .0
+            .borrow_mut()
+            .read(start_block_idx.0 as u32, blocks.len() as u16)?;
+        for (block, data_part) in blocks
+            .iter_mut()
+            .zip(data.chunks(embedded_sdmmc::Block::LEN))
+        {
+            block.contents.copy_from_slice(data_part);
+        }
+        Ok(())
+    }
+
+    fn write(
+        &self,
+        _blocks: &[embedded_sdmmc::Block],
+        _start_block_idx: embedded_sdmmc::BlockIdx,
+    ) -> Result<(), Self::Error> {
+        return Err(MassStorageError::OtherError);
+    }
+
+    fn num_blocks(&self) -> Result<embedded_sdmmc::BlockCount, Self::Error> {
+        Ok(embedded_sdmmc::BlockCount(
+            self.0.borrow().block_count() as u32
+        ))
+    }
+}
+
+#[derive(Debug)]
+struct FakeTimeSource;
+
+impl TimeSource for FakeTimeSource {
+    fn get_timestamp(&self) -> embedded_sdmmc::Timestamp {
+        embedded_sdmmc::Timestamp::from_fat(0, 0)
     }
 }
 
@@ -386,6 +394,88 @@ fn test_usb() -> ! {
 
         sleep_ms(0);
     }
+}
+
+fn create_mass_storage_device(
+    controller: &mut ehci::Controller<u32>,
+    address: u8,
+    descriptor: DescriptorSet,
+) -> Option<MassStorageHost<BlockingUsbWrapper>> {
+    let mut ep_in = 0;
+    let mut ep_out = 0;
+    let Some(configuration) = descriptor.configurations().next() else {
+        warn!("No config descriptor");
+        return None;
+    };
+    let Some(interface) = configuration.interfaces().find(|interface| {
+        interface.interface_class == 8 /* Mass storage */
+                && interface.interface_sub_class == 6
+                && interface.interface_protocol == 0x50 /* Bulk only */
+    }) else {
+        warn!("Could not find mass storage interface");
+        return None;
+    };
+
+    for endpoint in interface.endpoints() {
+        if endpoint.get_endpoint_type() == Some(EndpointType::Bulk) {
+            match endpoint.get_direction() {
+                EndpointDirection::Out => ep_out = endpoint.get_endpoint_number(),
+                EndpointDirection::In => ep_in = endpoint.get_endpoint_number(),
+            }
+            if let Err(e) = controller.open_endpoint(
+                address,
+                endpoint.get_endpoint_number(),
+                endpoint.max_packet_size,
+                endpoint.get_direction(),
+            ) {
+                warn!("Could not open endpoint {endpoint:?}: {e:?}");
+                return None;
+            }
+        }
+    }
+    debug!("Using endpoints IN:{ep_in} OUT:{ep_out}");
+    let wrapper = BlockingUsbWrapper {
+        address,
+        ep_in,
+        ep_out,
+        controller,
+    };
+    let mut mass_storage = match mass_storage::MassStorageHost::new(wrapper) {
+        Ok(ms) => ms,
+        Err(e) => {
+            error!("Could not init mass storage device: {e:?}");
+            return None;
+        }
+    };
+
+    let blocks = match mass_storage.read(0, 4) {
+        Ok(b) => b,
+        Err(e) => {
+            error!("Could not read 4 blocks from block 0: {e:?}");
+            return None;
+        }
+    };
+    debug!("First 4 blocks: {blocks:x?}");
+    return Some(mass_storage);
+}
+
+fn list_files_on_disk(
+    mass_storage: MassStorageHost<BlockingUsbWrapper>,
+) -> Result<(), embedded_sdmmc::Error<MassStorageError>> {
+    let mut volume_mgr = VolumeManager::new(
+        MassStorageWrapper(RefCell::new(mass_storage)),
+        FakeTimeSource,
+    );
+    let mut volume0 = volume_mgr.open_volume(VolumeIdx(0))?;
+    let mut root_dir = volume0.open_root_dir()?;
+    info!("Files in root:");
+    root_dir.iterate_dir(|de| {
+        if de.attributes.is_archive() {
+            info!("{} {} {:?}", de.name, de.size, de.attributes)
+        }
+    })?;
+
+    Ok(())
 }
 
 // ----- Interrupt handlers -----
