@@ -38,7 +38,7 @@ dependencies = [
  "ehci",
  "embedded-alloc",
  "embedded-graphics",
- "embedded-hal",
+ "embedded-hal 0.2.7",
  "embedded-sdmmc",
  "ft3269",
  "hex",
@@ -88,7 +88,7 @@ version = "0.1.0"
 source = "git+https://github.com/Foundation-Devices/bq24157.git#9e0452ba709b437705d3bfce42a4d0cd1acd77c5"
 dependencies = [
  "bitfield 0.15.0",
- "embedded-hal",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]
@@ -131,7 +131,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c629ac8aeaf71f2e2cdf460938d9e398da7aec850541d48f3c5ce5c2fa85e87"
 dependencies = [
  "bitfield 0.13.2",
- "embedded-hal",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]
@@ -189,13 +189,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "embedded-sdmmc"
-version = "0.6.0"
+name = "embedded-hal"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3778099e48fedd6b81048e1d84f60db663124f5c6e22fcef495040b9d51fe06a"
+checksum = "361a90feb7004eca4019fb28352a9465666b24f840f5c3cddf0ff13920590b89"
+
+[[package]]
+name = "embedded-sdmmc"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da528dbf3f1c1f0b321552bc334d04799bb17c1936de55bccfb643a4f39300d8"
 dependencies = [
  "byteorder",
- "embedded-hal",
+ "embedded-hal 1.0.0",
  "heapless",
 ]
 
@@ -214,7 +220,7 @@ version = "0.1.0"
 source = "git+https://github.com/Foundation-Devices/ft3269.git#6f9437ad33742cc186a93d82554426cd7a434ab7"
 dependencies = [
  "bitflags",
- "embedded-hal",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]
@@ -251,7 +257,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59e5c3271385f98564019c7c77b28ddba07c4aed8253e430490162893261dd88"
 dependencies = [
- "embedded-hal",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]
@@ -355,7 +361,7 @@ name = "ovm7690-rs"
 version = "0.1.0"
 source = "git+https://github.com/Foundation-Devices/ovm7690-rs.git#351844f720ecc6f5ed6ef37c97d9070e1b2a831b"
 dependencies = [
- "embedded-hal",
+ "embedded-hal 0.2.7",
 ]
 
 [[package]]
