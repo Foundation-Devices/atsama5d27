@@ -372,9 +372,10 @@ fn test_usb() -> ! {
 
     let mut ehci_ctrl = ehci::Controller::new(
         HW_UHPHS_EHCI_BASE,
-        unsafe { QueueHeadPool::new(QH_POOL_BACKING.as_mut_ptr_range()) },
-        unsafe { QtdPool::new(QTD_POOL_BACKING.as_mut_ptr_range()) },
+        unsafe { QueueHeadPool::new(QH_POOL_BACKING.as_mut_ptr_range(), virt_to_phys) },
+        unsafe { QtdPool::new(QTD_POOL_BACKING.as_mut_ptr_range(), virt_to_phys) },
         flush_caches,
+        virt_to_phys,
     )
     .unwrap();
     let mut otg_prev = false;
@@ -528,4 +529,9 @@ fn sleep_ms(ms: usize) {
 
 fn flush_caches(_: &[u8]) {
     /* No caches are used in this example */
+}
+
+fn virt_to_phys(p: *const u8) -> usize {
+    /* No MMUs were harmed in this process */
+    p as usize
 }

@@ -137,7 +137,7 @@ dependencies = [
 [[package]]
 name = "ehci"
 version = "0.1.1"
-source = "git+https://github.com/Foundation-Devices/ehci.git#704e8b4280db89eff4ff24bbb1d0d9bb64040c87"
+source = "git+https://github.com/Foundation-Devices/ehci.git#90c79465d34af55615dc43ea203de4ec8c46def6"
 dependencies = [
  "bitfield 0.15.0",
  "log",
