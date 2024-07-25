@@ -47,7 +47,7 @@ fn _entry() -> ! {
     atsama5d27::l1cache::disable_dcache();
 
     let mut pmc = Pmc::new();
-    pmc.enable_peripheral_clock(PeripheralId::Pit);
+    pmc.enable_peripheral_clock(PeripheralId::Uart1);
     pmc.enable_peripheral_clock(PeripheralId::Aic);
     pmc.enable_peripheral_clock(PeripheralId::Pioa);
     pmc.enable_peripheral_clock(PeripheralId::Piob);
@@ -140,6 +140,7 @@ unsafe extern "C" fn aic_spurious_handler() {
 #[no_mangle]
 unsafe extern "C" fn uart_irq_handler() {
     let mut uart = UartType::new();
+
     let char = uart.getc() as char;
     writeln!(uart, "Received character: {}", char).ok();
 }

@@ -1,8 +1,9 @@
 extern crate alloc;
 
-use core::{cell::RefCell, sync::atomic::AtomicUsize};
-
-use alloc::boxed::Box;
+use {
+    alloc::boxed::Box,
+    core::{cell::RefCell, sync::atomic::AtomicUsize},
+};
 
 struct UartLogger<UartType> {
     uart: critical_section::Mutex<RefCell<UartType>>,

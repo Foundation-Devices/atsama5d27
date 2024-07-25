@@ -2,8 +2,14 @@
 
 use utralib::{
     utra::pmc::{
-        CKGR_UCKR, CKGR_UCKR_BIASEN, CKGR_UCKR_UPLLCOUNT, CKGR_UCKR_UPLLEN, PMC_PCR, PMC_PCR_PID,
-        PMC_SCER_ISCCK, PMC_SCER_LCDCK,
+        CKGR_UCKR,
+        CKGR_UCKR_BIASEN,
+        CKGR_UCKR_UPLLCOUNT,
+        CKGR_UCKR_UPLLEN,
+        PMC_PCR,
+        PMC_PCR_PID,
+        PMC_SCER_ISCCK,
+        PMC_SCER_LCDCK,
     },
     *,
 };

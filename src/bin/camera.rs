@@ -5,7 +5,7 @@ use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
         display::FramebufDisplay,
-        isc::{ClkSel, DmaControlConfig, DmaView, ISCStatus, Isc},
+        isc::{ClkSel, DmaBuffer, DmaControlConfig, DmaView, ISCStatus, Isc},
         lcdc::{ColorMode, LayerConfig, LcdDmaDesc, Lcdc, LcdcLayerId},
         lcdspi::LcdSpi,
         pio::{Direction, Func, Pio, PioB, PioC, PioPort},
@@ -44,7 +44,7 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
 };
 
 const CAM_WIDTH: usize = 480;
-const CAM_HEIGHT: usize = 640;
+const CAM_HEIGHT: usize = 480;
 
 static mut FRAMEBUFFER_CAM_ONE: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
     Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
@@ -56,9 +56,12 @@ static mut DMA_DESC_CAM_ONE: LcdDmaDesc = LcdDmaDesc {
 
 static mut FRAMEBUFFER_CAM_TWO: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
     Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
+static mut FRAMEBUFFER_CAM_THREE: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
+    Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
+
 const CAM_LAYER: LcdcLayerId = LcdcLayerId::Ovr1;
 
-const ISC_MASTER_CLK_DIV: u8 = 15; // This gives around 30 fps
+const ISC_MASTER_CLK_DIV: u8 = 18; // This gives around 30 fps
 const ISC_MASTER_CLK_SEL: ClkSel = ClkSel::Hclock;
 const ISC_ISP_CLK_DIV: u8 = 2;
 const ISC_ISP_CLK_SEL: ClkSel = ClkSel::Hclock;
@@ -156,13 +159,15 @@ fn _entry() -> ! {
     let fb1 = unsafe { FRAMEBUFFER_ONE.0.as_ptr() as usize };
     unsafe {
         FRAMEBUFFER_ONE.0.fill(0xc0c0c0);
-        FRAMEBUFFER_CAM_ONE.0.fill(0x00aa00);
+        FRAMEBUFFER_CAM_ONE.0.fill(0x00ff00);
         FRAMEBUFFER_CAM_TWO.0.fill(0x0000ff);
+        FRAMEBUFFER_CAM_THREE.0.fill(0xff0000);
     }
 
     let dma_desc_cam_one = (unsafe { &mut DMA_DESC_CAM_ONE } as *const _) as usize;
-    let fb_cam_one = 0x20cf3000; //unsafe { FRAMEBUFFER_CAM_ONE.0.as_ptr() as usize };
-    let fb_cam_two = 0x20c5c000; //unsafe { FRAMEBUFFER_CAM_TWO.0.as_ptr() as usize };
+    let fb_cam_one = unsafe { FRAMEBUFFER_CAM_ONE.0.as_ptr() as usize };
+    let fb_cam_two = unsafe { FRAMEBUFFER_CAM_TWO.0.as_ptr() as usize };
+    let fb_cam_three = unsafe { FRAMEBUFFER_CAM_THREE.0.as_ptr() as usize };
 
     unsafe {
         let slice = core::slice::from_raw_parts_mut(fb_cam_one as *mut u32, CAM_WIDTH * CAM_HEIGHT);
@@ -194,6 +199,10 @@ fn _entry() -> ! {
     lcdc.enable_layer(CAM_LAYER);
     lcdc.set_channel_enable(CAM_LAYER, false);
     lcdc.set_rgb_mode_input(CAM_LAYER, ColorMode::Rgb565);
+    lcdc.set_sif(CAM_LAYER, false);
+    lcdc.wait_for_sync_in_progress();
+    lcdc.set_clock_divider(18);
+    lcdc.set_lcdc_clk_source(false);
 
     const CAMERA_BYTES_PER_PX: usize = 2;
     let img_h = CAM_WIDTH as i32;
@@ -311,16 +320,13 @@ fn _entry() -> ! {
     .ok();
     writeln!(console, "Configuring DMA fb: {:08x}", fb_cam_one).ok();
 
+    let buffers = &[
+        DmaBuffer::new(isc_dma_view_one, isc_dma_view_one, fb_cam_one as u32),
+        // DmaBuffer::new(isc_dma_view_two, isc_dma_view_two, fb_cam_two as u32),
+    ];
+
     isc.enable_interrupt(ISCStatus::DDONE);
-    isc.configure(
-        isc_dma_view_one,
-        isc_dma_view_one,
-        isc_dma_view_two,
-        isc_dma_view_two,
-        fb_cam_one as u32,
-        fb_cam_one as u32, // TODO: change to the second buffer when double buffering is on
-        &dma_control_config,
-    );
+    isc.configure(false, buffers, &dma_control_config, || ());
     writeln!(console, "Status: {:?}", isc.interrupt_status()).ok();
     isc.start_capture();
 
@@ -374,10 +380,43 @@ unsafe extern "C" fn tc0_irq_handler() {
 #[no_mangle]
 unsafe extern "C" fn isc_irq_handler() {
     let mut isc = Isc::new();
+    let mut lcdc = Lcdc::new(WIDTH as u16, HEIGHT as u16);
 
     let status = isc.interrupt_status();
     if status.contains(ISCStatus::DDONE) {
-        NUM_FRAMES.store(NUM_FRAMES.load(Relaxed) + 1, Relaxed);
+        let frame_num = NUM_FRAMES.load(Relaxed) + 1;
+        NUM_FRAMES.store(frame_num, Relaxed);
+
+        let fb_one = unsafe { FRAMEBUFFER_CAM_ONE.0.as_ptr() as u32 };
+        let fb_two = unsafe { FRAMEBUFFER_CAM_TWO.0.as_ptr() as u32 };
+        let (fb_back, fb_front) = if frame_num % 2 == 0 {
+            (fb_one, fb_two)
+        } else {
+            (fb_two, fb_one)
+        };
+
+        let dma_desc_cam_one = (unsafe { &mut DMA_DESC_CAM_ONE } as *const _) as usize;
+        lcdc.update_layer(
+            &LayerConfig::new(
+                CAM_LAYER,
+                fb_front as usize,
+                dma_desc_cam_one,
+                dma_desc_cam_one,
+            ),
+            || (),
+        );
+        let isc_dma_view_one = (unsafe { &mut ISC_DMA_VIEW_ONE } as *const _) as u32;
+        isc.configure(
+            false,
+            &[DmaBuffer::new(isc_dma_view_one, isc_dma_view_one, fb_back)],
+            &DmaControlConfig {
+                descriptor_enable: true,
+                ..Default::default()
+            },
+            || (),
+        );
+        while lcdc.is_add_to_queue_pending(CAM_LAYER) {}
+        isc.start_capture();
     }
 }
 

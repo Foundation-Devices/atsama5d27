@@ -7,9 +7,11 @@
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
+        pio::{Direction, Func, Pio},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         tc::Tc,
+        twi::Twi,
         uart::{Uart, Uart1},
     },
     core::{
@@ -19,8 +21,6 @@ use {
         sync::atomic::{compiler_fence, Ordering::SeqCst},
     },
 };
-use atsama5d27::pio::{Direction, Func, Pio};
-use atsama5d27::twi::Twi;
 
 global_asm!(include_str!("../start.S"));
 
@@ -129,7 +129,7 @@ fn _entry() -> ! {
 
     //////////////////////////////////
 
-    let mut bq = bq24157::Bq24157::new(twi0);
+    let mut bq = bq24157::Bq24157::new(unsafe { twi0.clone() });
     assert!(bq.verify_chip_id().unwrap(), "unexpected chip ID");
     writeln!(console, "BQ24517 chip ID verified").ok();
 
@@ -146,8 +146,14 @@ fn _entry() -> ! {
     safety.set_vr_max(VR_MAX);
     writeln!(console, "Setting safety limits: {:?}", safety).ok();
     bq.set_safety_limits(safety).unwrap();
-    writeln!(console, "Safety limits initialized: {:?}", bq.safety_limits()).ok();
-    // assert_eq!(bq.safety_limits().unwrap().v_curr_sense(), V_CURR_SENSE, "safety is locked");
+    writeln!(
+        console,
+        "Safety limits initialized: {:?}",
+        bq.safety_limits()
+    )
+    .ok();
+    // assert_eq!(bq.safety_limits().unwrap().v_curr_sense(), V_CURR_SENSE, "safety is
+    // locked");
 
     //////////////////////////////////
 
@@ -161,7 +167,11 @@ fn _entry() -> ! {
     let status = bq.status().unwrap();
     writeln!(console, "fault chg: {:?}", status.charge_fault()).ok();
 
-    writeln!(console, "Setting input current limit to 500 mA and enabling TE").ok();
+    writeln!(
+        console,
+        "Setting input current limit to 500 mA and enabling TE"
+    )
+    .ok();
     let mut control = bq.control().unwrap();
     writeln!(console, "before: {:?}", control).ok();
     control.set_te(true);
@@ -189,20 +199,37 @@ fn _entry() -> ! {
     writeln!(console, "before: {:?}", special_charger_voltage).ok();
 
     special_charger_voltage.set_low_chg(false);
-    bq.set_special_charger_voltage(special_charger_voltage).unwrap();
-    writeln!(console, "after: {:?}", bq.special_charger_voltage().unwrap()).ok();
+    bq.set_special_charger_voltage(special_charger_voltage)
+        .unwrap();
+    writeln!(
+        console,
+        "after: {:?}",
+        bq.special_charger_voltage().unwrap()
+    )
+    .ok();
 
     //////////////////////////////////
     let status = bq.status().unwrap();
     writeln!(console, "fault chg: {:?}", status.charge_fault()).ok();
 
-    writeln!(console, "Setting charger current to 550 mA with termination current at 100 mA").ok();
+    writeln!(
+        console,
+        "Setting charger current to 550 mA with termination current at 100 mA"
+    )
+    .ok();
     let mut chg_curr = bq.charger_current().unwrap();
     writeln!(console, "before: {:?}", chg_curr).ok();
     chg_curr.set_v_iterm(0b011); // 50mA + 1 * 50mA + 0*100mA + 0*200mA = 100mA
     chg_curr.set_chr_curr_sense_v(0b000); // 550 mA
     bq.set_charge_current(chg_curr).unwrap();
     writeln!(console, "after: {:?}", bq.charger_current().unwrap()).ok();
+
+    let mut buf = [0; 7];
+    twi0.write_read_bytes(0x6A, &[0], &mut buf)
+        .expect("dumo chip regs");
+    for (i, byte) in buf.iter().enumerate() {
+        writeln!(console, "0x{:02x} = 0x{:02x}", i, *byte).ok();
+    }
 
     writeln!(console, "Setting CD to LOW to enable charging").ok();
     bc_cd.set(false);

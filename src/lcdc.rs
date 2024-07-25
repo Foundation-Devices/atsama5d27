@@ -289,7 +289,7 @@ impl Lcdc {
         self.set_channel_enable(layer, false);
     }
 
-    fn set_lcdc_clk_source(&mut self, is_x2: bool) {
+    pub fn set_lcdc_clk_source(&mut self, is_x2: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
         lcdc_csr.rmwf(LCDCFG0_CLKSEL, is_x2 as u32)
     }
@@ -312,7 +312,7 @@ impl Lcdc {
         lcdc_csr.rmwf(LCDCFG0_CLKPWMSEL, source as u32);
     }
 
-    fn set_clock_divider(&self, value: u8) {
+    pub fn set_clock_divider(&self, value: u8) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
         lcdc_csr.rmwf(LCDCFG0_CLKDIV, value.saturating_sub(2) as u32);
     }
@@ -1000,7 +1000,7 @@ impl Lcdc {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         match layer {
-            LcdcLayerId::Base => (), // Unsupported
+            LcdcLayerId::Base => lcdc_csr.rmwf(BASECFG0_SIF, sif as u32),
             LcdcLayerId::Ovr1 => lcdc_csr.rmwf(OVR1CFG0_SIF, sif as u32),
             LcdcLayerId::Ovr2 => (), /* FIXME: OVR2CFG0_SIF not found in generated utralib: */
             // lcdc_csr.rmwf(OVR2CFG0_SIF, sif as u32),
