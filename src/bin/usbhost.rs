@@ -29,7 +29,11 @@ use {
     },
     ehci::{
         descriptors::{DescriptorSet, EndpointType},
-        EndpointDirection, QtdPool, QtdPoolElement, QueueHeadPool, QueueHeadPoolElement,
+        EndpointDirection,
+        QtdPool,
+        QtdPoolElement,
+        QueueHeadPool,
+        QueueHeadPoolElement,
     },
     embedded_sdmmc::{BlockDevice, TimeSource, VolumeIdx, VolumeManager},
     log::{debug, error, info, trace, warn},

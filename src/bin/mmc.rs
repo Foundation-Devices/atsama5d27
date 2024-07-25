@@ -184,7 +184,9 @@ fn _entry() -> ! {
 
     let disk = Disk(sdmmc0);
     let mut volume_mgr = VolumeManager::new(disk, Clock);
-    let volume = volume_mgr.open_volume(VolumeIdx(0)).expect("open volume");
+    let volume = volume_mgr
+        .open_raw_volume(VolumeIdx(2))
+        .expect("open volume");
     let root_dir = volume_mgr.open_root_dir(volume).expect("open root dir");
 
     writeln!(uart, "Files in /:").ok();
@@ -227,7 +229,6 @@ fn _entry() -> ! {
     }
 
     volume_mgr.close_dir(root_dir).expect("close dir");
-    volume_mgr.close_volume(volume).expect("close volume");
 
     loop {
         armv7::asm::wfi();
