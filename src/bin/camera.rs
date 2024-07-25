@@ -44,7 +44,7 @@ static mut DMA_DESC_ONE: LcdDmaDesc = LcdDmaDesc {
 };
 
 const CAM_WIDTH: usize = 480;
-const CAM_HEIGHT: usize = 640;
+const CAM_HEIGHT: usize = 480;
 
 static mut FRAMEBUFFER_CAM_ONE: Aligned4<{ CAM_WIDTH * CAM_HEIGHT }> =
     Aligned4([0; CAM_WIDTH * CAM_HEIGHT]);
@@ -200,6 +200,9 @@ fn _entry() -> ! {
     lcdc.set_channel_enable(CAM_LAYER, false);
     lcdc.set_rgb_mode_input(CAM_LAYER, ColorMode::Rgb565);
     lcdc.set_sif(CAM_LAYER, false);
+    lcdc.wait_for_sync_in_progress();
+    lcdc.set_clock_divider(18);
+    lcdc.set_lcdc_clk_source(false);
 
     const CAMERA_BYTES_PER_PX: usize = 2;
     let img_h = CAM_WIDTH as i32;
