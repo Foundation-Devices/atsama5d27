@@ -246,7 +246,6 @@ impl Flexcom {
         let mut counter = TOP_TIMEOUT_CYCLES;
         while counter > 0 {
             let curr_status = self.status();
-            writeln!(Uart::<Uart1>::new(), "s: {curr_status:?}").ok();
             if counter - 1 == 0 {
                 writeln!(
                     Uart::<Uart1>::new(),
