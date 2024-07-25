@@ -1,12 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Foundation Devices, Inc. <hello@foundationdevices.com>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use utralib::{
-    utra::{xdmac0::*},
-    CSR,
-    HW_XDMAC0_BASE,
-    HW_XDMAC1_BASE,
-};
+use utralib::{utra::xdmac0::*, CSR, HW_XDMAC0_BASE, HW_XDMAC1_BASE};
 
 pub struct Xdmac {
     base_addr: u32,

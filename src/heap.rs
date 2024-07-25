@@ -1,7 +1,4 @@
-
-use core::mem::MaybeUninit;
-
-use embedded_alloc::Heap;
+use {core::mem::MaybeUninit, embedded_alloc::Heap};
 
 #[global_allocator]
 static mut HEAP: Heap = Heap::empty();
