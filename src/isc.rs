@@ -266,6 +266,40 @@ pub enum ClkSel {
     Gck,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct DmaBuffer {
+    pub dma_desc_addr: u32,
+    pub dma_desc_phys_addr: u32,
+    pub fb_phys_addr: u32,
+}
+
+impl DmaBuffer {
+    pub fn new(dma_desc_addr: u32, dma_desc_phys_addr: u32, fb_phys_addr: u32) -> Self {
+        DmaBuffer {
+            dma_desc_addr,
+            dma_desc_phys_addr,
+            fb_phys_addr,
+        }
+    }
+
+    /// Applies DMA descriptor to the memory address located at `dma_desc_addr`.
+    /// Optionally sets the next descriptor address or loops the descriptor on itself.
+    fn write_dma_descriptor(&self, next: Option<&DmaBuffer>) {
+        // Loop the descriptor on itself it there's no next descriptor
+        let next_desc_phys_addr = next
+            .map(|d| d.dma_desc_phys_addr)
+            .unwrap_or(self.dma_desc_phys_addr);
+
+        let dma_desc_1 = self.dma_desc_addr as *mut DmaView;
+        unsafe {
+            (*dma_desc_1).ctrl = 0b01; // Mode = packed (0), descriptor enable = 1
+            (*dma_desc_1).next_desc = next_desc_phys_addr;
+            (*dma_desc_1).addr = self.fb_phys_addr;
+            (*dma_desc_1).stride = 0;
+        }
+    }
+}
+
 pub struct Isc {
     base_addr: u32,
 }
@@ -323,17 +357,14 @@ impl Isc {
 
     pub fn configure(
         &mut self,
-        dma_desc_addr_1: u32,
-        dma_desc_phys_addr_1: u32,
-        dma_desc_addr_2: u32,
-        dma_desc_phys_addr_2: u32,
-        fb_1_phys_addr: u32,
-        fb_2_phys_addr: u32,
+        is_continuous: bool,
+        buffers: &[DmaBuffer],
         dma_control_config: &DmaControlConfig,
+        cache_maintenance: impl Fn(),
     ) {
         self.reset();
 
-        self.pfe_set_continuous_mode(true);
+        self.pfe_set_continuous_mode(is_continuous);
         self.pfe_set_pclk_gated(true);
 
         // Configure the Parallel Front End module performs data
@@ -356,15 +387,7 @@ impl Isc {
         self.rlp_configure(RlpMode::Dat8, 0xff);
 
         // Configure DMA
-        self.configure_dma(
-            dma_desc_addr_1,
-            dma_desc_phys_addr_1,
-            dma_desc_addr_2,
-            dma_desc_phys_addr_2,
-            fb_1_phys_addr,
-            fb_2_phys_addr,
-            dma_control_config,
-        );
+        self.configure_dma(buffers, dma_control_config, cache_maintenance);
 
         // Update profile
         self.update_profile();
@@ -406,31 +429,23 @@ impl Isc {
 
     fn configure_dma(
         &mut self,
-        dma_desc_addr_1: u32,
-        dma_desc_phys_addr_1: u32,
-        dma_desc_addr_2: u32,
-        dma_desc_phys_addr_2: u32,
-        fb_1_phys_addr: u32,
-        fb_2_phys_addr: u32,
+        dma_buffers: &[DmaBuffer],
         dma_control_config: &DmaControlConfig,
+        cache_maintenance: impl Fn(),
     ) {
-        let dma_desc_1 = dma_desc_addr_1 as *mut DmaView;
-        unsafe {
-            (*dma_desc_1).ctrl = 0b01; // Mode = packed (0), descriptor enable = 1
-            (*dma_desc_1).next_desc = dma_desc_phys_addr_2; // Loop the descriptor linked list
-            (*dma_desc_1).addr = fb_1_phys_addr;
-            (*dma_desc_1).stride = 0;
+        // Build a linked list of DMA descriptors
+        let first_dma_buffer = dma_buffers.first().expect("empty DMA buffer list");
+        for desc_pair in dma_buffers.windows(2) {
+            desc_pair[0].write_dma_descriptor(Some(&desc_pair[1]));
+        }
+        if let Some(last_desc) = dma_buffers.iter().last() {
+            last_desc.write_dma_descriptor(Some(first_dma_buffer));
         }
 
-        let dma_desc_2 = dma_desc_addr_2 as *mut DmaView;
-        unsafe {
-            (*dma_desc_2).ctrl = 0b01; // Mode = packed (0), descriptor enable = 1
-            (*dma_desc_2).next_desc = dma_desc_phys_addr_1; // Loop the descriptor linked list
-            (*dma_desc_2).addr = fb_2_phys_addr;
-            (*dma_desc_2).stride = 0;
-        }
+        cache_maintenance();
 
-        self.set_dma_desc_phys_addr(dma_desc_phys_addr_1);
+        // Configure the beginning of the descriptor list
+        self.set_dma_desc_phys_addr(first_dma_buffer.dma_desc_phys_addr);
         self.dma_configure_register(
             DmaInputMode::Packed8,
             DMABurstSize::Beats16,
