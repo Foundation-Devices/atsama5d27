@@ -429,7 +429,7 @@ impl Lcdc {
         }
     }
 
-    fn set_disp_signal_enable(&mut self, enable: bool) {
+    pub fn set_disp_signal_enable(&mut self, enable: bool) {
         let mut lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         if enable {
@@ -439,7 +439,7 @@ impl Lcdc {
         }
     }
 
-    fn wait_for_disp_signal(&self) {
+    pub fn wait_for_disp_signal(&self) {
         let lcdc_csr = CSR::new(self.base_addr as *mut u32);
 
         while lcdc_csr.rf(LCDSR_DISPSTS) == 0 {
