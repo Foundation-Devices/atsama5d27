@@ -59,6 +59,7 @@ ovm7690-rs = { git = "https://github.com/Foundation-Devices/ovm7690-rs.git", opt
 embedded-sdmmc = { version = "0.7.0", default-features = false, optional = true }
 hex = { version = "0.4.3", default-features = false, optional = true }
 bq24157 = { git = "https://github.com/Foundation-Devices/bq24157.git", optional = true }
+bq27421 = { git = "https://github.com/Foundation-Devices/bq27421/", optional = true }
 ehci = { git = "https://github.com/Foundation-Devices/ehci.git", optional = true }
 mass-storage = { git = "https://github.com/Foundation-Devices/mass-storage.git", optional = true }
 embedded-alloc = { version = "0.5.1", optional = true }
@@ -78,7 +79,7 @@ mmc = ["embedded-sdmmc"]
 camera-dev = []
 camera-prod = []
 sha = ["hex"]
-charger = ["bq24157"]
+charger = ["bq24157", "bq27421"]
 heap = ["embedded-alloc"]
 logging = ["log", "heap", "critical-section"]
 critical-section = ["dep:critical-section", "armv7/critical-section"]

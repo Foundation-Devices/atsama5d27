@@ -207,12 +207,30 @@ fn _entry() -> ! {
     writeln!(console, "Setting CD to LOW to enable charging").ok();
     bc_cd.set(false);
 
+    //////////////////////////////////
+    let mut fuel_gauge = bq27421::Bq24157::new(Twi::twi0());
+    assert!(fuel_gauge.verify_chip_id().unwrap(), "unexpected fuel gauge chip ID");
+    writeln!(console, "Fuel gauge status: {:?}", fuel_gauge.status().unwrap()).ok();
+
     loop {
         let status = bq.status().unwrap();
+        writeln!(console, "").ok();
         writeln!(console, "{:?}", status).ok();
         writeln!(console, "{:?}", status.state().unwrap()).ok();
-        writeln!(console, "fault chg: {:?}", status.charge_fault().unwrap()).ok();
-        writeln!(console, "fault boost: {:?}", status.boost_fault().unwrap()).ok();
+        writeln!(
+            console,
+            "fault chg: {:?}   fault boost: {:?}",
+            status.charge_fault().unwrap(),
+            status.boost_fault().unwrap(),
+        ).ok();
+        writeln!(console, "Fuel gauge flags: {:?}", fuel_gauge.flags().unwrap()).ok();
+        writeln!(
+            console,
+            "State of charge: {}  Charge current: {}  Capacity: {}",
+            fuel_gauge.state_of_charge().unwrap(),
+            fuel_gauge.charge_current().unwrap(),
+            fuel_gauge.capacity().unwrap(),
+        ).ok();
 
         pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
     }
