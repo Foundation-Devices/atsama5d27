@@ -235,7 +235,7 @@ fn _entry() -> ! {
     bc_cd.set(false);
 
     //////////////////////////////////
-    let mut fuel_gauge = bq27421::Bq24157::new(Twi::twi0());
+    let mut fuel_gauge = bq27421::Bq27421::new(Twi::twi0());
     assert!(fuel_gauge.verify_chip_id().unwrap(), "unexpected fuel gauge chip ID");
     writeln!(console, "Fuel gauge status: {:?}", fuel_gauge.status().unwrap()).ok();
 

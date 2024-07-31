@@ -95,6 +95,7 @@ dependencies = [
 [[package]]
 name = "bq27421"
 version = "0.1.0"
+source = "git+https://github.com/Foundation-Devices/bq27421.git#52eaa6283bca0e0696ddd13dc4fcf082f70710de"
 dependencies = [
  "bitfield 0.15.0",
  "embedded-hal 0.2.7",
