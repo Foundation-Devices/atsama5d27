@@ -33,6 +33,7 @@ dependencies = [
  "armv7",
  "bitflags",
  "bq24157",
+ "bq27421",
  "critical-section",
  "drv2605",
  "ehci",
@@ -86,6 +87,14 @@ checksum = "327762f6e5a765692301e5bb513e0d9fef63be86bbc14528052b1cd3e6f03e07"
 name = "bq24157"
 version = "0.1.0"
 source = "git+https://github.com/Foundation-Devices/bq24157.git#9e0452ba709b437705d3bfce42a4d0cd1acd77c5"
+dependencies = [
+ "bitfield 0.15.0",
+ "embedded-hal 0.2.7",
+]
+
+[[package]]
+name = "bq27421"
+version = "0.1.0"
 dependencies = [
  "bitfield 0.15.0",
  "embedded-hal 0.2.7",
