@@ -30,6 +30,7 @@ pub mod sckc;
 pub mod sdmmc;
 pub mod sfr;
 pub mod sha;
+pub mod shdwc;
 pub mod spi;
 pub mod tc;
 pub mod trng;
