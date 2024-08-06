@@ -44,6 +44,10 @@ required-features = []
 name = "usbhost"
 required-features = ["usb-host"]
 
+[[bin]]
+name = "shdwc"
+required-features = []
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
