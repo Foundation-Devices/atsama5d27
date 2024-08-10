@@ -9,7 +9,9 @@
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
-        dma::{Buffer, DmaChannel, Peripheral, Xdmac},
+        dma::{
+            DmaChannel, DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, Xdmac,
+        },
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         tc::Tc,
@@ -19,6 +21,7 @@ use {
         arch::global_asm,
         fmt::Write,
         panic::PanicInfo,
+        ptr::addr_of_mut,
         sync::atomic::{compiler_fence, Ordering::SeqCst},
     },
 };
@@ -33,7 +36,7 @@ const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
 
 const DMA_BUF_LEN: usize = 32;
-static mut BUF: Buffer<DMA_BUF_LEN> = Buffer([0u8; DMA_BUF_LEN]);
+static mut BUF: [u8; DMA_BUF_LEN] = [0; DMA_BUF_LEN];
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -102,21 +105,24 @@ fn _entry() -> ! {
     })
     .ok();
 
-    let peripheral = Peripheral {
-        id: 38,
-        chunk_size: 0,
-        address: atsama5d27::uart::UART_BASE_ADDRESS[1] + 0x18,
-    };
-
     let xdmac = Xdmac::xdmac0();
     let ch1 = xdmac.channel(DmaChannel::Channel1);
 
     loop {
-        ch1.configure_peripheral_to_memory(peripheral);
+        ch1.configure_peripheral_transfer(
+            DmaPeripheralId::Uart1Rx,
+            DmaTransferDirection::PeripheralToMemory,
+            DmaDataWidth::D8,
+            DmaChunkSize::C1,
+        );
         ch1.set_bi_interrupt(true);
         ch1.set_interrupt(true);
-        ch1.execute_peripheral_transfer(peripheral, unsafe { &mut BUF }, DMA_BUF_LEN as u32)
-            .expect("dma");
+        ch1.execute_transfer(
+            atsama5d27::uart::UART_BASE_ADDRESS[1] + 0x18,
+            unsafe { addr_of_mut!(BUF) as u32 },
+            DMA_BUF_LEN,
+        )
+        .expect("dma");
 
         writeln!(uart, "gim: {:032b}", xdmac.gim()).ok();
         writeln!(uart, "gis: {:032b}", xdmac.gis()).ok();
@@ -134,7 +140,7 @@ fn _entry() -> ! {
         writeln!(uart, "Done DMA").ok();
         writeln!(uart, "gim: {:032b}", xdmac.gim()).ok();
         writeln!(uart, "gis: {:032b}", xdmac.gis()).ok();
-        let buf = unsafe { &mut BUF.0 };
+        let buf = unsafe { &mut BUF };
         if !buf.iter().all(|x| *x == 0) {
             writeln!(uart, "buf: {:?}", buf).ok();
             let str = if let Ok(str) = core::ffi::CStr::from_bytes_until_nul(buf) {

@@ -239,12 +239,12 @@ impl Aes {
     // TODO I wasn't able to get this to work (due to the DMA module not working). I
     // will tackle it again later.
     /// Encrypt a buffer using AES-256 in CBC mode with DMA.
-    pub fn encrypt<const NP: usize, const NC: usize>(
+    pub fn encrypt(
         &self,
         key: [u8; 32],
         iv: [u8; 16],
-        plaintext: &dma::Buffer<NP>,
-        ciphertext: &mut dma::Buffer<NC>,
+        plaintext: &[u8],
+        ciphertext: &mut [u8],
     ) -> Result<(), &'static str> {
         todo!();
 

@@ -51,7 +51,13 @@ pub struct XdmacChannel {
 
 impl XdmacChannel {
     /// Sets up a peripheral-to-memory DMA transfer.
-    pub fn configure_peripheral_to_memory(&self, peripheral: Peripheral) {
+    pub fn configure_peripheral_transfer(
+        &self,
+        id: DmaPeripheralId,
+        direction: DmaTransferDirection,
+        data_width: DmaDataWidth,
+        chunk_size: DmaChunkSize,
+    ) {
         let mut dma = CSR::new(self.xdmac_base_addr as *mut u32);
 
         let cc_reg = match self.channel {
@@ -59,18 +65,29 @@ impl XdmacChannel {
             DmaChannel::Channel1 => XDMAC_CC1,
         };
 
-        let cc = dma.ms(XDMAC_CC0_TYPE, 1)
-            | dma.ms(XDMAC_CC0_PERID, peripheral.id)
-            | dma.ms(XDMAC_CC0_DSYNC, 0) // PER2MEM
-            | dma.ms(XDMAC_CC0_PROT, 0)
-            | dma.ms(XDMAC_CC0_SWREQ, 0)
-            | dma.ms(XDMAC_CC0_DAM, 1)
-            | dma.ms(XDMAC_CC0_SAM, 0)
+        let direction_flags = match direction {
+            DmaTransferDirection::PeripheralToMemory => {
+                dma.ms(XDMAC_CC0_SAM, 0) // Source address constant
+                | dma.ms(XDMAC_CC0_DAM, 1) // Destination address auto-increments
+                | dma.ms(XDMAC_CC0_DSYNC, 0) // PER2MEM
+            }
+            DmaTransferDirection::MemoryToPeripheral => {
+                dma.ms(XDMAC_CC0_SAM, 1) // Source address auto-increments
+                | dma.ms(XDMAC_CC0_DAM, 0) // Destination address constant
+                | dma.ms(XDMAC_CC0_DSYNC, 1) // MEM2PER
+            }
+        };
+
+        let cc: u32 = dma.ms(XDMAC_CC0_TYPE, 1) // Synchronized mode
+            | dma.ms(XDMAC_CC0_PERID, id as u32)
+            | dma.ms(XDMAC_CC0_PROT, 0) // Secured channel
+            | dma.ms(XDMAC_CC0_SWREQ, 0) // Hardware request line
             | dma.ms(XDMAC_CC0_SIF, 1)
             | dma.ms(XDMAC_CC0_DIF, 0)
-            | dma.ms(XDMAC_CC0_DWIDTH, 0)
-            | dma.ms(XDMAC_CC0_CSIZE, 0)
-            | dma.ms(XDMAC_CC0_MBSIZE, 0);
+            | dma.ms(XDMAC_CC0_DWIDTH, data_width as u32)
+            | dma.ms(XDMAC_CC0_CSIZE, chunk_size as u32)
+            | dma.ms(XDMAC_CC0_MBSIZE, 3) // Memory burst size: 16
+            | direction_flags;
 
         dma.wo(cc_reg, cc);
     }
@@ -79,18 +96,14 @@ impl XdmacChannel {
     ///
     /// The DMA transfer must be configured beforehand by calling one of the following
     /// methods:
-    /// - [`configure_peripheral_to_memory`](configure_peripheral_to_memory)
-    /// - TODO
-    pub fn execute_peripheral_transfer<const N: usize>(
+    /// - [`XdmacChannel::configure_peripheral_to_memory`]
+    /// - Memory-memory: TODO
+    pub fn execute_transfer(
         &self,
-        peripheral: Peripheral,
-        dst: &mut Buffer<N>,
-        block_size: u32,
+        src: u32,
+        dst: u32,
+        data_size: usize,
     ) -> Result<(), &'static str> {
-        if N % 4 != 0 {
-            return Err("Destination buffer length is not a multiple of 4 bytes.");
-        }
-
         let mut dma = CSR::new(self.xdmac_base_addr as *mut u32);
         let (cis_reg, sa, da, ublen, en) = match self.channel {
             DmaChannel::Channel0 => (
@@ -113,9 +126,9 @@ impl XdmacChannel {
         dma.r(cis_reg);
 
         // Configure the transfer parameters
-        dma.wfo(sa, peripheral.address);
-        dma.wfo(da, dst.0.as_ptr() as u32);
-        dma.wfo(ublen, block_size);
+        dma.wfo(sa, src);
+        dma.wfo(da, dst);
+        dma.wfo(ublen, data_size as u32);
 
         // Make sure all memory transfers are completed before enabling the DMA
         armv7::asm::dmb();
@@ -170,6 +183,13 @@ impl XdmacChannel {
         dma.wo(XDMAC_GSWF, 1 << ch_bit);
     }
 
+    pub fn software_request(&self) {
+        let mut dma = CSR::new(self.xdmac_base_addr as *mut u32);
+        let ch_bit = self.channel as u32;
+
+        dma.wo(XDMAC_GSWR, 1 << ch_bit);
+    }
+
     pub fn set_interrupt(&self, enable: bool) {
         let mut dma = CSR::new(self.xdmac_base_addr as *mut u32);
         let ch_bit = self.channel as u32;
@@ -203,18 +223,42 @@ pub enum DmaChannel {
     Channel1 = 1,
 }
 
-/// Every memory buffer used for DMA must be aligned to 4 bytes.
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-#[repr(align(4))]
-pub struct Buffer<const N: usize>(pub [u8; N]);
+#[derive(Debug, Copy, Clone)]
+pub enum DmaDataWidth {
+    D8 = 0,
+    D16 = 1,
+    D32 = 2,
+    D64 = 3,
+}
 
-#[derive(Debug, Clone, Copy)]
-pub struct Peripheral {
-    /// Peripheral ID, referred to as PERID in the datasheet.
-    pub id: u32,
-    /// The chunk size used by this peripheral.
-    pub chunk_size: u32,
-    /// The address of the input register for this peripheral.
-    pub address: u32,
+#[derive(Debug, Copy, Clone)]
+pub enum DmaChunkSize {
+    C1 = 0,
+    C2 = 1,
+    C4 = 2,
+    C8 = 3,
+    C16 = 4,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum DmaTransferDirection {
+    PeripheralToMemory,
+    MemoryToPeripheral,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum DmaPeripheralId {
+    AesTx = 26,
+    AesRx = 27,
+    Sha = 30,
+    Uart0Tx = 35,
+    Uart0Rx = 36,
+    Uart1Tx = 37,
+    Uart1Rx = 38,
+    Uart2Tx = 39,
+    Uart2Rx = 40,
+    Uart3Tx = 41,
+    Uart3Rx = 42,
+    Uart4Tx = 43,
+    Uart4Rx = 44,
 }
