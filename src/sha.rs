@@ -1,6 +1,9 @@
 //! SHA hardware accelerator driver.
 
 use {
+    crate::dma::{
+        DmaChannel, DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel,
+    },
     bitflags::bitflags,
     utralib::{utra::sha::*, HW_SHA_BASE, *},
 };
@@ -9,6 +12,9 @@ const SHA256_EMPTY_HASH: Sha256Hash = Sha256Hash([
     0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
     0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
 ]);
+
+const IDATAR_OFFSET: u32 = 0x40;
+const IODATAR_OFFSET: u32 = 0x80;
 
 pub struct Sha256Hash(pub [u8; 32]);
 
@@ -64,6 +70,14 @@ pub enum StartMode {
     Idatar0 = 2,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum Buffering {
+    /// Single buffer: IDATAR cannot be written to while processing
+    Single = 0,
+    /// Double buffer: IDATAR can be written to while processing
+    Double = 1,
+}
+
 pub struct Sha {
     base_addr: u32,
 }
@@ -96,24 +110,12 @@ impl Sha {
         SHAStatus::from_bits_truncate(sha_csr.r(ISR))
     }
 
-    pub fn set_hash_check(&self, check: Check) {
+    pub fn set_mode(&self, algorithm: Algorithm, mode: StartMode, buffering: Buffering) {
         let mut sha_csr = CSR::new(self.base_addr as *mut u32);
-        sha_csr.wfo(MR_CHECK, check as u32);
-    }
-
-    pub fn set_dual_input_buf(&self, enable: bool) {
-        let mut sha_csr = CSR::new(self.base_addr as *mut u32);
-        sha_csr.wfo(MR_DUALBUFF, enable as u32);
-    }
-
-    pub fn set_algorithm(&self, algorithm: Algorithm) {
-        let mut sha_csr = CSR::new(self.base_addr as *mut u32);
-        sha_csr.wfo(MR_ALGO, algorithm as u32);
-    }
-
-    pub fn set_start_mode(&self, mode: StartMode) {
-        let mut sha_csr = CSR::new(self.base_addr as *mut u32);
-        sha_csr.wfo(MR_SMOD, mode as u32);
+        let mr = sha_csr.ms(MR_SMOD, mode as u32)
+            | sha_csr.ms(MR_ALGO, algorithm as u32)
+            | sha_csr.ms(MR_DUALBUFF, buffering as u32);
+        sha_csr.wo(MR, mr);
     }
 
     pub fn set_message_size(&self, size: u32) {
@@ -155,7 +157,6 @@ impl Sha {
     }
 
     fn write_sha256_block(&self, block: &[u8]) {
-        const IDATAR_OFFSET: u32 = 0x40;
         let idatar_base = (self.base_addr + IDATAR_OFFSET) as *mut u32;
 
         for (i, word) in block.chunks(4).enumerate() {
@@ -170,7 +171,6 @@ impl Sha {
     }
 
     fn read_sha256_result(&self) -> Sha256Hash {
-        const IODATAR_OFFSET: u32 = 0x80;
         let iodatar_base = (self.base_addr + IODATAR_OFFSET) as *mut u32;
 
         let mut hash = [0u8; 32];
@@ -187,52 +187,50 @@ impl Sha {
         while !self.status().contains(SHAStatus::DATARDY) {}
     }
 
-    pub fn sha256_cb(
-        &self,
-        data: &[u8],
-        cb_freq_blocks: usize,
-        cb: fn(usize, usize),
-    ) -> Sha256Hash {
-        const SHA256_BLOCK_SIZE_BYTES: usize = 64;
-
-        self.reset();
-        self.set_start_mode(StartMode::Manual);
-        self.set_algorithm(Algorithm::Sha256);
-
-        self.set_message_size(data.len() as u32);
-        self.set_byte_count(data.len() as u32);
-
-        if data.is_empty() {
-            if cb_freq_blocks != 0 {
-                cb(0, 0);
-            }
-
+    pub fn sha256_dma(&self, data_phys: &[u32], dma_channel: XdmacChannel) -> Sha256Hash {
+        if data_phys.is_empty() {
             return SHA256_EMPTY_HASH;
         }
 
-        let total_blocks = data.chunks(SHA256_BLOCK_SIZE_BYTES).len();
-        for (i, block) in data.chunks(SHA256_BLOCK_SIZE_BYTES).enumerate() {
-            if i == 0 {
-                self.first();
-            }
-            self.write_sha256_block(block);
-            self.start();
-            self.wait_data_ready();
-
-            if cb_freq_blocks != 0 && i % cb_freq_blocks == 0 {
-                cb(i, total_blocks);
-            }
-        }
-
-        // Always report 100% progress
-        if cb_freq_blocks != 0 {
-            cb(total_blocks, total_blocks);
-        }
-
+        self.reset();
+        self.set_mode(Algorithm::Sha256, StartMode::Idatar0, Buffering::Double);
+        self.set_message_size(data_phys.len() as u32 * 4);
+        self.set_byte_count(data_phys.len() as u32 * 4);
+        self.first();
+        dma_channel.configure_peripheral_transfer(
+            DmaPeripheralId::Sha,
+            DmaTransferDirection::MemoryToPeripheral,
+            DmaDataWidth::D32,
+            DmaChunkSize::C16,
+        );
+        dma_channel
+            .execute_transfer(
+                data_phys.as_ptr() as *const u8 as u32,
+                self.base_addr + IDATAR_OFFSET,
+                data_phys.len(),
+            )
+            .ok();
+        self.wait_data_ready();
         self.read_sha256_result()
     }
 
     pub fn sha256(&self, data: &[u8]) -> Sha256Hash {
-        self.sha256_cb(data, 0, |_, _| {})
+        const SHA256_BLOCK_SIZE_BYTES: usize = 64;
+        if data.is_empty() {
+            return SHA256_EMPTY_HASH;
+        }
+
+        self.reset();
+        self.set_mode(Algorithm::Sha256, StartMode::Manual, Buffering::Single);
+        self.set_message_size(data.len() as u32);
+        self.set_byte_count(data.len() as u32);
+        self.first();
+        let total_blocks = data.chunks(SHA256_BLOCK_SIZE_BYTES).len();
+        for (i, block) in data.chunks(SHA256_BLOCK_SIZE_BYTES).enumerate() {
+            self.write_sha256_block(block);
+            self.start();
+            self.wait_data_ready();
+        }
+        self.read_sha256_result()
     }
 }

@@ -7,6 +7,7 @@
 use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
+        dma::{DmaChannel, DmaDataWidth, Xdmac, XdmacChannel},
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         sha::Sha,
@@ -14,7 +15,7 @@ use {
         uart::{Uart, Uart1},
     },
     core::{
-        arch::global_asm,
+        arch::{asm, global_asm},
         fmt::Write,
         panic::PanicInfo,
         sync::atomic::{compiler_fence, Ordering::SeqCst},
@@ -29,6 +30,10 @@ const UART_PERIPH_ID: PeripheralId = PeripheralId::Uart1;
 // MCK: 164MHz
 // Clock frequency is divided by 2 because of the default `h32mxdiv` PMC setting
 const MASTER_CLOCK_SPEED: u32 = 164000000 / 2;
+
+// Needs to be mut to be put into .bss and not .rodata
+static mut BIG_ZERO: [u8; 64000000] = [0; 64000000];
+const BIG_ZERO_HASH: &str = "dbcb3a959f7dba70347a2e6f528f421c67701b8ed5dbed575ff22f6eb4fb94b7";
 
 #[no_mangle]
 fn _entry() -> ! {
@@ -53,6 +58,7 @@ fn _entry() -> ! {
     pmc.enable_peripheral_clock(PeripheralId::Pioc);
     pmc.enable_peripheral_clock(PeripheralId::Piod);
     pmc.enable_peripheral_clock(PeripheralId::Sha);
+    pmc.enable_peripheral_clock(PeripheralId::Xdmac0);
 
     let mut tc0 = Tc::new();
     tc0.init();
@@ -88,15 +94,42 @@ fn _entry() -> ! {
     let sha = Sha::new();
     sha.reset();
 
-    sha256_tests(&sha);
-    sha256_test_file(&sha);
+    sha256_small_tests(&sha);
+    sha256_single_test(
+        &sha,
+        None,
+        "File without DMA",
+        include_bytes!("../../misc/mit.txt"),
+        "21785883212d06d2c262b7e9f73f92ae7a03a7f2fe86809d7c7ad9bd6961d265",
+    );
+    sha256_single_test(
+        &sha,
+        Some(Xdmac::xdmac0().channel(DmaChannel::Channel0)),
+        "File with DMA",
+        include_bytes!("../../misc/mit.txt"),
+        "21785883212d06d2c262b7e9f73f92ae7a03a7f2fe86809d7c7ad9bd6961d265",
+    );
+    sha256_single_test(
+        &sha,
+        Some(Xdmac::xdmac0().channel(DmaChannel::Channel0)),
+        "Zeros with DMA",
+        unsafe { &BIG_ZERO },
+        BIG_ZERO_HASH,
+    );
+    sha256_single_test(
+        &sha,
+        Some(Xdmac::xdmac0().channel(DmaChannel::Channel0)),
+        "Smol with DMA",
+        b"abcd",
+        "88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589",
+    );
 
     loop {
         armv7::asm::wfi();
     }
 }
 
-fn sha256_tests(sha: &Sha) {
+fn sha256_small_tests(sha: &Sha) {
     let mut uart = UartType::new();
 
     #[rustfmt::skip]
@@ -118,8 +151,6 @@ fn sha256_tests(sha: &Sha) {
     let mut temp_buf: [u8; 1024] = [0; 1024];
 
     for (i, (data, expected_hash)) in SHA256_TESTS.iter().enumerate() {
-        writeln!(uart, "Running test #{}", i + 1).ok();
-
         assert_eq!(data.len() % 2, 0, "uneven data length");
         assert_eq!(expected_hash.len(), 64, "hash length is not 256 bit");
 
@@ -128,50 +159,36 @@ fn sha256_tests(sha: &Sha) {
         if len != 0 {
             hex::decode_to_slice(data, &mut temp_buf[..len]).unwrap();
         }
-
-        let hash = sha.sha256(&temp_buf[..len]);
-        hex::encode_to_slice(hash.0, &mut temp_buf[..64]).unwrap();
-        let hash_str = core::str::from_utf8(&temp_buf[..64]).unwrap();
-
-        if hash_str != *expected_hash {
-            writeln!(uart, "SHA256 test #{} failed", i + 1).ok();
-            writeln!(uart, "Expected: {}", expected_hash).ok();
-            writeln!(uart, "Result:   {}", hash_str).ok();
-            armv7::asm::bkpt();
-        } else {
-            writeln!(uart, "SHA256 test #{} passed", i + 1).ok();
-        }
+        sha256_single_test(sha, None, "Small", &temp_buf[..len], expected_hash);
     }
 }
 
-fn sha256_test_file(sha: &Sha) {
+fn sha256_single_test(
+    sha: &Sha,
+    dma_channel: Option<XdmacChannel>,
+    name: &str,
+    data: &[u8],
+    expected_hash: &str,
+) {
     let mut uart = UartType::new();
+
+    writeln!(uart, "Hashing {} bytes", data.len()).ok();
+    let hash = match dma_channel {
+        Some(dma_channel) => sha.sha256_dma(unsafe { data.align_to().1 }, dma_channel),
+        None => sha.sha256(data),
+    };
+
     let mut temp_buf: [u8; 64] = [0; 64];
     temp_buf.fill(0);
-
-    let mit_bytes = include_bytes!("../../misc/mit.txt");
-    const MIT_HASH: &str = "21785883212d06d2c262b7e9f73f92ae7a03a7f2fe86809d7c7ad9bd6961d265";
-
-    writeln!(uart, "-").ok();
-    writeln!(uart, "Hashing {} bytes", mit_bytes.len()).ok();
-    let cb = |i, total| {
-        if total == 0 {
-            return;
-        }
-        let mut uart = UartType::new();
-        writeln!(uart, "Progress: {}%", i * 100 / total).ok();
-    };
-    let hash = sha.sha256_cb(mit_bytes.as_slice(), 4, cb);
-
     hex::encode_to_slice(hash.0, &mut temp_buf[..64]).unwrap();
     let hash_str = core::str::from_utf8(&temp_buf[..64]).unwrap();
 
-    if hash_str != MIT_HASH {
-        writeln!(uart, "SHA256 file test failed").ok();
-        writeln!(uart, "Expected: {}", MIT_HASH).ok();
-        writeln!(uart, "Result:   {}", hash_str).ok();
+    if hash_str != expected_hash {
+        writeln!(uart, "SHA256 {name} test failed").ok();
+        writeln!(uart, "Expected: {expected_hash}").ok();
+        writeln!(uart, "Result:   {hash_str}").ok();
     } else {
-        writeln!(uart, "SHA256 file test passed").ok();
+        writeln!(uart, "SHA256 {name} test passed").ok();
     }
 }
 
