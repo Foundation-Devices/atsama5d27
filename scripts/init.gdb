@@ -15,6 +15,7 @@ shell sleep 2
 monitor halt
 
 load
+set $cpsr = 0x13
 c
 
 define dc
