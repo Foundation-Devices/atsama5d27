@@ -191,34 +191,19 @@ impl L2cc {
     pub fn invalidate_pal(&mut self, phys_addr: u32) {
         let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
 
-        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
-        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
-        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
-        l2cc_csr.wo(IPALR, reg);
-
-        while l2cc_csr.r(IPALR) & 1 != 0 {}
+        l2cc_csr.wo(IPALR, phys_addr & !0x1f);
     }
 
     pub fn clean_pal(&mut self, phys_addr: u32) {
         let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
 
-        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
-        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
-        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
-        l2cc_csr.wo(CPALR, reg);
-
-        while l2cc_csr.r(CPALR) & 1 != 0 {}
+        l2cc_csr.wo(CPALR, phys_addr & !0x1f);
     }
 
     pub fn clean_invalidate_pal(&mut self, phys_addr: u32) {
         let mut l2cc_csr = CSR::new(self.base_addr as *mut u32);
 
-        let tag = phys_addr >> (L2CC_OFFSET_BIT + L2CC_INDEX_BIT);
-        let index = (phys_addr >> L2CC_OFFSET_BIT) & ((1 << L2CC_INDEX_BIT) - 1);
-        let reg = ((tag & 0x3ffff) << 14) | ((index & 0x1ff) << 5) | 0x1;
-        l2cc_csr.wo(CIPALR, reg);
-
-        while l2cc_csr.r(CIPALR) & 1 != 0 {}
+        l2cc_csr.wo(CIPALR, phys_addr & !0x1f);
     }
 
     pub fn invalidate_way(&mut self, way: u32) {
