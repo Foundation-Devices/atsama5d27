@@ -8,7 +8,6 @@ use {
     atsama5d27::{
         aesb::{AesMode, Aesb},
         aic::{Aic, InterruptEntry, SourceKind},
-        l2cc::Counter,
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
         tc::Tc,

@@ -2,7 +2,6 @@
 
 use {
     crate::dma::{
-        DmaChannel,
         DmaChunkSize,
         DmaDataWidth,
         DmaPeripheralId,
@@ -230,8 +229,7 @@ impl Sha {
         self.set_message_size(data.len() as u32);
         self.set_byte_count(data.len() as u32);
         self.first();
-        let total_blocks = data.chunks(SHA256_BLOCK_SIZE_BYTES).len();
-        for (i, block) in data.chunks(SHA256_BLOCK_SIZE_BYTES).enumerate() {
+        for block in data.chunks(SHA256_BLOCK_SIZE_BYTES) {
             self.write_sha256_block(block);
             self.start();
             self.wait_data_ready();
