@@ -6,11 +6,13 @@
 
 use {
     atsama5d27::{
+        aesb::{AesMode, Aesb},
         aic::{Aic, InterruptEntry, SourceKind},
+        l2cc::Counter,
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},
-        aesb::Aesb,
         tc::Tc,
+        trng::Trng,
         uart::{Uart, Uart1},
     },
     core::{
@@ -20,9 +22,6 @@ use {
         sync::atomic::{compiler_fence, Ordering::SeqCst},
     },
 };
-use atsama5d27::aesb::AesMode;
-use atsama5d27::l2cc::Counter;
-use atsama5d27::trng::Trng;
 
 global_asm!(include_str!("../start.S"));
 
@@ -92,11 +91,12 @@ fn _entry() -> ! {
 
     let trng = Trng::new().enable();
 
-    // The IV (Initialization Vector) field of the AESB Initialization Vector register x (AESB_IVRx)
-    // can be used to add a nonce in the encryption process in order to bring even more security (ignored if not filled).
-    // In this case, any value encrypted with a given nonce can only be decrypted with this nonce.
-    // If another nonce is set for the AESB_IVRx.IV, any value encrypted with the previous nonce can
-    // no longer be decrypted (see AESB Initialization Vector Register x)
+    // The IV (Initialization Vector) field of the AESB Initialization Vector register x
+    // (AESB_IVRx) can be used to add a nonce in the encryption process in order to bring
+    // even more security (ignored if not filled). In this case, any value encrypted with
+    // a given nonce can only be decrypted with this nonce. If another nonce is set for
+    // the AESB_IVRx.IV, any value encrypted with the previous nonce can no longer be
+    // decrypted (see AESB Initialization Vector Register x)
     let mut nonce = [0u32; 4];
     nonce.fill_with(|| trng.read_u32());
 
@@ -126,15 +126,24 @@ fn _entry() -> ! {
     unsafe {
         const TEST_VAL: u32 = 0x55555555;
         aes_dram_ptr.write_volatile(TEST_VAL);
-        assert_ne!(dram_ptr.read_volatile(), aes_dram_ptr.read_volatile(), "AES encryption failed");
-        assert_eq!(aes_dram_ptr.read_volatile(), TEST_VAL, "AES decryption failed");
+        assert_ne!(
+            dram_ptr.read_volatile(),
+            aes_dram_ptr.read_volatile(),
+            "AES encryption failed"
+        );
+        assert_eq!(
+            aes_dram_ptr.read_volatile(),
+            TEST_VAL,
+            "AES decryption failed"
+        );
     }
 
     // Test with an array
     writeln!(uart, "AESB: array test").ok();
     unsafe {
         const EMPTY_ARRAY: [u8; 256] = [0u8; 256];
-        let aes_dram_slice = core::slice::from_raw_parts_mut(aes_dram_ptr as *mut u8, EMPTY_ARRAY.len());
+        let aes_dram_slice =
+            core::slice::from_raw_parts_mut(aes_dram_ptr as *mut u8, EMPTY_ARRAY.len());
         let dram_slice = core::slice::from_raw_parts_mut(dram_ptr as *mut u8, EMPTY_ARRAY.len());
         aes_dram_slice.copy_from_slice(&EMPTY_ARRAY);
 

@@ -2,7 +2,12 @@
 
 use {
     crate::dma::{
-        DmaChannel, DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel,
+        DmaChannel,
+        DmaChunkSize,
+        DmaDataWidth,
+        DmaPeripheralId,
+        DmaTransferDirection,
+        XdmacChannel,
     },
     bitflags::bitflags,
     utralib::{utra::sha::*, HW_SHA_BASE, *},

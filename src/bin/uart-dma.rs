@@ -10,7 +10,12 @@ use {
     atsama5d27::{
         aic::{Aic, InterruptEntry, SourceKind},
         dma::{
-            DmaChannel, DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, Xdmac,
+            DmaChannel,
+            DmaChunkSize,
+            DmaDataWidth,
+            DmaPeripheralId,
+            DmaTransferDirection,
+            Xdmac,
         },
         pit::{Pit, PIV_MAX},
         pmc::{PeripheralId, Pmc},

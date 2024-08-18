@@ -3,9 +3,9 @@
 
 #![no_std]
 
-pub mod aesb;
 pub mod adc;
 pub mod aes;
+pub mod aesb;
 pub mod aic;
 pub mod cache;
 #[cfg(feature = "lcd-console")]

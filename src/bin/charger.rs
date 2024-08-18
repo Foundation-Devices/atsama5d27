@@ -236,8 +236,16 @@ fn _entry() -> ! {
 
     //////////////////////////////////
     let mut fuel_gauge = bq27421::Bq27421::new(Twi::twi0());
-    assert!(fuel_gauge.verify_chip_id().unwrap(), "unexpected fuel gauge chip ID");
-    writeln!(console, "Fuel gauge status: {:?}", fuel_gauge.status().unwrap()).ok();
+    assert!(
+        fuel_gauge.verify_chip_id().unwrap(),
+        "unexpected fuel gauge chip ID"
+    );
+    writeln!(
+        console,
+        "Fuel gauge status: {:?}",
+        fuel_gauge.status().unwrap()
+    )
+    .ok();
 
     loop {
         let status = bq.status().unwrap();
@@ -249,15 +257,22 @@ fn _entry() -> ! {
             "fault chg: {:?}   fault boost: {:?}",
             status.charge_fault().unwrap(),
             status.boost_fault().unwrap(),
-        ).ok();
-        writeln!(console, "Fuel gauge flags: {:?}", fuel_gauge.flags().unwrap()).ok();
+        )
+        .ok();
+        writeln!(
+            console,
+            "Fuel gauge flags: {:?}",
+            fuel_gauge.flags().unwrap()
+        )
+        .ok();
         writeln!(
             console,
             "State of charge: {}  Charge current: {}  Capacity: {}",
             fuel_gauge.state_of_charge().unwrap(),
             fuel_gauge.charge_current().unwrap(),
             fuel_gauge.capacity().unwrap(),
-        ).ok();
+        )
+        .ok();
 
         pit.busy_wait_ms(MASTER_CLOCK_SPEED, 1000);
     }

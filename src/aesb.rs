@@ -8,18 +8,11 @@ use utralib::{utra::aesb::*, HW_AESB_BASE, *};
 const CKEY: u32 = 0xE;
 
 pub enum AesMode {
-    Ecb {
-        key: [u32; 4],
-    },
+    Ecb { key: [u32; 4] },
 
-    Cbc {
-        key: [u32; 4],
-        iv: [u32; 4],
-    },
+    Cbc { key: [u32; 4], iv: [u32; 4] },
 
-    Counter {
-        nonce: [u32; 4],
-    }
+    Counter { nonce: [u32; 4] },
 }
 
 pub struct Aesb {
