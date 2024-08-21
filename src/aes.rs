@@ -1,6 +1,14 @@
 use {
-    crate::dma,
-    utralib::{utra::aes, CSR},
+    crate::dma::{
+        self,
+        DmaChannel,
+        DmaChunkSize,
+        DmaDataWidth,
+        DmaPeripheralId,
+        DmaTransferDirection,
+        XdmacChannel,
+    },
+    utralib::{utra::aes::*, CSR},
 };
 
 /// The AES peripheral.
@@ -16,316 +24,157 @@ impl Default for Aes {
     }
 }
 
+const IDATAR_OFFSET: u32 = 0x40;
+const ODATAR_OFFSET: u32 = 0x50;
+
 impl Aes {
     /// Create AES with a different base address. Useful with virtual memory.
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
         Self { base_addr }
     }
 
-    /// Encrypt a buffer using AES-256 in CBC mode without DMA.
-    pub fn encrypt_no_dma(
-        &self,
-        key: [u8; 32],
-        iv: [u8; 16],
-        data: &mut [u8],
-    ) -> Result<(), &'static str> {
-        if data.len() % 16 != 0 {
-            return Err("Plaintext buffer must be aligned to 16 bytes (AES block size).");
-        }
-
-        let mut aes = CSR::new(self.base_addr as *mut u32);
-
-        for (i, chunk) in data.chunks_mut(16).enumerate() {
-            // Clear the DATRDY bit by reading ODATAR.
-            aes.r(aes::ODATAR0);
-
-            // Write the CKEY. This is necessary to allow the MR register to be programmed.
-            aes.wfo(aes::MR_CKEY, 0xE);
-            // Use manual mode.
-            aes.wfo(aes::MR_SMOD, 0);
-            // Use CBC.
-            aes.wfo(aes::MR_OPMOD, 1);
-            // Use 256-bit key size. TODO Benchmark the difference between 128-bit and
-            // 256-bit.
-            aes.wfo(aes::MR_KEYSIZE, 2);
-            // Encrypt data.
-            aes.wfo(aes::MR_CIPHER, 1);
-
-            // Set the key.
-            aes.wo(
-                aes::KEYWR0,
-                u32::from_ne_bytes(key[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR1,
-                u32::from_ne_bytes(key[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR2,
-                u32::from_ne_bytes(key[8..12].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR3,
-                u32::from_ne_bytes(key[12..16].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR4,
-                u32::from_ne_bytes(key[16..20].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR5,
-                u32::from_ne_bytes(key[20..24].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR6,
-                u32::from_ne_bytes(key[24..28].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR7,
-                u32::from_ne_bytes(key[28..32].try_into().unwrap()),
-            );
-
-            // Set the IV.
-            aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
-            aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
-            aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
-            aes.wo(
-                aes::IVR3,
-                u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
-            );
-
-            // Write the input data.
-            aes.wo(
-                aes::IDATAR0,
-                u32::from_ne_bytes(chunk[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR1,
-                u32::from_ne_bytes(chunk[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR2,
-                u32::from_ne_bytes(chunk[8..12].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR3,
-                u32::from_ne_bytes(chunk[12..16].try_into().unwrap()),
-            );
-
-            // Start the encryption process.
-            aes.wfo(aes::CR_START, 1);
-
-            // Wait until the encryption is done.
-            while aes.rf(aes::ISR_DATRDY) == 0 {}
-
-            // Copy the output data.
-            let start = i * 16;
-            chunk[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
-            chunk[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
-            chunk[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
-            chunk[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
-        }
-
-        Ok(())
+    /// Initialize the AES peripheral in CBC mode.
+    pub fn init(&self, key: [u32; 4], iv: [u32; 4]) {
+        self.reset();
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        self.set_key(&key);
+        self.set_iv(&iv);
+        let opmod = csr.ms(MR_OPMOD, 1); // CBC mode
+        let smod = csr.ms(MR_SMOD, 2); // DMA auto-start
+        let ckey = csr.ms(MR_CKEY, CKEY);
+        // TODO Try disabling this?
+        let dualbuff = csr.ms(MR_DUALBUFF, 1);
+        csr.wo(MR, ckey | opmod | smod | dualbuff);
     }
 
-    /// Decrypt a buffer using AES-256 in CBC mode without DMA.
-    pub fn decrypt_no_dma(
-        &self,
-        key: [u8; 32],
-        iv: [u8; 16],
-        data: &mut [u8],
-    ) -> Result<(), &'static str> {
-        if data.len() % 16 != 0 {
-            return Err("Ciphertext buffer must be aligned to 16 bytes (AES block size).");
-        }
-
-        let mut aes = CSR::new(self.base_addr as *mut u32);
-
-        for (i, chunk) in data.chunks_mut(16).enumerate() {
-            // Clear the DATRDY bit by reading ODATAR.
-            aes.r(aes::ODATAR0);
-
-            // Write the CKEY. This is necessary to allow the MR register to be programmed.
-            aes.wfo(aes::MR_CKEY, 0xE);
-            // Use manual mode.
-            aes.wfo(aes::MR_SMOD, 0);
-            // Use CBC.
-            aes.wfo(aes::MR_OPMOD, 1);
-            // Use 256-bit key size. TODO Benchmark the difference between 128-bit and
-            // 256-bit.
-            aes.wfo(aes::MR_KEYSIZE, 2);
-            // Decrypt data.
-            aes.wfo(aes::MR_CIPHER, 0);
-
-            // Set the key.
-            aes.wo(
-                aes::KEYWR0,
-                u32::from_ne_bytes(key[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR1,
-                u32::from_ne_bytes(key[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR2,
-                u32::from_ne_bytes(key[8..12].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR3,
-                u32::from_ne_bytes(key[12..16].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR4,
-                u32::from_ne_bytes(key[16..20].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR5,
-                u32::from_ne_bytes(key[20..24].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR6,
-                u32::from_ne_bytes(key[24..28].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::KEYWR7,
-                u32::from_ne_bytes(key[28..32].try_into().unwrap()),
-            );
-
-            // Set the IV.
-            aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
-            aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
-            aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
-            aes.wo(
-                aes::IVR3,
-                u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
-            );
-
-            // Write the input data.
-            aes.wo(
-                aes::IDATAR0,
-                u32::from_ne_bytes(chunk[0..4].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR1,
-                u32::from_ne_bytes(chunk[4..8].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR2,
-                u32::from_ne_bytes(chunk[8..12].try_into().unwrap()),
-            );
-            aes.wo(
-                aes::IDATAR3,
-                u32::from_ne_bytes(chunk[12..16].try_into().unwrap()),
-            );
-
-            // Start the decryption process.
-            aes.wfo(aes::CR_START, 1);
-
-            // Wait until the decryption is done.
-            while aes.rf(aes::ISR_DATRDY) == 0 {}
-
-            // Copy the output data.
-            let start = i * 16;
-            chunk[start + 0..start + 4].copy_from_slice(&aes.r(aes::ODATAR0).to_ne_bytes());
-            chunk[start + 4..start + 8].copy_from_slice(&aes.r(aes::ODATAR1).to_ne_bytes());
-            chunk[start + 8..start + 12].copy_from_slice(&aes.r(aes::ODATAR2).to_ne_bytes());
-            chunk[start + 12..start + 16].copy_from_slice(&aes.r(aes::ODATAR3).to_ne_bytes());
-        }
-
-        Ok(())
-    }
-
-    // TODO I wasn't able to get this to work (due to the DMA module not working). I
-    // will tackle it again later.
-    /// Encrypt a buffer using AES-256 in CBC mode with DMA.
+    /// Encrypt some data using the AES peripheral. Panics if the output buffer is smaller
+    /// than the input buffer.
     pub fn encrypt(
         &self,
-        key: [u8; 32],
-        iv: [u8; 16],
-        plaintext: &[u8],
-        ciphertext: &mut [u8],
-    ) -> Result<(), &'static str> {
-        todo!();
-
-        /*
-        let mut aes = CSR::new(self.base_addr as *mut u32);
-
-        // Write the CKEY. This is necessary to allow the MR register to be programmed.
-        aes.wfo(aes::MR_CKEY, 0xE);
-        // Use DMA.
-        aes.wfo(aes::MR_SMOD, 2);
-        // Use CBC.
-        aes.wfo(aes::MR_OPMOD, 1);
-        // Use 256-bit key size. TODO Benchmark the difference between 128-bit and
-        // 256-bit.
-        aes.wfo(aes::MR_KEYSIZE, 2);
-        // Encrypt data.
-        aes.wfo(aes::MR_CIPHER, 1);
-        // Use a double buffer.
-        aes.wfo(aes::MR_DUALBUFF, 1);
-
-        // Set the key.
-        aes.wo(
-            aes::KEYWR0,
-            u32::from_ne_bytes(key[0..4].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR1,
-            u32::from_ne_bytes(key[4..8].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR2,
-            u32::from_ne_bytes(key[8..12].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR3,
-            u32::from_ne_bytes(key[12..16].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR4,
-            u32::from_ne_bytes(key[16..20].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR5,
-            u32::from_ne_bytes(key[20..24].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR6,
-            u32::from_ne_bytes(key[24..28].try_into().unwrap()),
-        );
-        aes.wo(
-            aes::KEYWR7,
-            u32::from_ne_bytes(key[28..32].try_into().unwrap()),
-        );
-
-        // Set the IV.
-        aes.wo(aes::IVR0, u32::from_ne_bytes(iv[0..4].try_into().unwrap()));
-        aes.wo(aes::IVR1, u32::from_ne_bytes(iv[4..8].try_into().unwrap()));
-        aes.wo(aes::IVR2, u32::from_ne_bytes(iv[8..12].try_into().unwrap()));
-        aes.wo(
-            aes::IVR3,
-            u32::from_ne_bytes(iv[12..16].try_into().unwrap()),
-        );
-
-        dma::memory_to_peripheral(
-            plaintext,
-            dma::Peripheral {
-                id: 26,
-                chunk_size: 2,
-                address: (aes::HW_AES_BASE + aes::IDATAR0.offset() * 4) as u32,
-            },
-        )?;
-        dma::peripheral_to_memory(
-            dma::Peripheral {
-                id: 27,
-                chunk_size: 2,
-                address: (aes::HW_AES_BASE + aes::ODATAR0.offset() * 4) as u32,
-            },
-            ciphertext,
-        )?;
-        dma::execute_peripheral_transfer();
-
-        Ok(())*/
+        input_phys: &[u8],
+        output_phys: &mut [u8],
+        ch0: &XdmacChannel,
+        ch1: &XdmacChannel,
+    ) {
+        if output_phys.len() < input_phys.len() {
+            panic!("Output buffer too small");
+        }
+        self.set_cipher(1); // Encrypt data
+        self.execute(input_phys, output_phys, ch0, ch1);
     }
+
+    /// Decrypt some data using the AES peripheral. Panics if the output buffer is smaller
+    /// than the input buffer.
+    pub fn decrypt(
+        &self,
+        input_phys: &[u8],
+        output_phys: &mut [u8],
+        ch0: &XdmacChannel,
+        ch1: &XdmacChannel,
+    ) {
+        if output_phys.len() < input_phys.len() {
+            panic!("Output buffer too small");
+        }
+        self.set_cipher(0); // Decrypt data
+        self.execute(input_phys, output_phys, ch0, ch1);
+    }
+
+    fn execute(
+        &self,
+        input_phys: &[u8],
+        output_phys: &mut [u8],
+        ch0: &XdmacChannel,
+        ch1: &XdmacChannel,
+    ) {
+        self.set_len(input_phys.len() as _);
+
+        ch0.configure_peripheral_transfer(
+            DmaPeripheralId::AesTx,
+            DmaTransferDirection::MemoryToPeripheral,
+            DmaDataWidth::D32,
+            DmaChunkSize::C4,
+        );
+        ch1.configure_peripheral_transfer(
+            DmaPeripheralId::AesRx,
+            DmaTransferDirection::PeripheralToMemory,
+            DmaDataWidth::D32,
+            DmaChunkSize::C4,
+        );
+
+        ch0.execute_transfer(
+            input_phys.as_ptr() as *const u8 as _,
+            self.base_addr + IDATAR_OFFSET,
+            input_phys.len(),
+        )
+        .expect("dma");
+        ch1.execute_transfer(
+            self.base_addr + ODATAR_OFFSET,
+            output_phys.as_mut_ptr() as *mut u8 as _,
+            input_phys.len(),
+        )
+        .expect("dma");
+    }
+
+    fn set_key(&self, key: &[u32; 4]) {
+        const AES_KEYWR_OFFSET: usize = 0x20;
+        let ivr_base = self.base_addr as usize + AES_KEYWR_OFFSET;
+
+        for (i, key) in key.iter().enumerate() {
+            unsafe {
+                let ptr = (ivr_base + i * 4) as *mut u32;
+                ptr.write_volatile(*key);
+            }
+        }
+    }
+
+    fn set_iv(&self, iv: &[u32; 4]) {
+        const AES_IVR_OFFSET: usize = 0x60;
+        let ivr_base = self.base_addr as usize + AES_IVR_OFFSET;
+
+        for (i, iv) in iv.iter().enumerate() {
+            unsafe {
+                let ptr = (ivr_base + i * 4) as *mut u32;
+                ptr.write_volatile(*iv);
+            }
+        }
+    }
+
+    // TODO This should be unnecessary
+    fn set_len(&self, len: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CLENR_CLEN, len);
+        csr.wfo(BCNT_BCNT, len);
+    }
+
+    fn set_cipher(&self, cipher: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(MR_CIPHER, cipher);
+    }
+
+    fn reset(&self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(CR_SWRST, 1);
+    }
+}
+
+const CKEY: u32 = 0xE;
+
+#[derive(Debug, Clone)]
+pub enum AesMode {
+    Ecb {
+        key: [u32; 4],
+        cipher: u32,
+    },
+
+    Cbc {
+        key: [u32; 4],
+        iv: [u32; 4],
+        cipher: u32,
+        length: u32,
+    },
+
+    Counter {
+        nonce: [u32; 4],
+        cipher: u32,
+    },
 }
