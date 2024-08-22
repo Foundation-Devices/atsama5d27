@@ -18,7 +18,11 @@ use {
         arch::global_asm,
         fmt::Write,
         panic::PanicInfo,
-        sync::atomic::{compiler_fence, Ordering::SeqCst},
+        sync::atomic::{
+            compiler_fence,
+            AtomicBool,
+            Ordering::{self, SeqCst},
+        },
     },
 };
 
@@ -109,14 +113,28 @@ fn _entry() -> ! {
 
     //////////////////////////////////
 
+    let mut wpt_chg = Pio::pa28(); // WPT_CHG_B
+    wpt_chg.set_func(Func::Gpio);
+    wpt_chg.set_direction(Direction::Input);
+
     let mut wpt_en1 = Pio::pa24(); // WPT_EN1
     wpt_en1.set_func(Func::Gpio);
     wpt_en1.set_direction(Direction::Output);
-    wpt_en1.set(true);
+    wpt_en1.set(false);
     let mut wpt_en2 = Pio::pd6(); // WPT_EN2
     wpt_en2.set_func(Func::Gpio);
     wpt_en2.set_direction(Direction::Output);
     wpt_en2.set(false);
+
+    let mut wpt_term = Pio::pd11(); // WPT_TERM
+    wpt_term.set_func(Func::Gpio);
+    wpt_term.set_direction(Direction::Output);
+    wpt_term.set(false);
+
+    let mut wpt_fault = Pio::pd13(); // WPT_FAULT
+    wpt_fault.set_func(Func::Gpio);
+    wpt_fault.set_direction(Direction::Output);
+    wpt_fault.set(false);
 
     let mut bc_cd = Pio::pd20(); // BC_CD is battery charger disable pin
     bc_cd.set_func(Func::Gpio);
@@ -250,6 +268,7 @@ fn _entry() -> ! {
     loop {
         let status = bq.status().unwrap();
         writeln!(console, "").ok();
+        writeln!(console, "wireless charging: {:?}", !wpt_chg.get()).ok();
         writeln!(console, "{:?}", status).ok();
         writeln!(console, "{:?}", status.state().unwrap()).ok();
         writeln!(
@@ -283,11 +302,44 @@ unsafe extern "C" fn aic_spurious_handler() {
     core::arch::asm!("bkpt");
 }
 
+static WPT_FAULT: AtomicBool = AtomicBool::new(false);
+static WPT_TERM: AtomicBool = AtomicBool::new(false);
+
 #[no_mangle]
 unsafe extern "C" fn uart_irq_handler() {
     let mut uart = UartType::new();
     let char = uart.getc() as char;
     writeln!(uart, "Received character: {}", char).ok();
+
+    if char == 't' {
+        let term_val = !WPT_TERM.load(Ordering::Relaxed);
+
+        let mut wpt_term = Pio::pd11(); // WPT_TERM
+        wpt_term.set_func(Func::Gpio);
+        wpt_term.set_direction(Direction::Output);
+        wpt_term.set(term_val);
+        WPT_TERM.store(term_val, Ordering::Relaxed);
+
+        if term_val {
+            writeln!(uart, "WPT terminated").ok();
+        } else {
+            writeln!(uart, "WPT resumed").ok();
+        }
+    } else if char == 'f' {
+        let fault_val = !WPT_FAULT.load(Ordering::Relaxed);
+
+        let mut wpt_fault = Pio::pd13(); // WPT_FAULT
+        wpt_fault.set_func(Func::Gpio);
+        wpt_fault.set_direction(Direction::Output);
+        wpt_fault.set(fault_val);
+
+        WPT_FAULT.store(fault_val, Ordering::Relaxed);
+        if fault_val {
+            writeln!(uart, "WPT faulted").ok();
+        } else {
+            writeln!(uart, "WPT fault removed").ok();
+        }
+    }
 }
 
 #[inline(never)]
