@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use {
-    crate::dma::{DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel},
+    crate::{
+        dma::{DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel},
+        mem::PhysLocation,
+    },
     utralib::{utra::aes::*, CSR},
 };
 
@@ -119,19 +122,16 @@ impl Aes {
     }
 
     /// Process the data blocks using the AES peripheral.
-    /// Panics if the output buffer is smaller than the input buffer.
     pub fn process_dma(
         &self,
-        input_phys: &[u8],
-        output_phys: &mut [u8],
+        input: PhysLocation,
+        output: PhysLocation,
+        len: usize,
         ch0: &XdmacChannel,
         ch1: &XdmacChannel,
     ) {
-        if output_phys.len() < input_phys.len() {
-            panic!("Output buffer too small");
-        }
         self.set_mr_for_dma();
-        self.execute(input_phys, output_phys, ch0, ch1);
+        self.execute(input, output, len, ch0, ch1);
     }
 
     pub fn process(&self, input: &[u8], output: &mut [u8]) {
@@ -176,8 +176,9 @@ impl Aes {
 
     fn execute(
         &self,
-        input_phys: &[u8],
-        output_phys: &mut [u8],
+        input: PhysLocation,
+        output: PhysLocation,
+        len: usize,
         ch0: &XdmacChannel,
         ch1: &XdmacChannel,
     ) {
@@ -194,16 +195,12 @@ impl Aes {
             DmaChunkSize::C4,
         );
 
-        ch0.execute_transfer(
-            input_phys.as_ptr() as _,
-            self.base_addr + IDATAR_OFFSET,
-            input_phys.len() / 4,
-        )
-        .expect("dma");
+        ch0.execute_transfer(input.addr() as u32, self.base_addr + IDATAR_OFFSET, len / 4)
+            .expect("dma");
         ch1.execute_transfer(
             self.base_addr + ODATAR_OFFSET,
-            output_phys.as_mut_ptr() as _,
-            input_phys.len() / 4,
+            output.addr() as u32,
+            len / 4,
         )
         .expect("dma");
     }

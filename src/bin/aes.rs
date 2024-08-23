@@ -384,7 +384,7 @@ fn run_tests() {
             aes.init_decrypt(mode);
         }
 
-        aes.process_dma(input, output, &ch0, &ch1);
+        aes.process_dma(input.into(), output.into(), input.len(), &ch0, &ch1);
         wait_dma();
         // aes.process(input, output); // Uncomment for non-DMA processing
 

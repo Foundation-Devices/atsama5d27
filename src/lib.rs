@@ -23,6 +23,7 @@ pub mod lcdc;
 pub mod lcdspi;
 #[cfg(feature = "logging")]
 pub mod logging;
+pub mod mem;
 pub mod pio;
 pub mod pit;
 pub mod pmc;
