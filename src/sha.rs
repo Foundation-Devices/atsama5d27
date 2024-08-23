@@ -1,13 +1,7 @@
 //! SHA hardware accelerator driver.
 
 use {
-    crate::dma::{
-        DmaChunkSize,
-        DmaDataWidth,
-        DmaPeripheralId,
-        DmaTransferDirection,
-        XdmacChannel,
-    },
+    crate::dma::{DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel},
     bitflags::bitflags,
     utralib::{utra::sha::*, HW_SHA_BASE, *},
 };
