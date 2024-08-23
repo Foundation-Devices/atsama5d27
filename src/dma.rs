@@ -149,7 +149,6 @@ impl XdmacChannel {
     }
 
     /// Disables the DMA channel.
-    /// Does *not* reset the `transfer complete` flag.
     pub fn disable(&self) {
         let mut dma = CSR::new(self.xdmac_base_addr as *mut u32);
         let ch_bit = self.channel as u32;
