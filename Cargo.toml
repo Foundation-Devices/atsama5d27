@@ -52,6 +52,10 @@ required-features = []
 name = "aesb"
 required-features = []
 
+[[bin]]
+name = "aes"
+required-features = ["aes"]
+
 [dependencies]
 armv7 = { git = "https://github.com/Foundation-Devices/armv7.git", branch = "update" }
 bitflags = "2.4.1"
@@ -73,6 +77,7 @@ mass-storage = { git = "https://github.com/Foundation-Devices/mass-storage.git",
 embedded-alloc = { version = "0.5.1", optional = true }
 critical-section = {version = "1.1.2", optional = true }
 log = { version = "0.4.21", optional = true }
+hex-literal = { version = "0.4.1", optional = true, default-features = false }
 
 [build-dependencies]
 png-decoder = "0.1.1"
@@ -87,6 +92,7 @@ mmc = ["embedded-sdmmc"]
 camera-dev = []
 camera-prod = []
 sha = ["hex"]
+aes = ["hex", "hex-literal"]
 charger = ["bq24157", "bq27421"]
 heap = ["embedded-alloc"]
 logging = ["log", "heap", "critical-section"]
