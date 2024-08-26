@@ -27,6 +27,7 @@ pub mod pio;
 pub mod pit;
 pub mod pmc;
 pub mod rstc;
+pub mod rtc;
 pub mod sckc;
 pub mod sdmmc;
 pub mod sfr;

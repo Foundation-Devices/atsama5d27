@@ -49,6 +49,10 @@ name = "shdwc"
 required-features = []
 
 [[bin]]
+name = "rtc"
+required-features = []
+
+[[bin]]
 name = "aesb"
 required-features = []
 
