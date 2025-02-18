@@ -31,6 +31,7 @@ pub mod rstc;
 pub mod rtc;
 pub mod sckc;
 pub mod sdmmc;
+pub mod sfc;
 pub mod sfr;
 pub mod sha;
 pub mod shdwc;
