@@ -1,8 +1,7 @@
+pub use utralib::HW_FLEXCOM2_BASE;
 use {
-    crate::uart::{Uart, Uart1},
     bitflags::bitflags,
-    core::fmt::Write,
-    utralib::{utra::flexcom0::*, HW_FLEXCOM2_BASE, *},
+    utralib::{utra::flexcom0::*, *},
 };
 
 bitflags! {
@@ -41,6 +40,9 @@ bitflags! {
 
 const TOP_TIMEOUT_CYCLES: usize = 500_000;
 
+const FLEX_RHR_OFFSET: usize = 0x10;
+const FLEX_THR_OFFSET: usize = 0x20;
+
 #[derive(Debug)]
 pub enum UsartMode {
     Normal = 0x00,
@@ -56,7 +58,8 @@ pub enum UsartMode {
 }
 
 #[derive(Debug)]
-pub enum OpMode {
+#[allow(dead_code)]
+enum OpMode {
     Disabled = 0,
     Usart = 1,
     Spi = 2,
@@ -122,31 +125,57 @@ impl Flexcom {
         Self::with_base_addr(HW_FLEXCOM2_BASE as u32)
     }
 
-    pub fn init_baud(
+    pub fn init_usart(
         &mut self,
         clock_speed: u32,
         baud_rate: u32,
         mode: UsartMode,
         clock_source: ClockSource,
     ) {
+        self.set_op_mode(OpMode::Usart);
         let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_CR_RSTTX, 1);
+        csr.wfo(US_CR_RSTRX, 1);
         csr.rmwf(US_MR_USART_MODE, mode as u32);
         csr.rmwf(US_MR_USCLKS, clock_source as u32);
 
-        self.set_baud(clock_speed, baud_rate);
+        csr.rmwf(US_MR_SYNC, 0);
+        csr.rmwf(US_MR_OVER, 0); // 16x oversampling
+        self.set_baud(clock_speed, baud_rate)
     }
 
     pub fn set_baud(&mut self, clock_speed: u32, baud_rate: u32) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
-
-        csr.wfo(US_CR_RSTTX, 1);
-        csr.wfo(US_CR_RSTRX, 1);
-        self.set_tx(false);
-        self.set_rx(false);
-
-        csr.rmwf(US_MR_SYNC, 0);
-        csr.rmwf(US_MR_OVER, 0);
         csr.rmwf(US_BRGR_CD, clock_speed / (16 * baud_rate));
+    }
+
+    pub fn enable_rxrdy_interrupt(&mut self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_IER_RXRDY, 1);
+    }
+
+    pub fn enable_overrun_interrupt(&mut self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_IER_OVRE, 1);
+    }
+
+    pub fn enable_timeout_interrupt(&mut self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_IER_TIMEOUT, 1);
+    }
+
+    /// Starts a receive timeout to `timeout` number of bit periods
+    /// Maximum value is `0x1ffff`
+    pub fn start_timeout(&mut self, timeout: u32) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_RTOR_TO, timeout);
+        csr.wfo(US_CR_RETTO, 1);
+    }
+
+    pub fn clear_timeout(&mut self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_RTOR_TO, 0);
+        csr.wfo(US_CR_STTTO, 1);
     }
 
     pub fn set_tx(&mut self, enable: bool) {
@@ -169,7 +198,7 @@ impl Flexcom {
         }
     }
 
-    pub fn set_op_mode(&mut self, mode: OpMode) {
+    fn set_op_mode(&mut self, mode: OpMode) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.wfo(MR_OPMODE, mode as u32);
     }
@@ -189,6 +218,11 @@ impl Flexcom {
         csr.rmwf(US_MR_CHMODE, mode as u32);
     }
 
+    pub fn enable_fifo(&mut self, en: bool) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.rmwf(US_CR_FIFOEN, en as u32);
+    }
+
     pub fn read_byte(&self) -> Result<u8, FlexcomError> {
         self.wait_for_status(FlexcomStatus::RXRDY)?;
 
@@ -205,6 +239,14 @@ impl Flexcom {
         }
 
         Ok(byte)
+    }
+
+    pub fn try_read_byte(&self) -> Option<u8> {
+        if self.status().contains(FlexcomStatus::RXRDY) {
+            self.read_byte().ok()
+        } else {
+            None
+        }
     }
 
     pub fn write_byte(&self, byte: u8) -> Result<(), FlexcomError> {
@@ -226,6 +268,12 @@ impl Flexcom {
         Ok(())
     }
 
+    pub fn flush(&self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_CR_RXFCLR, 1);
+        csr.wfo(US_CR_TXFCLR, 1);
+    }
+
     pub fn unlock(&mut self) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.wo(US_WPMR, WPKEY | 1);
@@ -236,23 +284,21 @@ impl Flexcom {
         csr.rf(US_WPSR_WPVS) != 0
     }
 
-    fn status(&self) -> FlexcomStatus {
+    pub fn status(&self) -> FlexcomStatus {
         let csr = CSR::new(self.base_addr as *mut u32);
         let bits = csr.r(US_CSR);
         FlexcomStatus::from_bits_retain(bits)
+    }
+
+    pub fn reset_status(&mut self) {
+        let mut csr = CSR::new(self.base_addr as *mut u32);
+        csr.wfo(US_CR_RSTSTA, 1);
     }
 
     fn wait_for_status(&self, status: FlexcomStatus) -> Result<(), FlexcomError> {
         let mut counter = TOP_TIMEOUT_CYCLES;
         while counter > 0 {
             let curr_status = self.status();
-            if counter - 1 == 0 {
-                writeln!(
-                    Uart::<Uart1>::new(),
-                    "About to timeout, status: {curr_status:?}"
-                )
-                .ok();
-            }
 
             if curr_status.contains(FlexcomStatus::TIMEOUT) {
                 return Err(FlexcomError::Timeout);
@@ -266,5 +312,11 @@ impl Flexcom {
         }
 
         Err(FlexcomError::Timeout)
+    }
+    pub fn dma_tx_addr(&self) -> usize {
+        self.base_addr as usize + FLEX_THR_OFFSET
+    }
+    pub fn dma_rx_addr(&self) -> usize {
+        self.base_addr as usize + FLEX_RHR_OFFSET
     }
 }
