@@ -6,6 +6,8 @@ use utralib::{utra::xdmac0::*, CSR, HW_XDMAC0_BASE, HW_XDMAC1_BASE};
 // Number of registers per DMA channel
 const DMA_CHANNEL_NUM_REGISTERS: u32 = 0x40;
 
+pub const DMA_CHANNELS: usize = 16;
+
 pub struct Xdmac {
     base_addr: u32,
 }
@@ -54,36 +56,39 @@ pub struct XdmacChannel {
 
 impl XdmacChannel {
     /// Sets up a peripheral-to-memory DMA transfer.
-    pub fn configure_peripheral_transfer(
-        &self,
-        id: DmaPeripheralId,
-        direction: DmaTransferDirection,
-        data_width: DmaDataWidth,
-        chunk_size: DmaChunkSize,
-    ) {
+    pub fn configure_peripheral_transfer(&self, config: DmaPeripheralTransferConfig) {
         let dma = CSR::new(self.xdmac_base_addr as *mut u32);
 
-        let direction_flags = match direction {
+        let direction_flags = match config.direction {
+            // A Note about SIF and DIF:
+            // Only system interface 1 is connected to the 32 bit bridge (i.e. most peripherals), so
+            // that has to be used as the source/destination for peripheral transfers.
+            // (See SAMA5D2 datasheet "Table 18-6:  Master to Slave Access on H32MX"
+            // The other interface should be the other one to allow two parallel masters to work
+            // simultaneously.
+            // XXX: This will NOT work for the NFC command register
             DmaTransferDirection::PeripheralToMemory => {
                 dma.ms(XDMAC_CC0_SAM, 0) // Source address constant
                 | dma.ms(XDMAC_CC0_DAM, 1) // Destination address auto-increments
                 | dma.ms(XDMAC_CC0_DSYNC, 0) // PER2MEM
+                | dma.ms(XDMAC_CC0_SIF, 1) // Source is a peripheral
+                | dma.ms(XDMAC_CC0_DIF, 0)
             }
             DmaTransferDirection::MemoryToPeripheral => {
                 dma.ms(XDMAC_CC0_SAM, 1) // Source address auto-increments
                 | dma.ms(XDMAC_CC0_DAM, 0) // Destination address constant
                 | dma.ms(XDMAC_CC0_DSYNC, 1) // MEM2PER
+                | dma.ms(XDMAC_CC0_DIF, 1) // Destination is a peripheral
+                | dma.ms(XDMAC_CC0_SIF, 0)
             }
         };
 
         let cc: u32 = dma.ms(XDMAC_CC0_TYPE, 1) // Synchronized mode
-            | dma.ms(XDMAC_CC0_PERID, id as u32)
+            | dma.ms(XDMAC_CC0_PERID, config.peripheral_id as u32)
             | dma.ms(XDMAC_CC0_PROT, 0) // Secured channel
             | dma.ms(XDMAC_CC0_SWREQ, 0) // Hardware request line
-            | dma.ms(XDMAC_CC0_SIF, 1)
-            | dma.ms(XDMAC_CC0_DIF, 0)
-            | dma.ms(XDMAC_CC0_DWIDTH, data_width as u32)
-            | dma.ms(XDMAC_CC0_CSIZE, chunk_size as u32)
+            | dma.ms(XDMAC_CC0_DWIDTH, config.data_width as u32)
+            | dma.ms(XDMAC_CC0_CSIZE, config.chunk_size as u32)
             | dma.ms(XDMAC_CC0_MBSIZE, 3) // Memory burst size: 16
             | direction_flags;
 
@@ -96,12 +101,7 @@ impl XdmacChannel {
     /// methods:
     /// - [`XdmacChannel::configure_peripheral_to_memory`]
     /// - Memory-memory: TODO
-    pub fn execute_transfer(
-        &self,
-        src: u32,
-        dst: u32,
-        data_size: usize,
-    ) -> Result<(), &'static str> {
+    pub fn execute_transfer(&self, src: u32, dst: u32, data_size: usize) {
         // Clear the channel status by reading
         let _ = self.interrupt_status();
 
@@ -114,8 +114,6 @@ impl XdmacChannel {
 
         // Start the transfer
         self.enable();
-
-        Ok(())
     }
 
     /// Checks the interrupt status. This operation clears the interrupt status.
@@ -191,6 +189,16 @@ impl XdmacChannel {
         }
     }
 
+    pub fn set_di_interrupt(&self, enable: bool) {
+        const MASK_DI: u32 = 1 << 2;
+
+        if enable {
+            self.set_cie(MASK_DI);
+        } else {
+            self.set_cid(MASK_DI);
+        }
+    }
+
     /// Sets the value of the `CC` register for this channel.
     fn set_cc(&self, cc_val: u32) {
         const CC_REG_OFFSET: u32 = 0x78;
@@ -230,6 +238,12 @@ impl XdmacChannel {
         }
     }
 
+    pub fn remaining_data_size(&self) -> u32 {
+        const CUBC_REG_OFFSET: u32 = 0x70;
+        let ubl_reg_ptr = self.reg_by_offset(CUBC_REG_OFFSET);
+        unsafe { ubl_reg_ptr.read_volatile() }
+    }
+
     fn set_data_size(&self, size: u32) {
         const CUBC_REG_OFFSET: u32 = 0x70;
         let ubl_reg_ptr = self.reg_by_offset(CUBC_REG_OFFSET);
@@ -245,7 +259,40 @@ impl XdmacChannel {
     }
 }
 
+#[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
+pub struct DmaPeripheralTransferConfig {
+    /// The id of the peripheral to use. This is different from the PMC peripheral ids.
+    pub peripheral_id: DmaPeripheralId,
+    pub direction: DmaTransferDirection,
+    /// The data element width of the transfer. Addresses need to be aligned to this
+    /// width. Specified for each peripheral in the datasheet.
+    pub data_width: DmaDataWidth,
+    /// How many data elements to transfer with a single AXI transaction.
+    /// Specified for each peripheral in the datasheet.
+    /// When in doubt, use 16.
+    pub chunk_size: DmaChunkSize,
+}
+
+impl Default for DmaPeripheralTransferConfig {
+    fn default() -> Self {
+        Self {
+            peripheral_id: DmaPeripheralId::Mem2Mem,
+            direction: DmaTransferDirection::PeripheralToMemory,
+            data_width: DmaDataWidth::D32,
+            chunk_size: DmaChunkSize::C16,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum DmaChannel {
     Channel0 = 0,
     Channel1 = 1,
@@ -265,7 +312,35 @@ pub enum DmaChannel {
     Channel15 = 15,
 }
 
+impl DmaChannel {
+    pub fn from_usize(value: usize) -> Option<Self> {
+        match value {
+            0 => Some(Self::Channel0),
+            1 => Some(Self::Channel1),
+            2 => Some(Self::Channel2),
+            3 => Some(Self::Channel3),
+            4 => Some(Self::Channel4),
+            5 => Some(Self::Channel5),
+            6 => Some(Self::Channel6),
+            7 => Some(Self::Channel7),
+            8 => Some(Self::Channel8),
+            9 => Some(Self::Channel9),
+            10 => Some(Self::Channel10),
+            11 => Some(Self::Channel11),
+            12 => Some(Self::Channel12),
+            13 => Some(Self::Channel13),
+            14 => Some(Self::Channel14),
+            15 => Some(Self::Channel15),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum DmaDataWidth {
     D8 = 0,
     D16 = 1,
@@ -273,7 +348,22 @@ pub enum DmaDataWidth {
     D64 = 3,
 }
 
+impl DmaDataWidth {
+    pub fn byte_len(&self) -> usize {
+        match self {
+            DmaDataWidth::D8 => 1,
+            DmaDataWidth::D16 => 2,
+            DmaDataWidth::D32 => 4,
+            DmaDataWidth::D64 => 8,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum DmaChunkSize {
     C1 = 0,
     C2 = 1,
@@ -283,12 +373,20 @@ pub enum DmaChunkSize {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum DmaTransferDirection {
-    PeripheralToMemory,
-    MemoryToPeripheral,
+    PeripheralToMemory = 0,
+    MemoryToPeripheral = 1,
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum DmaPeripheralId {
     TwiHs0Tx = 0,
     TwiHs0Rx = 1,
