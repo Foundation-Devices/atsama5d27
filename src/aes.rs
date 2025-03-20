@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use {
-    crate::{
-        dma::{DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel},
-        mem::PhysLocation,
+    crate::dma::{
+        DmaChunkSize,
+        DmaDataWidth,
+        DmaPeripheralId,
+        DmaPeripheralTransferConfig,
+        DmaTransferDirection,
     },
     utralib::{utra::aes::*, CSR},
 };
@@ -24,8 +27,10 @@ impl Default for Aes {
 
 const BLOCK_SIZE: usize = 16;
 
-const IDATAR_OFFSET: u32 = 0x40;
-const ODATAR_OFFSET: u32 = 0x50;
+const XTS_POLYNOMIAL: u128 = 0x87;
+
+pub const IDATAR_OFFSET: u32 = 0x40;
+pub const ODATAR_OFFSET: u32 = 0x50;
 
 #[derive(Debug)]
 enum OpModeValue {
@@ -50,6 +55,18 @@ enum OpModeValue {
 }
 
 impl Aes {
+    pub const TX_DMA_CONFIG: DmaPeripheralTransferConfig = DmaPeripheralTransferConfig {
+        peripheral_id: DmaPeripheralId::AesTx,
+        direction: DmaTransferDirection::MemoryToPeripheral,
+        data_width: DmaDataWidth::D32,
+        chunk_size: DmaChunkSize::C4,
+    };
+    pub const RX_DMA_CONFIG: DmaPeripheralTransferConfig = DmaPeripheralTransferConfig {
+        peripheral_id: DmaPeripheralId::AesRx,
+        direction: DmaTransferDirection::PeripheralToMemory,
+        data_width: DmaDataWidth::D32,
+        chunk_size: DmaChunkSize::C4,
+    };
     /// Create AES with a different base address. Useful with virtual memory.
     pub fn with_alt_base_addr(base_addr: u32) -> Self {
         Self { base_addr }
@@ -93,7 +110,12 @@ impl Aes {
             AesMode::Counter { nonce: _ } => {
                 unimplemented!()
             }
-            AesMode::Xts { key1, key2, tweak } => {
+            AesMode::Xts {
+                key1,
+                key2,
+                tweak,
+                j,
+            } => {
                 // Temporarily switch to ECB to encrypt the tweak value with key2
                 let mut sub_aes = Self {
                     base_addr: self.base_addr,
@@ -113,7 +135,7 @@ impl Aes {
                 self.set_tweak(&encrypted_tweak);
 
                 // Set the alpha primitive corresponding to the first block of the sector
-                self.set_alpha(&[1, 0, 0, 0]);
+                self.set_alpha(&Self::compute_alpha(j));
 
                 // Set key1 as the main key
                 self.set_key(&key1);
@@ -121,17 +143,24 @@ impl Aes {
         }
     }
 
-    /// Process the data blocks using the AES peripheral.
-    pub fn process_dma(
-        &self,
-        input: PhysLocation,
-        output: PhysLocation,
-        len: usize,
-        ch0: &XdmacChannel,
-        ch1: &XdmacChannel,
-    ) {
-        self.set_mr_for_dma();
-        self.execute(input, output, len, ch0, ch1);
+    fn compute_alpha(j: usize) -> [u32; 4] {
+        let mut alpha = 1u128;
+
+        // Multiply j times with 2, over GF128 using the XTS_POLYNOMIAL
+        for _ in 0..j {
+            alpha = alpha << 1
+                ^ if alpha & (1 << 127) != 0 {
+                    XTS_POLYNOMIAL
+                } else {
+                    0
+                };
+        }
+        [
+            alpha as u32,
+            (alpha >> 32) as u32,
+            (alpha >> 64) as u32,
+            (alpha >> 96) as u32,
+        ]
     }
 
     pub fn process(&self, input: &[u8], output: &mut [u8]) {
@@ -149,6 +178,14 @@ impl Aes {
 
             self.read_output_data(out_block);
         }
+    }
+
+    pub fn dma_tx_addr(&self) -> usize {
+        self.base_addr as usize + IDATAR_OFFSET as usize
+    }
+
+    pub fn dma_rx_addr(&self) -> usize {
+        self.base_addr as usize + ODATAR_OFFSET as usize
     }
 
     fn set_input_data(&self, block: &[u8]) {
@@ -172,37 +209,6 @@ impl Aes {
                 word.copy_from_slice(&word_u32.to_le_bytes());
             }
         }
-    }
-
-    fn execute(
-        &self,
-        input: PhysLocation,
-        output: PhysLocation,
-        len: usize,
-        ch0: &XdmacChannel,
-        ch1: &XdmacChannel,
-    ) {
-        ch0.configure_peripheral_transfer(
-            DmaPeripheralId::AesTx,
-            DmaTransferDirection::MemoryToPeripheral,
-            DmaDataWidth::D32,
-            DmaChunkSize::C4,
-        );
-        ch1.configure_peripheral_transfer(
-            DmaPeripheralId::AesRx,
-            DmaTransferDirection::PeripheralToMemory,
-            DmaDataWidth::D32,
-            DmaChunkSize::C4,
-        );
-
-        ch0.execute_transfer(input.addr() as u32, self.base_addr + IDATAR_OFFSET, len / 4)
-            .expect("dma");
-        ch1.execute_transfer(
-            self.base_addr + ODATAR_OFFSET,
-            output.addr() as u32,
-            len / 4,
-        )
-        .expect("dma");
     }
 
     fn set_key(&self, key: &Key) {
@@ -254,7 +260,7 @@ impl Aes {
         }
     }
 
-    fn set_mr_for_dma(&self) {
+    pub fn setup_for_dma(&self) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.rmwf(MR_SMOD, 2); // DMA auto-start
         csr.rmwf(MR_DUALBUFF, 1); // Dual-buffering to increase performance
@@ -280,6 +286,10 @@ impl Aes {
 const CKEY: u32 = 0xE;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum AesMode {
     Ecb {
         key: Key,
@@ -295,13 +305,22 @@ pub enum AesMode {
     },
 
     Xts {
+        /// Block encryption key
         key1: Key,
+        /// Tweak encryption key
         key2: Key,
+        /// Tweak value (spans multiple AES blocks)
         tweak: [u8; 16],
+        /// Block offset value within a single tweak
+        j: usize,
     },
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum Key {
     Key128([u32; 4]),
     Key192([u32; 6]),
@@ -309,6 +328,10 @@ pub enum Key {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub enum KeySize {
     Aes128 = 0,
     Aes192 = 1,
@@ -367,6 +390,10 @@ impl Key {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub struct Iv([u32; 4]);
 
 impl Iv {

@@ -1,7 +1,13 @@
 //! SHA hardware accelerator driver.
 
 use {
-    crate::dma::{DmaChunkSize, DmaDataWidth, DmaPeripheralId, DmaTransferDirection, XdmacChannel},
+    crate::dma::{
+        DmaChunkSize,
+        DmaDataWidth,
+        DmaPeripheralId,
+        DmaPeripheralTransferConfig,
+        DmaTransferDirection,
+    },
     bitflags::bitflags,
     utralib::{utra::sha::*, HW_SHA_BASE, *},
 };
@@ -14,7 +20,8 @@ const SHA256_EMPTY_HASH: Sha256Hash = Sha256Hash([
 const IDATAR_OFFSET: u32 = 0x40;
 const IODATAR_OFFSET: u32 = 0x80;
 
-pub struct Sha256Hash(pub [u8; 32]);
+pub const SHA256_HASH_SIZE: usize = 32;
+pub struct Sha256Hash(pub [u8; SHA256_HASH_SIZE]);
 
 bitflags! {
     #[derive(Debug, Copy, Clone)]
@@ -87,6 +94,13 @@ impl Default for Sha {
 }
 
 impl Sha {
+    pub const DMA_CONFIG: DmaPeripheralTransferConfig = DmaPeripheralTransferConfig {
+        peripheral_id: DmaPeripheralId::Sha,
+        direction: DmaTransferDirection::MemoryToPeripheral,
+        data_width: DmaDataWidth::D32,
+        chunk_size: DmaChunkSize::C16,
+    };
+
     pub fn new() -> Self {
         Self {
             base_addr: HW_SHA_BASE as u32,
@@ -171,7 +185,7 @@ impl Sha {
     fn read_sha256_result(&self) -> Sha256Hash {
         let iodatar_base = (self.base_addr + IODATAR_OFFSET) as *mut u32;
 
-        let mut hash = [0u8; 32];
+        let mut hash = [0u8; SHA256_HASH_SIZE];
         for (i, word) in hash.chunks_exact_mut(4).enumerate() {
             let hash_word = unsafe { iodatar_base.add(i).read_volatile() };
 
@@ -185,31 +199,27 @@ impl Sha {
         while !self.status().contains(SHAStatus::DATARDY) {}
     }
 
-    pub fn sha256_dma(&self, data_phys: &[u32], dma_channel: XdmacChannel) -> Sha256Hash {
-        if data_phys.is_empty() {
-            return SHA256_EMPTY_HASH;
+    pub fn dma_in_address(&self) -> usize {
+        (self.base_addr + IDATAR_OFFSET) as usize
+    }
+
+    pub fn sha256_dma<E>(
+        &self,
+        data_len: usize,
+        dma_execute: impl Fn() -> Result<(), E>,
+    ) -> Result<Sha256Hash, E> {
+        if data_len == 0 {
+            return Ok(SHA256_EMPTY_HASH);
         }
 
         self.reset();
         self.set_mode(Algorithm::Sha256, StartMode::Idatar0, Buffering::Double);
-        self.set_message_size(data_phys.len() as u32 * 4);
-        self.set_byte_count(data_phys.len() as u32 * 4);
+        self.set_message_size(data_len as u32);
+        self.set_byte_count(data_len as u32);
         self.first();
-        dma_channel.configure_peripheral_transfer(
-            DmaPeripheralId::Sha,
-            DmaTransferDirection::MemoryToPeripheral,
-            DmaDataWidth::D32,
-            DmaChunkSize::C16,
-        );
-        dma_channel
-            .execute_transfer(
-                data_phys.as_ptr() as *const u8 as u32,
-                self.base_addr + IDATAR_OFFSET,
-                data_phys.len(),
-            )
-            .ok();
+        dma_execute()?;
         self.wait_data_ready();
-        self.read_sha256_result()
+        Ok(self.read_sha256_result())
     }
 
     pub fn sha256(&self, data: &[u8]) -> Sha256Hash {
