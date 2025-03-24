@@ -59,7 +59,7 @@ pub enum UsartMode {
 
 #[derive(Debug)]
 #[allow(dead_code)]
-enum OpMode {
+pub enum OpMode {
     Disabled = 0,
     Usart = 1,
     Spi = 2,
@@ -198,7 +198,7 @@ impl Flexcom {
         }
     }
 
-    fn set_op_mode(&mut self, mode: OpMode) {
+    pub fn set_op_mode(&mut self, mode: OpMode) {
         let mut csr = CSR::new(self.base_addr as *mut u32);
         csr.wfo(MR_OPMODE, mode as u32);
     }
